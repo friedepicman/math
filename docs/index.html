@@ -349,16 +349,16 @@
     .problem-nav {
       position: fixed;
       left: 50%;
-      transform: translateX(calc(-450px - 160px));
-      top: 140px;
-      width: 140px;
+      transform: translateX(-50%);
+      top: 200px;
+      width: 300px;
       z-index: 100;
       background: var(--bg-card);
       padding: 12px;
       border-radius: 12px;
       box-shadow: var(--shadow-md);
       border: 1px solid var(--border-color);
-      max-height: calc(100vh - 180px);
+      max-height: calc(100vh - 240px);
       overflow-y: auto;
       display: none;
     }
@@ -369,7 +369,8 @@
 
     .toggle-nav-btn {
       position: fixed;
-      left: calc(50% - 450px - 250px);
+      left: 50%;
+      transform: translateX(-50%);
       top: 140px;
       z-index: 101;
       background: var(--primary-blue);
@@ -431,7 +432,7 @@
 
     .problem-nav-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 12px;
     }
 
@@ -444,7 +445,7 @@
       border: 2px solid var(--border-color);
       border-radius: 8px;
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 400;
       font-size: 18px;
       transition: all 0.2s;
       color: var(--text-primary);
@@ -1484,12 +1485,6 @@
         "10": { "2.5": 0, "3.0": 1, "3.5": 1, "4.0": 2, "4.5": 2, "5.0": 1, "5.5": 2, "6.0": 1, "6.5": 2, "7.0": 1, "7.5": 1, "8.0": 1 }
       };
       
-      // FILTERING LOGIC:
-      // - Base requirement: ALL problems must be manually_reviewed AND have quality >= selectedQuality
-      // - Use Finalized Only: Only finalized problems
-      // - Use Expanded DB: finalized OR (has aime_answer)
-      // - Default mode: finalized OR (answer === aime_answer as strings, meaning 0-999 answers only)
-      
       function bucketizeFine() {
         const buckets = {};
         for (let d = 2.5; d <= 8; d += 0.5) {
@@ -1503,34 +1498,25 @@
           let d = parseFloat(p.difficulty);
           if (isNaN(d)) continue;
           
-          // Base requirement: manually reviewed AND has quality rating
           if (!p.manually_reviewed || !p.quality || p.quality === 0) continue;
-
-          // Apply quality filter - this now applies to ALL modes
           if (p.quality < selectedQuality) continue;
 
           let includeProb = false;
 
           if (useFinalizedOnly) {
-            // Use Finalized Only mode
             if (p.finalized) {
               includeProb = true;
             }
           } else if (useExpanded) {
-            // Use Expanded Database mode: finalized OR (manually reviewed with aime_answer)
             if (p.finalized || (p.aime_answer !== null && p.aime_answer !== undefined)) {
               includeProb = true;
             }
           } else {
-            // Default mode: finalized OR (aime_answer between 0-999, meaning it equals the answer column)
             if (p.finalized) {
               includeProb = true;
             } else if (p.aime_answer !== null && p.aime_answer !== undefined && p.answer !== null && p.answer !== undefined && p.answer !== '') {
-              // Check if aime_answer mod 1000 equals answer (standard AIME format)
-              // Convert both to strings and trim whitespace for comparison
               const aimeAnswerMod = p.aime_answer % 1000;
               const answerTrimmed = String(p.answer).trim();
-              // Only include if answer is a plain number (not LaTeX or fractions)
               if (/^\d+$/.test(answerTrimmed) && String(aimeAnswerMod) === answerTrimmed) {
                 includeProb = true;
               }
@@ -1580,12 +1566,10 @@
           navGrid.appendChild(item);
         }
         
-        // Update progress indicator
         if (navProgress) {
           navProgress.textContent = `${answeredCount}/${chosenProblems.length} answered`;
         }
         
-        // Show toggle button when problems are generated
         const toggleBtn = document.getElementById('toggleNavBtn');
         if (toggleBtn) {
           if (chosenProblems.length > 0) {
@@ -1595,7 +1579,6 @@
           }
         }
         
-        // Add margin to main content when nav is visible
         const mainContent = document.querySelector('.main-content');
         if (mainContent && chosenProblems.length > 0 && window.innerWidth > 1200) {
           mainContent.style.marginLeft = '0';
@@ -1618,7 +1601,6 @@
         }
       }
 
-      // Handle Enter key to jump to next problem
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type === 'text') {
           const currentIndex = parseInt(e.target.getAttribute('data-index'));
@@ -1629,7 +1611,6 @@
         }
       });
 
-      // Update nav when answers change
       document.addEventListener('input', (e) => {
         if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
           updateProblemNav();
@@ -1741,7 +1722,6 @@
           </div>
         `;
         
-        // SECURITY FIX: Safely set content
         const problemTextEl = document.getElementById(`problem-text-${index}`);
         const aopsLinkEl = document.getElementById(`aops-link-${index}`);
         
@@ -1772,7 +1752,6 @@
         const buckets = bucketizeFine();
         const plan = difficultyTemplate[level];
 
-        // Calculate stats for summary
         let totalAvailable = 0;
         let canGenerate = true;
         let insufficientDifficulties = [];
@@ -1786,7 +1765,6 @@
           }
         }
 
-        // Build stats table HTML
         let tableHTML = '<table class="stats-table"><thead><tr><th>Difficulty</th><th>Available</th><th>Needed</th><th>Status</th></tr></thead><tbody>';
         
         for (const [diff, countNeeded] of Object.entries(plan)) {
@@ -1840,7 +1818,6 @@
         
         tableHTML += '</tbody></table>';
 
-        // Build summary section
         let summaryHTML = '<div class="stats-summary">';
         summaryHTML += `<div class="stats-summary-item">📊 Total problems available: <strong>${totalAvailable}</strong></div>`;
         
@@ -1896,7 +1873,6 @@
 
           container.appendChild(div);
           
-          // SECURITY FIX: Safely set content after DOM insertion
           const problemTextEl = document.getElementById(`problem-text-${i}`);
           const aopsLinkEl = document.getElementById(`aops-link-${i}`);
           
@@ -2002,7 +1978,6 @@
         `;
         summaryDiv.classList.add('show');
 
-        // Save the mock attempt if user is logged in
         if (currentUser) {
           await saveMockAttempt(correctCount, chosenProblems.length, document.getElementById("difficulty").value, chosenProblems);
         }
