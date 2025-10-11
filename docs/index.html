@@ -369,19 +369,20 @@
 
     .toggle-nav-btn {
       position: fixed;
-      left: 20px;
+      left: 50%;
+      transform: translateX(calc(-450px / 2 - 70px));
       top: 140px;
       z-index: 101;
       background: var(--primary-blue);
       color: white;
       border: none;
-      padding: 10px 14px;
+      padding: 12px 18px;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 600;
       font-size: 14px;
       box-shadow: var(--shadow-md);
-      transition: all 0.2s;
+      transition: background 0.2s, box-shadow 0.2s;
       display: none;
     }
 
@@ -412,18 +413,18 @@
 
     .problem-nav-title {
       font-weight: 600;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       color: var(--text-primary);
-      font-size: 12px;
+      font-size: 14px;
       text-align: center;
     }
 
     .problem-nav-progress {
-      font-size: 11px;
+      font-size: 13px;
       color: var(--text-secondary);
       text-align: center;
-      margin-bottom: 10px;
-      padding: 5px;
+      margin-bottom: 16px;
+      padding: 8px;
       background: var(--bg-secondary);
       border-radius: 6px;
       font-weight: 600;
@@ -432,7 +433,7 @@
     .problem-nav-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
+      gap: 10px;
     }
 
     .problem-nav-item {
@@ -445,7 +446,7 @@
       border-radius: 8px;
       cursor: pointer;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 16px;
       transition: all 0.2s;
       color: var(--text-primary);
     }
