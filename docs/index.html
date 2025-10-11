@@ -187,23 +187,23 @@
 
   <style>
     :root {
-      --bg-primary: #faf8f3;
-      --bg-secondary: #f0ebe0;
+      --bg-primary: #f8f9fa;
+      --bg-secondary: #e9ecef;
       --bg-card: #ffffff;
-      --text-primary: #2c2416;
-      --text-secondary: #5a4a2f;
-      --text-tertiary: #8b7355;
-      --border-color: #e8dcc8;
-      --border-strong: #d4c4a8;
-      --primary-blue: #1a4d7a;
-      --primary-blue-light: #2d6ba3;
-      --shadow-sm: 0 2px 8px rgba(42, 36, 22, 0.1);
-      --shadow-md: 0 4px 16px rgba(42, 36, 22, 0.15);
-      --instruction-bg: #fff8e1;
-      --instruction-border: #f9a825;
-      --instruction-text: #6d4c00;
-      --accent-burgundy: #8b2635;
-      --accent-gold: #c9a961;
+      --text-primary: #212529;
+      --text-secondary: #495057;
+      --text-tertiary: #6c757d;
+      --border-color: #dee2e6;
+      --border-strong: #adb5bd;
+      --primary-blue: #0066cc;
+      --primary-blue-light: #3399ff;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
+      --instruction-bg: #e7f3ff;
+      --instruction-border: #0066cc;
+      --instruction-text: #004499;
+      --accent-primary: #0066cc;
+      --accent-secondary: #00aa66;
     }
 
     [data-theme="dark"] {
@@ -219,9 +219,9 @@
       --primary-blue-light: #6bb3ff;
       --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
       --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
-      --instruction-bg: #3d3520;
-      --instruction-border: #d4a50a;
-      --instruction-text: #f0d98d;
+      --instruction-bg: #1a3a52;
+      --instruction-border: #4a9eff;
+      --instruction-text: #a5d6f6;
     }
     
     body {
@@ -230,8 +230,7 @@
       padding: 0;
       background: var(--bg-primary);
       background-image: 
-        linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-secondary) 100%),
-        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(139, 115, 85, 0.02) 2px, rgba(139, 115, 85, 0.02) 4px);
+        linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-secondary) 100%);
       font-size: 17px;
       line-height: 1.7;
       color: var(--text-primary);
@@ -240,20 +239,20 @@
     
     h1 {
       text-align: center;
-      color: var(--accent-burgundy);
+      color: var(--accent-primary);
       font-weight: 700;
       font-size: 2.8rem;
       margin-bottom: 0.5rem;
       font-family: 'Georgia', 'Times New Roman', serif;
       letter-spacing: -0.5px;
-      text-shadow: 1px 1px 2px rgba(139, 38, 53, 0.1);
+      text-shadow: none;
     }
     
     nav {
       background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
-      box-shadow: 0 2px 8px rgba(26, 77, 122, 0.3);
+      box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
       margin-bottom: 48px;
-      border-bottom: 3px solid var(--accent-burgundy);
+      border-bottom: 3px solid var(--accent-secondary);
     }
     
     nav a {
@@ -367,7 +366,7 @@
       border-radius: 8px;
       box-shadow: var(--shadow-md);
       border: 2px solid var(--border-strong);
-      border-top: 4px solid var(--accent-burgundy);
+      border-top: 4px solid var(--accent-primary);
       max-height: calc(100vh - 180px);
       overflow-y: auto;
       display: none;
@@ -423,7 +422,7 @@
     .problem-nav-title {
       font-weight: 700;
       margin-bottom: 12px;
-      color: var(--accent-burgundy);
+      color: var(--accent-primary);
       font-size: 15px;
       text-align: center;
       font-family: 'Georgia', serif;
@@ -485,7 +484,7 @@
       border-radius: 8px;
       box-shadow: var(--shadow-sm);
       border: 2px solid var(--border-color);
-      border-left: 5px solid var(--accent-gold);
+      border-left: 5px solid var(--primary-blue);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
       scroll-margin-top: 120px;
@@ -494,8 +493,8 @@
     .problem:hover {
       transform: translateY(-2px);
       box-shadow: var(--shadow-md);
-      border-color: var(--accent-burgundy);
-      border-left-color: var(--accent-burgundy);
+      border-color: var(--primary-blue-light);
+      border-left-color: var(--accent-secondary);
     }
 
     @keyframes problemPulse {
@@ -973,13 +972,13 @@
       box-shadow: var(--shadow-sm);
       margin-bottom: 20px;
       border: 2px solid var(--border-color);
-      border-top: 4px solid var(--accent-burgundy);
+      border-top: 4px solid var(--accent-primary);
     }
     
     .filter-section h3 {
       margin: 0 0 16px 0;
       font-size: 20px;
-      color: var(--accent-burgundy);
+      color: var(--accent-primary);
       font-weight: 700;
       font-family: 'Georgia', serif;
       letter-spacing: 0.5px;
