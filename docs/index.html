@@ -348,17 +348,16 @@
 
     .problem-nav {
       position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      top: 200px;
-      width: 300px;
+      right: 20px;
+      top: 140px;
+      width: 200px;
       z-index: 100;
       background: var(--bg-card);
       padding: 12px;
       border-radius: 12px;
       box-shadow: var(--shadow-md);
       border: 1px solid var(--border-color);
-      max-height: calc(100vh - 240px);
+      max-height: calc(100vh - 180px);
       overflow-y: auto;
       display: none;
     }
@@ -369,9 +368,8 @@
 
     .toggle-nav-btn {
       position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      top: 140px;
+      right: 20px;
+      top: 80px;
       z-index: 101;
       background: var(--primary-blue);
       color: white;
@@ -432,7 +430,7 @@
 
     .problem-nav-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
     }
 
@@ -452,7 +450,6 @@
     }
 
     .problem-nav-item:hover {
-      transform: scale(1.1);
       border-color: var(--primary-blue);
     }
 
