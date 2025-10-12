@@ -479,6 +479,34 @@
       border-color: #66bb6a;
       color: #e0e0e0;
     }
+
+    .problems-wrapper {
+      background: var(--bg-card);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      border: 2px solid var(--border-color);
+      margin-bottom: 30px;
+    }
+
+    .problems-header {
+      border-bottom: 3px solid var(--primary-blue);
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+    }
+
+    .problems-header h2 {
+      color: var(--primary-blue);
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .problems-header p {
+      color: var(--text-tertiary);
+      margin: 8px 0 0 0;
+      font-size: 15px;
+    }
     
     .problem {
       background: var(--bg-card);
@@ -1869,7 +1897,17 @@
         }
 
         const container = document.getElementById("problems");
-        container.innerHTML = "";
+        container.innerHTML = `
+          <div class="problems-wrapper">
+            <div class="problems-header">
+              <h2>Problems</h2>
+              <p>${chosenProblems.length} problems generated • Difficulty Level ${level}</p>
+            </div>
+            <div id="problems-list"></div>
+          </div>
+        `;
+
+        const problemsList = document.getElementById("problems-list");
 
         chosenProblems.forEach((p, i) => {
           const div = document.createElement("div");
@@ -1890,7 +1928,7 @@
             </div>
           `;
 
-          container.appendChild(div);
+          problemsList.appendChild(div);
           
           const problemTextEl = document.getElementById(`problem-text-${i}`);
           const aopsLinkEl = document.getElementById(`aops-link-${i}`);
