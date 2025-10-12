@@ -1937,6 +1937,15 @@
         let correctCount = 0;
         let results = [];
 
+        // Add user answers to problems data
+        const problemsWithAnswers = chosenProblems.map((p, i) => {
+          const input = document.querySelector(`input[data-index="${i}"]`);
+          return {
+            ...p,
+            user_answer: input?.value?.trim() || null
+          };
+        });
+
         chosenProblems.forEach((p, i) => {
           const answerInput = document.querySelector(`input[data-index="${i}"]`);
           const problemDiv = document.querySelector(`.problem[data-problem-index="${i}"]`);
@@ -1998,7 +2007,7 @@
         summaryDiv.classList.add('show');
 
         if (currentUser) {
-          await saveMockAttempt(correctCount, chosenProblems.length, document.getElementById("difficulty").value, chosenProblems);
+          await saveMockAttempt(correctCount, chosenProblems.length, document.getElementById("difficulty").value, problemsWithAnswers);
         }
       }
     </script>

@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Profile - Mock AIME</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.4/dist/umd/supabase.min.js"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <style>
     :root {
       --bg-primary: #f8f9fa;
@@ -12,8 +21,9 @@
       --text-primary: #212529;
       --text-secondary: #495057;
       --border-color: #e9ecef;
-      --primary-blue: #004488;
+      --primary-blue: #0056b3;
       --success-color: #28a745;
+      --error-color: #dc3545;
     }
 
     body {
@@ -44,7 +54,7 @@
     }
 
     .container {
-      max-width: 800px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 20px;
     }
@@ -158,14 +168,31 @@
       background: #c82333;
     }
 
+    .btn-back {
+      background: #6c757d;
+      margin-bottom: 20px;
+    }
+
+    .btn-back:hover {
+      background: #5a6268;
+    }
+
     .attempt-item {
-      padding: 15px;
-      border: 1px solid var(--border-color);
+      padding: 15px 20px;
+      border: 2px solid var(--border-color);
       border-radius: 8px;
       margin-bottom: 15px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .attempt-item:hover {
+      border-color: var(--primary-blue);
+      background: #f8f9fa;
+      transform: translateX(5px);
     }
 
     .attempt-info {
@@ -196,6 +223,158 @@
       border-radius: 6px;
       margin-bottom: 20px;
     }
+
+    .mock-detail-view {
+      display: none;
+    }
+
+    .mock-detail-view.active {
+      display: block;
+    }
+
+    .problem-detail {
+      background: white;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .problem-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .problem-number {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--primary-blue);
+    }
+
+    .problem-difficulty {
+      background: #e9ecef;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .problem-text {
+      margin: 15px 0;
+      line-height: 1.8;
+    }
+
+    .answer-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .answer-box {
+      padding: 12px;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .answer-box.correct {
+      background: rgba(40, 167, 69, 0.1);
+      border: 2px solid var(--success-color);
+    }
+
+    .answer-box.incorrect {
+      background: rgba(220, 53, 69, 0.1);
+      border: 2px solid var(--error-color);
+    }
+
+    .answer-box.unanswered {
+      background: rgba(108, 117, 125, 0.1);
+      border: 2px solid #6c757d;
+    }
+
+    .answer-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+
+    .answer-value {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .quality-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+      color: #000;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+
+    .quality-badge.quality-1 { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; }
+    .quality-badge.quality-2 { background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%); color: white; }
+    .quality-badge.quality-3 { background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); color: #000; }
+    .quality-badge.quality-4 { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); color: white; }
+    .quality-badge.quality-5 { background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white; }
+
+    .mock-summary {
+      background: var(--bg-card);
+      padding: 20px;
+      border-radius: 8px;
+      border: 2px solid var(--primary-blue);
+      margin-bottom: 30px;
+    }
+
+    .mock-summary h3 {
+      margin-top: 0;
+      color: var(--primary-blue);
+    }
+
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .summary-stat {
+      text-align: center;
+    }
+
+    .summary-stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--primary-blue);
+    }
+
+    .summary-stat-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 5px;
+    }
+
+    .aops-link {
+      color: var(--primary-blue);
+      text-decoration: none;
+      font-size: 14px;
+      margin-top: 10px;
+      display: inline-block;
+    }
+
+    .aops-link:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -212,56 +391,88 @@
   </nav>
 
   <div class="container">
-    <div class="profile-header">
-      <div class="profile-avatar" id="userAvatar">U</div>
-      <h1 id="userName">Loading...</h1>
-      <p id="userEmail"></p>
-    </div>
+    <!-- Profile Overview -->
+    <div id="profileOverview">
+      <div class="profile-header">
+        <div class="profile-avatar" id="userAvatar">U</div>
+        <h1 id="userName">Loading...</h1>
+        <p id="userEmail"></p>
+      </div>
 
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-number" id="totalAttempts">0</div>
-        <div class="stat-label">Mock Tests Completed</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="averageScore">0%</div>
-        <div class="stat-label">Average Score</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="bestScore">0</div>
-        <div class="stat-label">Best Score</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="totalProblems">0</div>
-        <div class="stat-label">Problems Solved</div>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>Profile Settings</h2>
-      <div id="updateMessage" class="success-message" style="display: none;"></div>
-      <form id="profileForm">
-        <div class="form-group">
-          <label for="displayName">Display Name</label>
-          <input type="text" id="displayName" required>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number" id="totalAttempts">0</div>
+          <div class="stat-label">Mock Tests Completed</div>
         </div>
-        <div class="form-group">
-          <label for="emailDisplay">Email</label>
-          <input type="email" id="emailDisplay" disabled>
+        <div class="stat-card">
+          <div class="stat-number" id="averageScore">0%</div>
+          <div class="stat-label">Average Score</div>
         </div>
-        <button type="submit" class="btn">Update Profile</button>
-      </form>
+        <div class="stat-card">
+          <div class="stat-number" id="bestScore">0</div>
+          <div class="stat-label">Best Score</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="totalProblems">0</div>
+          <div class="stat-label">Problems Solved</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Profile Settings</h2>
+        <div id="updateMessage" class="success-message" style="display: none;"></div>
+        <form id="profileForm">
+          <div class="form-group">
+            <label for="displayName">Display Name</label>
+            <input type="text" id="displayName" required>
+          </div>
+          <div class="form-group">
+            <label for="emailDisplay">Email</label>
+            <input type="email" id="emailDisplay" disabled>
+          </div>
+          <button type="submit" class="btn">Update Profile</button>
+        </form>
+      </div>
+
+      <div class="section">
+        <h2>Recent Mock Tests</h2>
+        <div id="recentAttempts" class="loading">Loading your test history...</div>
+      </div>
+
+      <div class="section">
+        <h2>Account Actions</h2>
+        <button onclick="resetPassword()" class="btn">Reset Password</button>
+        <button onclick="deleteAccount()" class="btn btn-danger" style="margin-left: 10px;">Delete Account</button>
+      </div>
     </div>
 
-    <div class="section">
-      <h2>Recent Mock Tests</h2>
-      <div id="recentAttempts" class="loading">Loading your test history...</div>
-    </div>
+    <!-- Mock Detail View -->
+    <div id="mockDetailView" class="mock-detail-view">
+      <button onclick="backToProfile()" class="btn btn-back">← Back to Profile</button>
+      
+      <div class="mock-summary">
+        <h3>Mock Test Summary</h3>
+        <div class="summary-stats">
+          <div class="summary-stat">
+            <div class="summary-stat-value" id="detailScore">0/15</div>
+            <div class="summary-stat-label">Score</div>
+          </div>
+          <div class="summary-stat">
+            <div class="summary-stat-value" id="detailPercentage">0%</div>
+            <div class="summary-stat-label">Percentage</div>
+          </div>
+          <div class="summary-stat">
+            <div class="summary-stat-value" id="detailDifficulty">5</div>
+            <div class="summary-stat-label">Difficulty Level</div>
+          </div>
+          <div class="summary-stat">
+            <div class="summary-stat-value" id="detailDate">-</div>
+            <div class="summary-stat-label">Completed</div>
+          </div>
+        </div>
+      </div>
 
-    <div class="section">
-      <h2>Account Actions</h2>
-      <button onclick="resetPassword()" class="btn">Reset Password</button>
-      <button onclick="deleteAccount()" class="btn btn-danger" style="margin-left: 10px;">Delete Account</button>
+      <div id="problemsList"></div>
     </div>
   </div>
 
@@ -272,6 +483,7 @@
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let currentUser = null;
+    let allAttempts = [];
 
     window.onload = async () => {
       await checkAuth();
@@ -292,7 +504,6 @@
     async function loadUserData() {
       if (!currentUser) return;
 
-      // Load user profile
       const { data: profile } = await supabaseClient
         .from('user_profiles')
         .select('*')
@@ -343,6 +554,8 @@
         .order('completed_at', { ascending: false })
         .limit(10);
 
+      allAttempts = attempts || [];
+
       const container = document.getElementById('recentAttempts');
 
       if (!attempts || attempts.length === 0) {
@@ -350,15 +563,106 @@
         return;
       }
 
-      container.innerHTML = attempts.map(attempt => `
-        <div class="attempt-item">
+      container.innerHTML = attempts.map((attempt, index) => `
+        <div class="attempt-item" onclick="viewMockDetail(${index})">
           <div class="attempt-info">
-            <div>Difficulty Level ${attempt.difficulty_level}</div>
-            <div class="attempt-date">${new Date(attempt.completed_at).toLocaleDateString()}</div>
+            <div><strong>Difficulty Level ${attempt.difficulty_level}</strong></div>
+            <div class="attempt-date">${new Date(attempt.completed_at).toLocaleDateString()} at ${new Date(attempt.completed_at).toLocaleTimeString()}</div>
           </div>
           <div class="attempt-score">${attempt.score}/${attempt.total_problems}</div>
         </div>
       `).join('');
+    }
+
+    function viewMockDetail(index) {
+      const attempt = allAttempts[index];
+      
+      // Hide profile overview, show detail view
+      document.getElementById('profileOverview').style.display = 'none';
+      document.getElementById('mockDetailView').classList.add('active');
+
+      // Update summary
+      const percentage = Math.round((attempt.score / attempt.total_problems) * 100);
+      document.getElementById('detailScore').textContent = `${attempt.score}/${attempt.total_problems}`;
+      document.getElementById('detailPercentage').textContent = `${percentage}%`;
+      document.getElementById('detailDifficulty').textContent = attempt.difficulty_level;
+      document.getElementById('detailDate').textContent = new Date(attempt.completed_at).toLocaleDateString();
+
+      // Display problems
+      displayProblems(attempt);
+
+      // Scroll to top
+      window.scrollTo(0, 0);
+    }
+
+    function backToProfile() {
+      document.getElementById('profileOverview').style.display = 'block';
+      document.getElementById('mockDetailView').classList.remove('active');
+      window.scrollTo(0, 0);
+    }
+
+    async function displayProblems(attempt) {
+      const container = document.getElementById('problemsList');
+      container.innerHTML = '<div class="loading">Loading problems...</div>';
+
+      const problems = attempt.problems_data || [];
+      
+      if (!problems || problems.length === 0) {
+        container.innerHTML = '<p>No problem data available for this attempt.</p>';
+        return;
+      }
+
+      const problemsHTML = problems.map((problem, index) => {
+        const userAnswer = problem.user_answer || null;
+        const correctAnswer = problem.aime_answer ? String(problem.aime_answer % 1000) : String(problem.answer || '');
+        const isCorrect = userAnswer === correctAnswer;
+        const isUnanswered = !userAnswer;
+
+        const statusClass = isUnanswered ? 'unanswered' : (isCorrect ? 'correct' : 'incorrect');
+        const statusText = isUnanswered ? 'Not Answered' : (isCorrect ? 'Correct' : 'Incorrect');
+
+        const qualityBadge = problem.quality ? 
+          `<span class="quality-badge quality-${problem.quality}">${'★'.repeat(problem.quality)} ${problem.quality}/5</span>` : 
+          '';
+
+        return `
+          <div class="problem-detail mathjax-process">
+            <div class="problem-header">
+              <div>
+                <span class="problem-number">Problem ${index + 1}</span>
+                ${qualityBadge}
+              </div>
+              <span class="problem-difficulty">Difficulty: ${parseFloat(problem.difficulty).toFixed(1)}</span>
+            </div>
+            
+            <div class="problem-text">${problem.rewritten_problem || problem.text || 'Problem text not available'}</div>
+            
+            <div class="answer-section">
+              <div class="answer-box ${statusClass}">
+                <div class="answer-label">Your Answer</div>
+                <div class="answer-value">${userAnswer || '—'}</div>
+              </div>
+              <div class="answer-box correct">
+                <div class="answer-label">Correct Answer</div>
+                <div class="answer-value">${correctAnswer}</div>
+              </div>
+              <div class="answer-box" style="border: 2px solid var(--border-color);">
+                <div class="answer-label">Status</div>
+                <div class="answer-value" style="font-size: 16px;">${statusText}</div>
+              </div>
+            </div>
+            
+            ${problem.link ? `<a href="${problem.link}" target="_blank" class="aops-link">View on AoPS →</a>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = problemsHTML;
+
+      // Render MathJax
+      if (window.MathJax) {
+        MathJax.typesetPromise().catch(err => console.error('MathJax error:', err));
+      }
     }
 
     // Profile form submission
@@ -385,7 +689,6 @@
           document.getElementById('updateMessage').style.display = 'none';
         }, 3000);
 
-        // Update display
         document.getElementById('userName').textContent = displayName;
         document.getElementById('userAvatar').textContent = displayName.charAt(0).toUpperCase();
 
@@ -422,7 +725,6 @@
       }
 
       try {
-        // Delete user data first
         await supabaseClient.from('mock_attempts').delete().eq('user_id', currentUser.id);
         await supabaseClient.from('user_bookmarks').delete().eq('user_id', currentUser.id);
         await supabaseClient.from('user_profiles').delete().eq('id', currentUser.id);
