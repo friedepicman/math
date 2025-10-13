@@ -292,7 +292,7 @@
       margin: 10px 0;
     }
     
-    input[type="text"] {
+    input[type="text"], input[type="number"] {
       padding: 8px;
       border: 1px solid #ddd;
       border-radius: 4px;
@@ -647,6 +647,39 @@
       }
     }
 
+    async function saveAimeAnswer(problemId) {
+      const aimeAnswerInput = document.getElementById(`aime-answer-${problemId}`);
+      const aimeAnswer = aimeAnswerInput.value;
+      const statusEl = document.getElementById(`status-${problemId}`);
+      
+      statusEl.textContent = 'Saving AIME answer...';
+      statusEl.style.color = '#666';
+      
+      const { data, error } = await supabaseClient
+        .from('problems')
+        .update({ 
+          aime_answer: aimeAnswer ? parseInt(aimeAnswer) : null
+        })
+        .eq('id', problemId)
+        .select();
+      
+      if (error) {
+        console.error('Error saving AIME answer:', error);
+        statusEl.textContent = `Error: ${error.message}`;
+        statusEl.style.color = '#dc3545';
+      } else {
+        statusEl.textContent = '✓ AIME answer saved!';
+        statusEl.style.color = '#28a745';
+        
+        const problem = allProblems.find(p => p.id === problemId);
+        if (problem) {
+          problem.aime_answer = aimeAnswer ? parseInt(aimeAnswer) : null;
+        }
+        
+        setTimeout(() => { statusEl.textContent = ''; }, 2000);
+      }
+    }
+
     async function acceptAIRephrase(problemId) {
       const aiText = aiRephrases[problemId];
       if (!aiText) {
@@ -733,7 +766,7 @@
         .from('problems')
         .update({ 
           rewritten_problem: text,
-          finalized: true  // Finalize when saving manual edit
+          finalized: true
         })
         .eq('id', problemId)
         .select();
@@ -753,8 +786,8 @@
         }
         
         // Update the AI render to show the manual edit instead
-        const aiRender = document.getElementById(`ai-render-${p.id}`);
-        const aiTextarea = document.getElementById(`raw-ai-${p.id}`);
+        const aiRender = document.getElementById(`ai-render-${problemId}`);
+        const aiTextarea = document.getElementById(`raw-ai-${problemId}`);
         if (aiRender) {
           setMathContent(aiRender, text);
         }
@@ -776,10 +809,15 @@
         const buttonsDiv = document.getElementById(`accept-reject-${problemId}`);
         buttonsDiv.style.display = 'flex';
         
-        // Auto-advance
+        // Auto-advance to next problem
         setTimeout(() => {
           const currentIndex = allProblems.findIndex(p => p.id === problemId);
-          if (currentIndex < allProblems.length - 1) {
+          const startIdx = (currentPage - 1) * problemsPerPage;
+          const endIdx = Math.min(startIdx + problemsPerPage, allProblems.length);
+          const relativeIndex = currentIndex - startIdx;
+          
+          if (relativeIndex < endIdx - startIdx - 1) {
+            // Next problem is on same page
             const nextProblem = allProblems[currentIndex + 1];
             const nextElement = document.getElementById(`problem-${nextProblem.id}`);
             if (nextElement) {
@@ -787,9 +825,10 @@
                 top: nextElement.offsetTop - 100,
                 behavior: 'smooth' 
               });
-            } else {
-              goToPage(currentPage + 1);
             }
+          } else if (currentPage < totalPages) {
+            // Go to next page
+            goToPage(currentPage + 1);
           }
         }, 500);
       }
@@ -872,6 +911,11 @@
             </div>
             
             <div class="field-group">
+              <label>AIME Answer (mod 1000):</label>
+              <input type="number" id="aime-answer-${p.id}" value="" onblur="saveAimeAnswer(${p.id})" style="width: 100px;" min="0" max="999" />
+            </div>
+            
+            <div class="field-group">
               <label>Difficulty:</label>
               <input type="text" id="difficulty-${p.id}" value="" readonly style="width: 80px;" />
             </div>
@@ -904,6 +948,7 @@
         }
         
         document.getElementById(`answer-${p.id}`).value = p.answer || '';
+        document.getElementById(`aime-answer-${p.id}`).value = p.aime_answer || '';
         document.getElementById(`difficulty-${p.id}`).value = p.difficulty || '';
         document.getElementById(`source-${p.id}`).value = p.source || '';
       });
