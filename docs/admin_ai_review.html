@@ -544,19 +544,43 @@
     async function loadProblems() {
       document.getElementById('problems').innerHTML = '<p>Loading problems...</p>';
       
-      const { data: aiData, error: aiError } = await supabaseClient
-        .from('ai_rephrased')
-        .select('*');
+      // First, load ALL AI rephrases (with pagination)
+      console.log('Loading AI rephrases...');
+      let allAiData = [];
+      let aiFrom = 0;
+      const aiChunkSize = 1000;
       
-      if (aiError) {
-        console.error('Error loading AI rephrases:', aiError);
-      } else {
-        aiRephrases = {};
-        aiData.forEach(item => {
-          aiRephrases[item.problem_id] = item.ai_rephrased_text;
-        });
+      while (true) {
+        const { data: aiData, error: aiError } = await supabaseClient
+          .from('ai_rephrased')
+          .select('*')
+          .range(aiFrom, aiFrom + aiChunkSize - 1);
+        
+        if (aiError) {
+          console.error('Error loading AI rephrases:', aiError);
+          break;
+        }
+        
+        if (aiData.length === 0) {
+          break;
+        }
+        
+        allAiData.push(...aiData);
+        aiFrom += aiChunkSize;
+        
+        if (aiData.length < aiChunkSize) {
+          break;
+        }
       }
       
+      // Build AI rephrases map
+      aiRephrases = {};
+      allAiData.forEach(item => {
+        aiRephrases[item.problem_id] = item.ai_rephrased_text;
+      });
+      console.log(`Loaded ${Object.keys(aiRephrases).length} AI rephrases`);
+      
+      // Now load ALL problems (with pagination)
       let allData = [];
       let from = 0;
       const chunkSize = 1000;
@@ -584,6 +608,8 @@
         }
       }
       
+      console.log(`Total problems loaded: ${allData.length}`);
+      
       const showUnfinalized = document.getElementById('showUnfinalizedOnly').checked;
       const showWithAI = document.getElementById('showWithAIOnly').checked;
       
@@ -592,6 +618,8 @@
         if (showWithAI && !aiRephrases[p.id]) return false;
         return true;
       });
+      
+      console.log(`After filtering: ${allProblems.length} problems`);
       
       currentPage = 1;
       updateStats();
