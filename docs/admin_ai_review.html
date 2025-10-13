@@ -731,7 +731,10 @@
       
       const { data, error } = await supabaseClient
         .from('problems')
-        .update({ rewritten_problem: text })
+        .update({ 
+          rewritten_problem: text,
+          finalized: true  // Finalize when saving manual edit
+        })
         .eq('id', problemId)
         .select();
       
@@ -740,20 +743,40 @@
         statusEl.textContent = `Error: ${error.message}`;
         statusEl.style.color = '#dc3545';
       } else {
-        statusEl.textContent = '✓ Saved!';
+        statusEl.textContent = '✓ Saved & Finalized!';
         statusEl.style.color = '#28a745';
         
         const problem = allProblems.find(p => p.id === problemId);
         if (problem) {
           problem.rewritten_problem = text;
+          problem.finalized = true;
         }
         
+        // Update the AI render to show the manual edit instead
+        const aiRender = document.getElementById(`ai-render-${p.id}`);
+        const aiTextarea = document.getElementById(`raw-ai-${p.id}`);
+        if (aiRender) {
+          setMathContent(aiRender, text);
+        }
+        if (aiTextarea) {
+          aiTextarea.value = text;
+        }
+        
+        // Update the finalized checkbox
+        const checkbox = document.querySelector(`#problem-${problemId} input[type="checkbox"]`);
+        if (checkbox) {
+          checkbox.checked = true;
+        }
+        
+        // Hide edit section
         const editSection = document.getElementById(`edit-section-${problemId}`);
         editSection.classList.remove('show');
         
+        // Show accept/reject buttons again
         const buttonsDiv = document.getElementById(`accept-reject-${problemId}`);
         buttonsDiv.style.display = 'flex';
         
+        // Auto-advance
         setTimeout(() => {
           const currentIndex = allProblems.findIndex(p => p.id === problemId);
           if (currentIndex < allProblems.length - 1) {

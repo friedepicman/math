@@ -79,8 +79,15 @@ CRITICAL RULES:
 5. Keep problem statement completely unchanged - only modify the final question
 6. Change "Find" → "Compute", "What is" → "Compute", "Evaluate" → "Compute" for consistency
 
-OUTPUT:
-Return ONLY the rephrased problem statement with the appropriate template applied. Do not include explanations."""
+OUTPUT FORMAT - CRITICAL:
+You must output ONLY the final rephrased problem statement. Do NOT include:
+- Your reasoning or thought process
+- Explanations of your approach
+- Phrases like "Looking at this problem" or "Following the template"
+- Any commentary about the answer or problem type
+- Any text before or after the problem statement
+
+Simply output the rephrased problem and nothing else. Start directly with the problem text."""
 
 def analyze_answer_format(answer_str):
     """
@@ -206,7 +213,7 @@ def process_problems(
         test_mode: Only process first 10 problems
         dry_run: Don't save to database, just show what would be done
         skip_existing: Skip problems that already have AI rephrases
-        limit: Maximum number of problems to process
+        limit: Maximum number of problems to process (applied AFTER filtering)
     """
     
     print("\n" + "="*70)
@@ -218,7 +225,7 @@ def process_problems(
     print(f"Dry run mode: {dry_run}")
     print(f"Skip existing: {skip_existing}")
     if limit:
-        print(f"Limit: {limit} problems")
+        print(f"Limit: {limit} problems (applied after filtering)")
     print("="*70 + "\n")
     
     # Get existing AI rephrases if skip_existing is True
@@ -228,7 +235,8 @@ def process_problems(
         existing_problem_ids = {row['problem_id'] for row in existing_result.data}
         print(f"Found {len(existing_problem_ids)} existing AI rephrases (will skip)\n")
     
-    # Build query
+    # Build query - fetch ALL problems matching criteria
+    # We'll apply limit AFTER filtering out existing ones
     query = supabase.table('problems').select('*')
     
     if only_reviewed:
@@ -242,28 +250,43 @@ def process_problems(
     
     query = query.order('id')
     
-    # Don't apply limit in the query if we're skipping existing
-    # We'll filter and limit after
+    # Execute query to get ALL matching problems
+    print("Loading all problems from database...")
+    all_matching_problems = []
+    from_index = 0
+    chunk_size = 1000
     
-    # Execute query
-    result = query.execute()
-    problems = result.data
+    while True:
+        result = query.range(from_index, from_index + chunk_size - 1).execute()
+        if not result.data:
+            break
+        all_matching_problems.extend(result.data)
+        from_index += chunk_size
+        print(f"  Loaded {len(all_matching_problems)} problems so far...")
+        if len(result.data) < chunk_size:
+            break
     
-    if not problems:
+    print(f"Total problems loaded: {len(all_matching_problems)}\n")
+    
+    if not all_matching_problems:
         print("No problems found matching criteria.")
         return
     
-    # Filter out existing if needed
+    # Filter out existing problems FIRST
     if skip_existing:
-        problems = [p for p in problems if p['id'] not in existing_problem_ids]
+        problems_before_filter = len(all_matching_problems)
+        all_matching_problems = [p for p in all_matching_problems if p['id'] not in existing_problem_ids]
+        print(f"After filtering existing: {len(all_matching_problems)} problems remaining\n")
     
-    # Apply limit AFTER filtering for existing
-    if limit:
-        problems = problems[:limit]
-    elif test_mode:
-        problems = problems[:10]
+    # NOW apply limit AFTER filtering
+    if test_mode:
+        problems = all_matching_problems[:10]
+    elif limit:
+        problems = all_matching_problems[:limit]
+    else:
+        problems = all_matching_problems
     
-    print(f"Found {len(problems)} problems to rephrase\n")
+    print(f"Will process {len(problems)} problems\n")
     
     if len(problems) == 0:
         print("All problems already have AI rephrases!")
@@ -386,7 +409,7 @@ def main():
     parser.add_argument('--reprocess', action='store_true',
                        help='Reprocess problems even if they have AI rephrases')
     parser.add_argument('--limit', type=int, metavar='N',
-                       help='Process only N problems (starts from first unrephrased)')
+                       help='Process N unrephrased problems (limit applied AFTER filtering existing)')
     
     args = parser.parse_args()
     
