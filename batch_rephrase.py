@@ -79,6 +79,12 @@ CRITICAL RULES:
 5. Keep problem statement completely unchanged - only modify the final question
 6. Change "Find" → "Compute", "What is" → "Compute", "Evaluate" → "Compute" for consistency
 
+**AIME ANSWER VALIDATION:**
+You will be provided with the "AIME Answer" - this is the final numeric answer (0-999) that the problem should produce.
+- If AIME Answer > 999, you MUST add "Compute the remainder when [expression] is divided by $1000$"
+- If AIME Answer is provided and is ≤ 999, your template should produce that exact value
+- Use the AIME Answer to verify your template will work correctly
+
 OUTPUT FORMAT - CRITICAL:
 You must output ONLY the final rephrased problem statement. Do NOT include:
 - Your reasoning or thought process
@@ -123,7 +129,7 @@ def analyze_answer_format(answer_str):
     else:
         return "complex_expression"
 
-def rephrase_problem(original_text, answer, source=None, difficulty=None):
+def rephrase_problem(original_text, answer, aime_answer=None, source=None, difficulty=None):
     """
     Rephrase a single problem using Claude Sonnet 4.5
     """
@@ -136,8 +142,18 @@ def rephrase_problem(original_text, answer, source=None, difficulty=None):
             context_parts.append(f"Difficulty: {difficulty}")
         if answer:
             context_parts.append(f"Answer: {answer}")
+        if aime_answer is not None:
+            context_parts.append(f"AIME Answer (0-999): {aime_answer}")
         
         context = " | ".join(context_parts) if context_parts else "No context provided"
+        
+        # Build prompt with AIME answer guidance
+        aime_guidance = ""
+        if aime_answer is not None:
+            if aime_answer > 999:
+                aime_guidance = f"\n\nIMPORTANT: The AIME Answer is {aime_answer}, which is > 999. You MUST add 'Compute the remainder when [expression] is divided by $1000$' to ensure the final answer is 0-999."
+            else:
+                aime_guidance = f"\n\nNote: The AIME Answer is {aime_answer}. Verify your template will produce this value."
         
         user_prompt = f"""Context: {context}
 
@@ -148,7 +164,7 @@ Task: Rephrase this problem into AIME format. Apply the appropriate answer forma
 - Keep the problem statement IDENTICAL
 - Only change the final question
 - Ensure the final answer will be an integer from 0-999
-- If template sum exceeds 999, add mod 1000"""
+- If template sum exceeds 999, add mod 1000{aime_guidance}"""
 
         message = anthropic_client.messages.create(
             model="claude-sonnet-4-5-20250929",
@@ -228,11 +244,28 @@ def process_problems(
         print(f"Limit: {limit} problems (applied after filtering)")
     print("="*70 + "\n")
     
-    # Get existing AI rephrases if skip_existing is True
+    # Get existing AI rephrases if skip_existing is True (WITH PAGINATION)
     existing_problem_ids = set()
     if skip_existing:
-        existing_result = supabase.table('ai_rephrased').select('problem_id').execute()
-        existing_problem_ids = {row['problem_id'] for row in existing_result.data}
+        print("Loading existing AI rephrases...")
+        ai_from = 0
+        ai_chunk = 1000
+        
+        while True:
+            existing_result = supabase.table('ai_rephrased').select('problem_id').range(ai_from, ai_from + ai_chunk - 1).execute()
+            
+            if not existing_result.data:
+                break
+                
+            for row in existing_result.data:
+                existing_problem_ids.add(row['problem_id'])
+            
+            ai_from += ai_chunk
+            print(f"  Loaded {len(existing_problem_ids)} existing AI rephrases so far...")
+            
+            if len(existing_result.data) < ai_chunk:
+                break
+        
         print(f"Found {len(existing_problem_ids)} existing AI rephrases (will skip)\n")
     
     # Build query - fetch ALL problems matching criteria
@@ -317,13 +350,18 @@ def process_problems(
         
         # Analyze answer format (for logging)
         answer_format = analyze_answer_format(problem.get('answer'))
+        aime_answer = problem.get('aime_answer')
+        
         print(f"{progress}    Answer format: {answer_format}")
+        if aime_answer is not None:
+            print(f"{progress}    AIME answer: {aime_answer}")
         
         try:
             # Rephrase the problem
             rephrased = rephrase_problem(
                 original_text=problem['text'],
                 answer=problem.get('answer'),
+                aime_answer=aime_answer,
                 source=problem.get('source'),
                 difficulty=problem.get('difficulty')
             )
