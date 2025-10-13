@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- 
+    AI Review Version - Updated for AI-rephrased problem review
+    Version: 2025-01-AI-Review
+  -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Review Admin - Mock AIME</title>
+  <script>
+    // Simple password check - prevents accidents only
+    const adminPassword = prompt("Enter admin password:");
+    if (adminPassword !== "mockaime2025") {
+      window.location.href = "index.html";
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.4/dist/umd/supabase.min.js"></script>
+  
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1400px;
+      margin: auto;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      color: #004488;
+    }
+    .nav-links {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .nav-links a {
+      display: inline-block;
+      padding: 10px 20px;
+      margin: 0 5px;
+      background: #004488;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    .nav-links a:hover {
+      background: #003366;
+    }
+    .classic-admin-link {
+      background: #6c757d !important;
+    }
+    .classic-admin-link:hover {
+      background: #5a6268 !important;
+    }
+    .controls {
+      margin: 20px 0;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+    }
+    .problem-card {
+      background: white;
+      padding: 20px;
+      margin: 15px 0;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.05);
+      border-left: 4px solid white;
+    }
+    
+    /* Quality-based sidebar colors - only when manually reviewed */
+    .problem-card.reviewed.quality-0 {
+      border-left-color: #6c757d;
+    }
+    .problem-card.reviewed.quality-1 {
+      border-left-color: #dc3545;
+    }
+    .problem-card.reviewed.quality-2 {
+      border-left-color: #fd7e14;
+    }
+    .problem-card.reviewed.quality-3 {
+      border-left-color: #ffc107;
+    }
+    .problem-card.reviewed.quality-4 {
+      border-left-color: #28a745;
+    }
+    .problem-card.reviewed.quality-5 {
+      border-left-color: #0066cc;
+    }
+    
+    .problem-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .problem-id {
+      font-weight: bold;
+      color: #666;
+    }
+    
+    .fields-row {
+      display: flex;
+      gap: 15px;
+      margin: 15px 0;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .field-group label {
+      font-weight: bold;
+      font-size: 13px;
+    }
+    
+    .field-group input {
+      margin: 0;
+    }
+    
+    .rendered-problem {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      border: 1px solid #dee2e6;
+      margin: 10px 0;
+      line-height: 1.6;
+      min-height: 60px;
+    }
+    
+    .original-section {
+      background: #fff9e6;
+      padding: 15px;
+      border-radius: 4px;
+      border: 2px solid #ffc107;
+      margin: 10px 0;
+    }
+    
+    .ai-section {
+      background: #e7f3ff;
+      padding: 15px;
+      border-radius: 4px;
+      border: 2px solid #0066cc;
+      margin: 10px 0;
+    }
+    
+    .section-label {
+      font-weight: bold;
+      color: #0066cc;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    
+    .original-section .section-label {
+      color: #856404;
+    }
+    
+    .toggle-raw-btn {
+      background: #6c757d;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+    
+    .toggle-raw-btn:hover {
+      background: #5a6268;
+    }
+    
+    .raw-textarea {
+      display: none;
+      width: 100%;
+      min-height: 100px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      margin: 10px 0;
+      background: white;
+    }
+    
+    .raw-textarea.show {
+      display: block;
+    }
+    
+    .accept-reject-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .accept-btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    
+    .accept-btn:hover {
+      background: #218838;
+      transform: translateY(-1px);
+    }
+    
+    .reject-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    
+    .reject-btn:hover {
+      background: #c82333;
+      transform: translateY(-1px);
+    }
+    
+    .edit-section {
+      display: none;
+      margin-top: 15px;
+      padding: 15px;
+      background: #fff3cd;
+      border: 2px solid #ffc107;
+      border-radius: 6px;
+    }
+    
+    .edit-section.show {
+      display: block;
+    }
+    
+    .edit-textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 10px;
+      border: 2px solid #ffc107;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      margin: 10px 0;
+    }
+    
+    .save-edit-btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .save-edit-btn:hover {
+      background: #0056b3;
+    }
+    
+    textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 14px;
+      margin: 10px 0;
+    }
+    
+    input[type="text"] {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      width: 200px;
+    }
+    
+    .field-label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+    
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+    }
+    
+    .checkbox-label input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+    
+    .quality-rating {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .quality-label {
+      font-weight: bold;
+      font-size: 16px;
+    }
+    
+    .stars {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .star {
+      font-size: 28px;
+      cursor: pointer;
+      color: #ddd;
+      transition: color 0.2s;
+      user-select: none;
+    }
+    
+    .star.filled {
+      color: #ffc107;
+    }
+    
+    .star.hover {
+      color: #ffc107;
+      opacity: 0.7;
+    }
+    
+    button {
+      padding: 8px 16px;
+      background: #004488;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 5px;
+    }
+    
+    button:hover {
+      background: #003366;
+    }
+    
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .save-status {
+      display: inline-block;
+      margin-left: 10px;
+      font-size: 14px;
+      color: #28a745;
+    }
+    
+    .link {
+      color: #004488;
+      text-decoration: none;
+    }
+    
+    .link:hover {
+      text-decoration: underline;
+    }
+    
+    .filter-controls {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .stats {
+      margin: 20px 0;
+      padding: 15px;
+      background: #e3f2fd;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin: 20px 0;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+    }
+    
+    .pagination button {
+      padding: 8px 16px;
+    }
+    
+    .pagination span {
+      font-size: 16px;
+      font-weight: bold;
+    }
+    
+    .no-ai-rephrase {
+      background: #f8d7da;
+      padding: 10px;
+      border-radius: 4px;
+      color: #721c24;
+      font-style: italic;
+      margin: 10px 0;
+    }
+  </style>
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      options: {
+        ignoreHtmlClass: 'no-mathjax',
+        processHtmlClass: 'mathjax-render'
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <h1>AI Rephrase Review Panel</h1>
+
+  <div class="nav-links">
+    <a href="index.html">Mock AIME</a>
+    <a href="search.html">Problem Search</a>
+    <a href="admin.html" class="classic-admin-link">⚙️ Classic Admin</a>
+    <a href="login.html" class="auth-button">Login</a>
+  </div>
+  
+  <div class="stats" id="stats">Loading...</div>
+
+  <div class="controls">
+    <div class="filter-controls">
+      <label>
+        <input type="checkbox" id="showUnfinalizedOnly" checked />
+        Show only unfinalized problems
+      </label>
+      <label>
+        <input type="checkbox" id="showWithAIOnly" checked />
+        Show only problems with AI rephrases
+      </label>
+      <button onclick="loadProblems()">Refresh</button>
+    </div>
+  </div>
+
+  <div class="pagination">
+    <button onclick="goToPage(1)">First</button>
+    <button onclick="goToPage(currentPage - 1)" id="prevBtn">Previous</button>
+    <span id="pageInfo">Page 1 of 1</span>
+    <button onclick="goToPage(currentPage + 1)" id="nextBtn">Next</button>
+    <button onclick="goToPage(totalPages)" id="lastBtn">Last</button>
+  </div>
+
+  <div id="problems"></div>
+
+  <div class="pagination">
+    <button onclick="goToPage(1)">First</button>
+    <button onclick="goToPage(currentPage - 1)">Previous</button>
+    <span id="pageInfo2">Page 1 of 1</span>
+    <button onclick="goToPage(currentPage + 1)">Next</button>
+    <button onclick="goToPage(totalPages)">Last</button>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://ftdbplxkyaocyrjpmjyb.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0ZGJwbHhreWFvY3lyanBtanliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMDgxMDUsImV4cCI6MjA2NzY4NDEwNX0.hE0V09JxdLYNbZqPVH3HZxNpLPP2rXIaBsNGUHO3upc';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let allProblems = [];
+    let aiRephrases = {};
+    let currentPage = 1;
+    let totalPages = 1;
+    const problemsPerPage = 50;
+    let currentUser = null;
+
+    async function updateAuthUI() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      currentUser = session?.user || null;
+      
+      const authButton = document.querySelector('.auth-button');
+      
+      if (currentUser) {
+        if (authButton) {
+          authButton.textContent = 'Profile';
+          authButton.href = 'profile.html';
+        }
+      } else {
+        if (authButton) {
+          authButton.textContent = 'Login';
+          authButton.href = 'login.html';
+        }
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return text;
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function setMathContent(element, content) {
+      if (!content) {
+        element.innerHTML = '<em>No content</em>';
+        return;
+      }
+      element.textContent = content;
+      if (window.MathJax) {
+        MathJax.typesetPromise([element]).catch(err => console.error('MathJax error:', err));
+      }
+    }
+
+    async function loadProblems() {
+      document.getElementById('problems').innerHTML = '<p>Loading problems...</p>';
+      
+      const { data: aiData, error: aiError } = await supabaseClient
+        .from('ai_rephrased')
+        .select('*');
+      
+      if (aiError) {
+        console.error('Error loading AI rephrases:', aiError);
+      } else {
+        aiRephrases = {};
+        aiData.forEach(item => {
+          aiRephrases[item.problem_id] = item.ai_rephrased_text;
+        });
+      }
+      
+      let allData = [];
+      let from = 0;
+      const chunkSize = 1000;
+      let hasMore = true;
+      
+      while (hasMore) {
+        const { data, error } = await supabaseClient
+          .from('problems')
+          .select('*')
+          .order('id', { ascending: true })
+          .range(from, from + chunkSize - 1);
+        
+        if (error) {
+          console.error('Error loading problems:', error);
+          alert('Failed to load problems');
+          return;
+        }
+        
+        if (data.length === 0) {
+          hasMore = false;
+        } else {
+          allData.push(...data);
+          from += chunkSize;
+          document.getElementById('problems').innerHTML = `<p>Loading problems... (${allData.length} loaded)</p>`;
+        }
+      }
+      
+      const showUnfinalized = document.getElementById('showUnfinalizedOnly').checked;
+      const showWithAI = document.getElementById('showWithAIOnly').checked;
+      
+      allProblems = allData.filter(p => {
+        if (showUnfinalized && p.finalized) return false;
+        if (showWithAI && !aiRephrases[p.id]) return false;
+        return true;
+      });
+      
+      currentPage = 1;
+      updateStats();
+      renderProblems();
+    }
+
+    function updateStats() {
+      const total = allProblems.length;
+      const withAI = allProblems.filter(p => aiRephrases[p.id]).length;
+      const finalized = allProblems.filter(p => p.finalized).length;
+      
+      document.getElementById('stats').innerHTML = `
+        <strong>Total problems shown:</strong> ${total} | 
+        <strong>With AI rephrases:</strong> ${withAI} | 
+        <strong>Finalized:</strong> ${finalized} | 
+        <strong>Remaining to review:</strong> ${total - finalized}
+      `;
+    }
+
+    function goToPage(page) {
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      renderProblems();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updatePaginationControls() {
+      const pageInfo = `Page ${currentPage} of ${totalPages}`;
+      document.getElementById('pageInfo').textContent = pageInfo;
+      document.getElementById('pageInfo2').textContent = pageInfo;
+      
+      document.getElementById('prevBtn').disabled = currentPage === 1;
+      document.querySelectorAll('button').forEach(btn => {
+        if (btn.textContent === 'Previous' || btn.textContent === 'First') {
+          btn.disabled = currentPage === 1;
+        }
+        if (btn.textContent === 'Next' || btn.textContent === 'Last') {
+          btn.disabled = currentPage === totalPages;
+        }
+      });
+    }
+
+    function toggleRawText(problemId, type) {
+      const textarea = document.getElementById(`raw-${type}-${problemId}`);
+      const btn = document.getElementById(`toggle-${type}-btn-${problemId}`);
+      
+      if (textarea.classList.contains('show')) {
+        textarea.classList.remove('show');
+        btn.textContent = 'Show Raw Text';
+      } else {
+        textarea.classList.add('show');
+        btn.textContent = 'Hide Raw Text';
+      }
+    }
+
+    async function acceptAIRephrase(problemId) {
+      const aiText = aiRephrases[problemId];
+      if (!aiText) {
+        alert('No AI rephrase available');
+        return;
+      }
+      
+      const statusEl = document.getElementById(`status-${problemId}`);
+      statusEl.textContent = 'Accepting...';
+      statusEl.style.color = '#666';
+      
+      const { data, error } = await supabaseClient
+        .from('problems')
+        .update({ 
+          rewritten_problem: aiText,
+          finalized: true
+        })
+        .eq('id', problemId)
+        .select();
+      
+      if (error) {
+        console.error('Error accepting AI rephrase:', error);
+        statusEl.textContent = `Error: ${error.message}`;
+        statusEl.style.color = '#dc3545';
+      } else {
+        statusEl.textContent = '✓ Accepted & Finalized!';
+        statusEl.style.color = '#28a745';
+        
+        const problem = allProblems.find(p => p.id === problemId);
+        if (problem) {
+          problem.rewritten_problem = aiText;
+          problem.finalized = true;
+        }
+        
+        const checkbox = document.querySelector(`#problem-${problemId} input[type="checkbox"]`);
+        if (checkbox) {
+          checkbox.checked = true;
+        }
+        
+        setTimeout(() => {
+          const currentIndex = allProblems.findIndex(p => p.id === problemId);
+          const startIdx = (currentPage - 1) * problemsPerPage;
+          const relativeIndex = currentIndex - startIdx;
+          
+          if (relativeIndex < problemsPerPage - 1) {
+            const nextProblem = allProblems[currentIndex + 1];
+            const nextElement = document.getElementById(`problem-${nextProblem.id}`);
+            if (nextElement) {
+              window.scrollTo({ 
+                top: nextElement.offsetTop - 100,
+                behavior: 'smooth' 
+              });
+            }
+          } else if (currentPage < totalPages) {
+            goToPage(currentPage + 1);
+          }
+        }, 500);
+      }
+    }
+
+    function rejectAndEdit(problemId) {
+      const problem = allProblems.find(p => p.id === problemId);
+      if (!problem) return;
+      
+      const editSection = document.getElementById(`edit-section-${problemId}`);
+      const editTextarea = document.getElementById(`edit-textarea-${problemId}`);
+      
+      editSection.classList.add('show');
+      editTextarea.value = problem.text;
+      
+      const buttonsDiv = document.getElementById(`accept-reject-${problemId}`);
+      buttonsDiv.style.display = 'none';
+    }
+
+    async function saveManualEdit(problemId) {
+      const editTextarea = document.getElementById(`edit-textarea-${problemId}`);
+      const text = editTextarea.value;
+      const statusEl = document.getElementById(`status-${problemId}`);
+      
+      statusEl.textContent = 'Saving...';
+      statusEl.style.color = '#666';
+      
+      const { data, error } = await supabaseClient
+        .from('problems')
+        .update({ rewritten_problem: text })
+        .eq('id', problemId)
+        .select();
+      
+      if (error) {
+        console.error('Error saving manual edit:', error);
+        statusEl.textContent = `Error: ${error.message}`;
+        statusEl.style.color = '#dc3545';
+      } else {
+        statusEl.textContent = '✓ Saved!';
+        statusEl.style.color = '#28a745';
+        
+        const problem = allProblems.find(p => p.id === problemId);
+        if (problem) {
+          problem.rewritten_problem = text;
+        }
+        
+        const editSection = document.getElementById(`edit-section-${problemId}`);
+        editSection.classList.remove('show');
+        
+        const buttonsDiv = document.getElementById(`accept-reject-${problemId}`);
+        buttonsDiv.style.display = 'flex';
+        
+        setTimeout(() => {
+          const currentIndex = allProblems.findIndex(p => p.id === problemId);
+          if (currentIndex < allProblems.length - 1) {
+            const nextProblem = allProblems[currentIndex + 1];
+            const nextElement = document.getElementById(`problem-${nextProblem.id}`);
+            if (nextElement) {
+              window.scrollTo({ 
+                top: nextElement.offsetTop - 100,
+                behavior: 'smooth' 
+              });
+            } else {
+              goToPage(currentPage + 1);
+            }
+          }
+        }, 500);
+      }
+    }
+
+    function renderProblems() {
+      const container = document.getElementById('problems');
+      
+      if (allProblems.length === 0) {
+        container.innerHTML = '<p>No problems found matching filters.</p>';
+        return;
+      }
+      
+      totalPages = Math.ceil(allProblems.length / problemsPerPage);
+      const startIdx = (currentPage - 1) * problemsPerPage;
+      const endIdx = Math.min(startIdx + problemsPerPage, allProblems.length);
+      const pageProblems = allProblems.slice(startIdx, endIdx);
+      
+      updatePaginationControls();
+      
+      container.innerHTML = '';
+      
+      pageProblems.forEach((p) => {
+        const qualityClass = `quality-${p.quality || 0}`;
+        const reviewedClass = p.manually_reviewed ? 'reviewed' : '';
+        const aiText = aiRephrases[p.id];
+        
+        const problemCard = document.createElement('div');
+        problemCard.className = `problem-card ${qualityClass} ${reviewedClass}`;
+        problemCard.id = `problem-${p.id}`;
+        
+        problemCard.innerHTML = `
+          <div class="problem-header">
+            <div class="header-left">
+              <span class="problem-id">Problem ID: ${p.id}</span>
+            </div>
+            <div class="header-right">
+              <label class="checkbox-label">
+                <input type="checkbox" 
+                       ${p.finalized ? 'checked' : ''} 
+                       onchange="updateFinalizedStatus(${p.id}, this.checked)">
+                Finalized
+              </label>
+            </div>
+          </div>
+          
+          <div class="original-section">
+            <div class="section-label">Original Problem Statement:</div>
+            <div class="rendered-problem mathjax-render" id="original-render-${p.id}"></div>
+            <button class="toggle-raw-btn" id="toggle-original-btn-${p.id}" onclick="toggleRawText(${p.id}, 'original')">Show Raw Text</button>
+            <textarea class="raw-textarea" id="raw-original-${p.id}" readonly></textarea>
+          </div>
+          
+          <div class="ai-section">
+            <div class="section-label">AI Rephrased Version:</div>
+            ${aiText ? `
+              <div class="rendered-problem mathjax-render" id="ai-render-${p.id}"></div>
+              <button class="toggle-raw-btn" id="toggle-ai-btn-${p.id}" onclick="toggleRawText(${p.id}, 'ai')">Show Raw Text</button>
+              <textarea class="raw-textarea" id="raw-ai-${p.id}" readonly></textarea>
+              
+              <div class="accept-reject-buttons" id="accept-reject-${p.id}">
+                <button class="accept-btn" onclick="acceptAIRephrase(${p.id})">✓ Accept</button>
+                <button class="reject-btn" onclick="rejectAndEdit(${p.id})">✗ Reject & Edit</button>
+              </div>
+              
+              <div class="edit-section" id="edit-section-${p.id}">
+                <div class="section-label">Edit Problem:</div>
+                <textarea class="edit-textarea" id="edit-textarea-${p.id}"></textarea>
+                <button class="save-edit-btn" onclick="saveManualEdit(${p.id})">Save Manual Edit</button>
+              </div>
+            ` : `
+              <div class="no-ai-rephrase">No AI rephrase available for this problem</div>
+            `}
+          </div>
+          
+          <div class="fields-row">
+            <div class="field-group">
+              <label>Answer:</label>
+              <input type="text" id="answer-${p.id}" value="" readonly style="width: 100px;" />
+            </div>
+            
+            <div class="field-group">
+              <label>Difficulty:</label>
+              <input type="text" id="difficulty-${p.id}" value="" readonly style="width: 80px;" />
+            </div>
+            
+            <div class="field-group">
+              <label>Source:</label>
+              <input type="text" id="source-${p.id}" value="" readonly style="width: 250px;" />
+            </div>
+          </div>
+          
+          <div style="margin-top: 10px;">
+            <span class="save-status" id="status-${p.id}"></span>
+          </div>
+        `;
+        
+        container.appendChild(problemCard);
+        
+        const originalRender = document.getElementById(`original-render-${p.id}`);
+        const originalTextarea = document.getElementById(`raw-original-${p.id}`);
+        
+        setMathContent(originalRender, p.text || '');
+        originalTextarea.value = p.text || '';
+        
+        if (aiText) {
+          const aiRender = document.getElementById(`ai-render-${p.id}`);
+          const aiTextarea = document.getElementById(`raw-ai-${p.id}`);
+          
+          setMathContent(aiRender, aiText);
+          aiTextarea.value = aiText;
+        }
+        
+        document.getElementById(`answer-${p.id}`).value = p.answer || '';
+        document.getElementById(`difficulty-${p.id}`).value = p.difficulty || '';
+        document.getElementById(`source-${p.id}`).value = p.source || '';
+      });
+      
+      if (window.MathJax) {
+        MathJax.typesetPromise().catch(err => console.error('MathJax error:', err));
+      }
+    }
+
+    async function updateFinalizedStatus(problemId, isFinalized) {
+      const { error } = await supabaseClient
+        .from('problems')
+        .update({ finalized: isFinalized })
+        .eq('id', problemId);
+      
+      if (error) {
+        console.error('Error updating finalized status:', error);
+        alert('Failed to update finalized status');
+      } else {
+        const problem = allProblems.find(p => p.id === problemId);
+        if (problem) problem.finalized = isFinalized;
+        updateStats();
+      }
+    }
+
+    window.onload = async () => {
+      await updateAuthUI();
+      loadProblems();
+    };
+    
+    document.getElementById('showUnfinalizedOnly').addEventListener('change', loadProblems);
+    document.getElementById('showWithAIOnly').addEventListener('change', loadProblems);
+    
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'TEXTAREA') return;
+      
+      if (e.key === 'n' || e.key === 'N') {
+        if (currentPage < totalPages) {
+          goToPage(currentPage + 1);
+        }
+      }
+      
+      if (e.key === 'p' || e.key === 'P') {
+        if (currentPage > 1) {
+          goToPage(currentPage - 1);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
