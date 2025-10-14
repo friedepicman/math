@@ -1386,6 +1386,7 @@
       }
     };
   </script>
+  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/core-js/3.32.1/minified.js"></script>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
@@ -1563,7 +1564,12 @@
         <!-- Answer Section -->
         <div id="answerSection" class="report-section">
           <div class="section-divider">Correct Answer</div>
-          <label class="modal-label">Current Answer: <strong id="currentAnswer">-</strong></label>
+          <label class="modal-label">
+            Current Answer: <strong id="currentAnswer">-</strong>
+            <button type="button" class="toggle-raw-btn" style="margin-left: 10px;" onclick="toggleCurrentAnswer()">Show Answer</button>
+          </label>
+          <div id="currentAnswerReveal" style="display: none; margin: 10px 0; padding: 10px; background: #e3f2fd; border-radius: 4px; font-weight: bold; font-size: 18px;"></div>
+          
           <label class="modal-label">Your Proposed Answer:</label>
           <input type="text" id="proposedAnswer" maxlength="3" placeholder="000" style="width: 100px; padding: 8px; border: 2px solid var(--border-strong); border-radius: 6px; text-align: center; font-size: 18px; font-weight: bold;">
           <label class="modal-label" style="margin-top: 15px;">Additional Details (Optional):</label>
@@ -1573,6 +1579,13 @@
         <!-- Problem Statement Section -->
         <div id="problemSection" class="report-section">
           <div class="section-divider">Problem Statement</div>
+          
+          <label class="modal-label">
+            Current Answer for Reference: 
+            <button type="button" class="toggle-raw-btn" style="margin-left: 10px;" onclick="toggleProblemCurrentAnswer()">Show Answer</button>
+          </label>
+          <div id="problemCurrentAnswerReveal" style="display: none; margin: 10px 0; padding: 10px; background: #e3f2fd; border-radius: 4px; font-weight: bold; font-size: 18px;"></div>
+          
           <label class="modal-label">Edit Problem Statement (LaTeX):</label>
           <textarea id="problemText" class="modal-textarea" style="min-height: 150px; font-family: 'Courier New', monospace;" oninput="updateProblemPreview()"></textarea>
           
@@ -1874,7 +1887,15 @@
           document.getElementById('currentSource').textContent = currentReportProblemData.source || 'Unknown';
           document.getElementById('problemText').value = currentReportProblemData.rewritten_problem || currentReportProblemData.text || '';
         }
-        
+        // Reset answer reveal sections
+        document.getElementById('currentAnswerReveal').style.display = 'none';
+        document.getElementById('problemCurrentAnswerReveal').style.display = 'none';
+        const showAnswerBtns = document.querySelectorAll('.toggle-raw-btn');
+        showAnswerBtns.forEach(btn => {
+          if (btn.textContent.includes('Answer')) {
+            btn.textContent = 'Show Answer';
+          }
+        });
         document.getElementById('reportModal').style.display = 'block';
       }
 
@@ -1887,6 +1908,45 @@
         const modal = document.getElementById('reportModal');
         if (event.target === modal) {
           closeReportModal();
+        }
+      }
+      function toggleCurrentAnswer() {
+        const revealDiv = document.getElementById('currentAnswerReveal');
+        const btn = event.target;
+        
+        if (revealDiv.style.display === 'none') {
+          // Show the answer
+          if (currentReportProblemData) {
+            const answer = currentReportProblemData.aime_answer 
+              ? String(currentReportProblemData.aime_answer % 1000) 
+              : String(currentReportProblemData.answer || 'Not available');
+            revealDiv.textContent = `Answer: ${answer}`;
+          }
+          revealDiv.style.display = 'block';
+          btn.textContent = 'Hide Answer';
+        } else {
+          revealDiv.style.display = 'none';
+          btn.textContent = 'Show Answer';
+        }
+      }
+
+      function toggleProblemCurrentAnswer() {
+        const revealDiv = document.getElementById('problemCurrentAnswerReveal');
+        const btn = event.target;
+        
+        if (revealDiv.style.display === 'none') {
+          // Show the answer
+          if (currentReportProblemData) {
+            const answer = currentReportProblemData.aime_answer 
+              ? String(currentReportProblemData.aime_answer % 1000) 
+              : String(currentReportProblemData.answer || 'Not available');
+            revealDiv.textContent = `Answer: ${answer}`;
+          }
+          revealDiv.style.display = 'block';
+          btn.textContent = 'Hide Answer';
+        } else {
+          revealDiv.style.display = 'none';
+          btn.textContent = 'Show Answer';
         }
       }
 
