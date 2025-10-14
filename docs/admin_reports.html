@@ -837,7 +837,7 @@
             <div class="change-header">
               <div class="change-title">⭐ Quality Rating: ${details.quality_rating}/5</div>
               <div class="change-actions">
-                <button class="btn-accept" onclick="acceptQuality(${problem.id}, ${details.quality_rating})">✓ Accept</button>
+                <button class="btn-accept" onclick="acceptQuality(event, ${problem.id}, ${details.quality_rating})">✓ Accept</button>
                 <button class="btn-reject" onclick="rejectChange(event)">✗ Reject</button>
               </div>
             </div>
@@ -857,7 +857,7 @@
             <div class="change-header">
               <div class="change-title">📊 Difficulty Rating: ${details.difficulty_rating}</div>
               <div class="change-actions">
-                <button class="btn-accept" onclick="acceptDifficulty(${problem.id}, ${details.difficulty_rating})">✓ Accept</button>
+                <button class="btn-accept" onclick="acceptDifficulty(event, ${problem.id}, ${details.difficulty_rating})">✓ Accept</button>
                 <button class="btn-reject" onclick="rejectChange(event)">✗ Reject</button>
               </div>
             </div>
@@ -877,7 +877,7 @@
             <div class="change-header">
               <div class="change-title">✏️ Correct Answer: ${escapeHtml(details.proposed_answer)}</div>
               <div class="change-actions">
-                <button class="btn-accept" onclick="acceptAnswer(${problem.id}, '${escapeHtml(details.proposed_answer)}')">✓ Accept</button>
+                <button class="btn-accept" onclick="acceptAnswer(event, ${problem.id}, '${escapeHtml(details.proposed_answer)}')">✓ Accept</button>
                 <button class="btn-reject" onclick="rejectChange(event)">✗ Reject</button>
               </div>
             </div>
@@ -898,7 +898,7 @@
             <div class="change-header">
               <div class="change-title">📝 Problem Statement Changes</div>
               <div class="change-actions">
-                <button class="btn-accept" onclick="acceptProblemStatement(${problem.id}, ${report.id})">✓ Accept</button>
+                <button class="btn-accept" onclick="acceptProblemStatement(event, ${problem.id}, ${report.id})">✓ Accept</button>
                 <button class="btn-reject" onclick="rejectChange(event)">✗ Reject</button>
               </div>
             </div>
@@ -918,7 +918,7 @@
             <div class="change-header">
               <div class="change-title">📚 Source: ${escapeHtml(details.proposed_source)}</div>
               <div class="change-actions">
-                <button class="btn-accept" onclick="acceptSource(${problem.id}, '${escapeHtml(details.proposed_source)}')">✓ Accept</button>
+                <button class="btn-accept" onclick="acceptSource(event, ${problem.id}, '${escapeHtml(details.proposed_source)}')">✓ Accept</button>
                 <button class="btn-reject" onclick="rejectChange(event)">✗ Reject</button>
               </div>
             </div>
@@ -954,7 +954,7 @@
       if (rewrittenRender) setMathContent(rewrittenRender, problem.rewritten_problem || '');
       if (originalTextarea) originalTextarea.value = problem.text || '';
       if (rewrittenTextarea) rewrittenTextarea.value = problem.rewritten_problem || '';
-    }, 100);
+    }, 300);
 
     function renderStars(problemId, currentQuality) {
       const quality = currentQuality || 0;
@@ -1191,21 +1191,21 @@
       }
     }
 
-    // Accept change functions - remove alerts and hide cards
-    async function acceptQuality(problemId, quality) {
+    // Accept change functions - pass event and hide cards
+    async function acceptQuality(event, problemId, quality) {
         await setQuality(problemId, quality);
         // Hide the change card
         event.target.closest('.change-card').style.display = 'none';
     }
 
-    async function acceptDifficulty(problemId, difficulty) {
+    async function acceptDifficulty(event, problemId, difficulty) {
         document.getElementById(`difficulty-${problemId}`).value = difficulty;
         await saveProblem(problemId);
         // Hide the change card
         event.target.closest('.change-card').style.display = 'none';
     }
 
-    async function acceptAnswer(problemId, answer) {
+    async function acceptAnswer(event, problemId, answer) {
         document.getElementById(`answer-${problemId}`).value = answer;
         // Also update AIME answer
         const answerNum = parseInt(answer);
@@ -1217,7 +1217,7 @@
         event.target.closest('.change-card').style.display = 'none';
     }
 
-    async function acceptProblemStatement(problemId, reportId) {
+    async function acceptProblemStatement(event, problemId, reportId) {
         const report = allReports.find(r => r.id === reportId);
         const details = JSON.parse(report.details || '{}');
         
@@ -1239,7 +1239,7 @@
         event.target.closest('.change-card').style.display = 'none';
     }
 
-    async function acceptSource(problemId, source) {
+    async function acceptSource(event, problemId, source) {
         document.getElementById(`source-${problemId}`).value = source;
         await saveProblem(problemId);
         // Hide the change card
