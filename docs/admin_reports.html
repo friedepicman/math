@@ -838,7 +838,7 @@
               <div class="change-title">⭐ Quality Rating: ${details.quality_rating}/5</div>
               <div class="change-actions">
                 <button class="btn-accept" onclick="acceptQuality(${problem.id}, ${details.quality_rating})">✓ Accept</button>
-                <button class="btn-reject">✗ Reject</button>
+                <button class="btn-reject" onclick="rejectChange(event)">✗ Reject</button>
               </div>
             </div>
             <div class="change-content">
@@ -858,7 +858,7 @@
               <div class="change-title">📊 Difficulty Rating: ${details.difficulty_rating}</div>
               <div class="change-actions">
                 <button class="btn-accept" onclick="acceptDifficulty(${problem.id}, ${details.difficulty_rating})">✓ Accept</button>
-                <button class="btn-reject">✗ Reject</button>
+                <button class="btn-reject" onclick="rejectChange(event)">✗ Reject</button>
               </div>
             </div>
             <div class="change-content">
@@ -878,7 +878,7 @@
               <div class="change-title">✏️ Correct Answer: ${escapeHtml(details.proposed_answer)}</div>
               <div class="change-actions">
                 <button class="btn-accept" onclick="acceptAnswer(${problem.id}, '${escapeHtml(details.proposed_answer)}')">✓ Accept</button>
-                <button class="btn-reject">✗ Reject</button>
+                <button class="btn-reject" onclick="rejectChange(event)">✗ Reject</button>
               </div>
             </div>
             <div class="change-content">
@@ -899,7 +899,7 @@
               <div class="change-title">📝 Problem Statement Changes</div>
               <div class="change-actions">
                 <button class="btn-accept" onclick="acceptProblemStatement(${problem.id}, ${report.id})">✓ Accept</button>
-                <button class="btn-reject">✗ Reject</button>
+                <button class="btn-reject" onclick="rejectChange(event)">✗ Reject</button>
               </div>
             </div>
             <div class="change-content">
@@ -919,7 +919,7 @@
               <div class="change-title">📚 Source: ${escapeHtml(details.proposed_source)}</div>
               <div class="change-actions">
                 <button class="btn-accept" onclick="acceptSource(${problem.id}, '${escapeHtml(details.proposed_source)}')">✓ Accept</button>
-                <button class="btn-reject">✗ Reject</button>
+                <button class="btn-reject" onclick="rejectChange(event)">✗ Reject</button>
               </div>
             </div>
             <div class="change-content">
@@ -1016,6 +1016,11 @@
           MathJax.typesetPromise([section]).catch(err => console.error('MathJax error:', err));
         }
       }
+    }
+
+    // Add this new function
+    function rejectChange(event) {
+    event.target.closest('.change-card').style.display = 'none';
     }
 
     function toggleRawText(problemId, type) {
@@ -1186,81 +1191,83 @@
       }
     }
 
-    // Accept change functions
+    // Accept change functions - remove alerts and hide cards
     async function acceptQuality(problemId, quality) {
-      await setQuality(problemId, quality);
-      alert('Quality rating accepted and saved!');
+        await setQuality(problemId, quality);
+        // Hide the change card
+        event.target.closest('.change-card').style.display = 'none';
     }
 
     async function acceptDifficulty(problemId, difficulty) {
-      document.getElementById(`difficulty-${problemId}`).value = difficulty;
-      await saveProblem(problemId);
-      alert('Difficulty rating accepted and saved!');
+        document.getElementById(`difficulty-${problemId}`).value = difficulty;
+        await saveProblem(problemId);
+        // Hide the change card
+        event.target.closest('.change-card').style.display = 'none';
     }
 
     async function acceptAnswer(problemId, answer) {
-      document.getElementById(`answer-${problemId}`).value = answer;
-      // Also update AIME answer
-      const answerNum = parseInt(answer);
-      if (!isNaN(answerNum)) {
-        document.getElementById(`aime-answer-${problemId}`).value = answerNum;
-      }
-      await saveProblem(problemId);
-      alert('Answer accepted and saved!');
+        document.getElementById(`answer-${problemId}`).value = answer;
+        // Also update AIME answer
+        const answerNum = parseInt(answer);
+        if (!isNaN(answerNum)) {
+            document.getElementById(`aime-answer-${problemId}`).value = answerNum;
+        }
+        await saveProblem(problemId);
+        // Hide the change card
+        event.target.closest('.change-card').style.display = 'none';
     }
 
     async function acceptProblemStatement(problemId, reportId) {
-      const report = allReports.find(r => r.id === reportId);
-      const details = JSON.parse(report.details || '{}');
-      
-      if (details.proposed_problem) {
-        document.getElementById(`raw-rewritten-${problemId}`).value = details.proposed_problem;
-        await saveRewrittenProblem(problemId);
-      }
-      
-      if (details.proposed_problem_answer) {
-        document.getElementById(`answer-${problemId}`).value = details.proposed_problem_answer;
-        const answerNum = parseInt(details.proposed_problem_answer);
-        if (!isNaN(answerNum)) {
-          document.getElementById(`aime-answer-${problemId}`).value = answerNum;
+        const report = allReports.find(r => r.id === reportId);
+        const details = JSON.parse(report.details || '{}');
+        
+        if (details.proposed_problem) {
+            document.getElementById(`raw-rewritten-${problemId}`).value = details.proposed_problem;
+            await saveRewrittenProblem(problemId);
         }
-        await saveProblem(problemId);
-      }
-      
-      alert('Problem statement changes accepted and saved!');
+        
+        if (details.proposed_problem_answer) {
+            document.getElementById(`answer-${problemId}`).value = details.proposed_problem_answer;
+            const answerNum = parseInt(details.proposed_problem_answer);
+            if (!isNaN(answerNum)) {
+            document.getElementById(`aime-answer-${problemId}`).value = answerNum;
+            }
+            await saveProblem(problemId);
+        }
+        
+        // Hide the change card
+        event.target.closest('.change-card').style.display = 'none';
     }
 
     async function acceptSource(problemId, source) {
-      document.getElementById(`source-${problemId}`).value = source;
-      await saveProblem(problemId);
-      alert('Source accepted and saved!');
+        document.getElementById(`source-${problemId}`).value = source;
+        await saveProblem(problemId);
+        // Hide the change card
+        event.target.closest('.change-card').style.display = 'none';
     }
 
     async function markReportHandled(reportId) {
-      if (!confirm('Mark this report as handled? It will be removed from the pending list.')) {
-        return;
-      }
+        try {
+            const { error } = await supabaseClient
+            .from('problem_reports')
+            .update({ 
+                handled: true,
+                handled_at: new Date().toISOString()
+            })
+            .eq('id', reportId);
 
-      try {
-        const { error } = await supabaseClient
-          .from('problem_reports')
-          .update({ 
-            handled: true,
-            handled_at: new Date().toISOString()
-          })
-          .eq('id', reportId);
+            if (error) throw error;
 
-        if (error) throw error;
-
-        // Remove from local array and re-render
-        allReports = allReports.filter(r => r.id !== reportId);
-        expandedReportId = null;
-        updateStats();
-        renderReports();
-      } catch (err) {
-        console.error('Error marking report as handled:', err);
-        alert('Failed to mark report as handled.');
-      }
+            // Remove from local array and re-render (no alert)
+            allReports = allReports.filter(r => r.id !== reportId);
+            expandedReportId = null;
+            updateStats();
+            renderReports();
+        } catch (err) {
+            console.error('Error marking report as handled:', err);
+            // Keep alert only for errors
+            alert('Failed to mark report as handled.');
+        }
     }
   </script>
 </body>
