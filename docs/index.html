@@ -1714,8 +1714,8 @@
               {
                 problem_id: currentReportProblemId,
                 report_type: reportType,
-                details: details || null,
-                created_at: new Date().toISOString()
+                details: details || null
+                // created_at will be set automatically by the database
               }
             ]);
 
