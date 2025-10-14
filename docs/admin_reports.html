@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Problem Reports - Mock AIME Admin</title>
+  <script>
+    const adminPassword = prompt("Enter admin password:");
+    if (adminPassword !== "mockaime2025") {
+      window.location.href = "index.html";
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.4/dist/umd/supabase.min.js"></script>
+  
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1400px;
+      margin: auto;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    
+    h1 {
+      text-align: center;
+      color: #004488;
+    }
+    
+    .nav-links {
+      text-align: center;
+      margin: 20px 0;
+    }
+    
+    .nav-links a {
+      display: inline-block;
+      padding: 10px 20px;
+      margin: 0 5px;
+      background: #004488;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    
+    .nav-links a:hover {
+      background: #003366;
+    }
+
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      text-align: center;
+      border-left: 4px solid #004488;
+    }
+
+    .stat-card.pending {
+      border-left-color: #ffc107;
+    }
+
+    .stat-number {
+      font-size: 36px;
+      font-weight: 700;
+      color: #004488;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      color: #666;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .report-collapsed {
+      background: white;
+      padding: 20px;
+      margin: 15px 0;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.05);
+      border-left: 4px solid #ffc107;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .report-collapsed:hover {
+      box-shadow: 0 0 12px rgba(0,0,0,0.15);
+      transform: translateY(-2px);
+    }
+
+    .report-collapsed-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .report-collapsed-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .report-id-badge {
+      background: #004488;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .report-types-compact {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .type-badge {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .type-badge.quality { background: #e3f2fd; color: #1976d2; }
+    .type-badge.difficulty { background: #fff3e0; color: #f57c00; }
+    .type-badge.wrong_answer { background: #ffebee; color: #c62828; }
+    .type-badge.problem_statement { background: #f3e5f5; color: #7b1fa2; }
+    .type-badge.source { background: #e8f5e9; color: #388e3c; }
+
+    .report-date-small {
+      color: #999;
+      font-size: 13px;
+    }
+
+    .report-expanded {
+      background: white;
+      padding: 0;
+      margin: 15px 0;
+      border-radius: 8px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+      border-left: 4px solid #28a745;
+      overflow: hidden;
+    }
+
+    .report-expanded-header {
+      background: #f8f9fa;
+      padding: 20px;
+      border-bottom: 2px solid #dee2e6;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .close-report-btn {
+      background: #6c757d;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .close-report-btn:hover {
+      background: #5a6268;
+    }
+
+    .problem-editor-section {
+      padding: 20px;
+      border-bottom: 3px solid #004488;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #004488;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #dee2e6;
+    }
+
+    /* Copy all the problem card styles from admin.html */
+    .problem-card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+    }
+
+    .problem-card.reviewed.quality-0 { border-left-color: #6c757d; }
+    .problem-card.reviewed.quality-1 { border-left-color: #dc3545; }
+    .problem-card.reviewed.quality-2 { border-left-color: #fd7e14; }
+    .problem-card.reviewed.quality-3 { border-left-color: #ffc107; }
+    .problem-card.reviewed.quality-4 { border-left-color: #28a745; }
+    .problem-card.reviewed.quality-5 { border-left-color: #0066cc; }
+
+    .problem-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .problem-id {
+      font-weight: bold;
+      color: #666;
+    }
+
+    .fields-row {
+      display: flex;
+      gap: 15px;
+      margin: 15px 0;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .field-group label {
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .field-group input {
+      margin: 0;
+    }
+
+    .rendered-problem {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      border: 1px solid #dee2e6;
+      margin: 10px 0;
+      line-height: 1.6;
+    }
+
+    .rewritten-section {
+      background: #e7f3ff;
+      padding: 15px;
+      border-radius: 4px;
+      border: 2px solid #0066cc;
+      margin: 10px 0;
+    }
+
+    .original-section {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      border: 1px solid #dee2e6;
+      margin: 10px 0;
+      display: none;
+    }
+
+    .original-section.show {
+      display: block;
+    }
+
+    .section-label {
+      font-weight: bold;
+      color: #0066cc;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .toggle-raw-btn {
+      background: #6c757d;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .toggle-raw-btn:hover {
+      background: #5a6268;
+    }
+
+    .raw-textarea {
+      display: none;
+      width: 100%;
+      min-height: 100px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      margin: 10px 0;
+    }
+
+    .raw-textarea.show {
+      display: block;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 14px;
+      margin: 10px 0;
+    }
+
+    input[type="text"] {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      width: 200px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .quality-rating {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .quality-label {
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .stars {
+      display: flex;
+      gap: 5px;
+    }
+
+    .star {
+      font-size: 28px;
+      cursor: pointer;
+      color: #ddd;
+      transition: color 0.2s;
+      user-select: none;
+    }
+
+    .star.filled {
+      color: #ffc107;
+    }
+
+    .star.hover {
+      color: #ffc107;
+      opacity: 0.7;
+    }
+
+    button {
+      padding: 8px 16px;
+      background: #004488;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 5px;
+    }
+
+    button:hover {
+      background: #003366;
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .save-status {
+      display: inline-block;
+      margin-left: 10px;
+      font-size: 14px;
+      color: #28a745;
+    }
+
+    .link {
+      color: #004488;
+      text-decoration: none;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    .proposed-changes-section {
+      padding: 20px;
+      background: #fffbf0;
+    }
+
+    .change-card {
+      background: white;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 8px;
+      border-left: 4px solid #004488;
+      box-shadow: 0 0 4px rgba(0,0,0,0.1);
+    }
+
+    .change-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .change-title {
+      font-weight: bold;
+      font-size: 16px;
+      color: #004488;
+    }
+
+    .change-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-accept {
+      background: #28a745;
+    }
+
+    .btn-accept:hover {
+      background: #218838;
+    }
+
+    .btn-reject {
+      background: #dc3545;
+    }
+
+    .btn-reject:hover {
+      background: #c82333;
+    }
+
+    .change-content {
+      margin-top: 10px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 4px;
+    }
+
+    .change-detail {
+      margin: 8px 0;
+      font-size: 14px;
+    }
+
+    .change-detail strong {
+      color: #004488;
+    }
+
+    .mark-handled-section {
+      padding: 20px;
+      background: #f8f9fa;
+      border-top: 2px solid #dee2e6;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-mark-handled {
+      background: #28a745;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .btn-mark-handled:hover {
+      background: #218838;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #ddd;
+      border-top: 4px solid #004488;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .no-reports {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+
+    .no-reports-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+  </style>
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      options: {
+        ignoreHtmlClass: 'no-mathjax',
+        processHtmlClass: 'mathjax-render'
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <h1>📋 Problem Reports Management</h1>
+
+  <div class="nav-links">
+    <a href="index.html">Mock AIME</a>
+    <a href="search.html">Problem Search</a>
+    <a href="admin.html">Admin Panel</a>
+    <a href="admin_reports.html" style="background: #003366;">Reports</a>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-card pending">
+      <div class="stat-number" id="pendingCount">0</div>
+      <div class="stat-label">Pending Reports</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="totalCount">0</div>
+      <div class="stat-label">Total Reports</div>
+    </div>
+  </div>
+
+  <div id="reportsContainer">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <p style="margin-top: 16px; font-weight: 500;">Loading reports...</p>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://ftdbplxkyaocyrjpmjyb.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0ZGJwbHhreWFvY3lyanBtanliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMDgxMDUsImV4cCI6MjA2NzY4NDEwNX0.hE0V09JxdLYNbZqPVH3HZxNpLPP2rXIaBsNGUHO3upc';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let allReports = [];
+    let allProblems = {};
+    let expandedReportId = null;
+
+    window.onload = async () => {
+      await loadReports();
+    };
+
+    function escapeHtml(text) {
+      if (!text) return text;
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function setMathContent(element, content) {
+      if (!content) {
+        element.innerHTML = '<em>No content</em>';
+        return;
+      }
+      element.textContent = content;
+      if (window.MathJax) {
+        MathJax.typesetPromise([element]).catch(err => console.error('MathJax error:', err));
+      }
+    }
+
+    async function loadReports() {
+      const container = document.getElementById('reportsContainer');
+      container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><p style="margin-top: 16px;">Loading reports...</p></div>';
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('problem_reports')
+          .select('*')
+          .eq('handled', false)
+          .order('created_at', { ascending: true }); // Oldest first
+
+        if (error) throw error;
+
+        allReports = data || [];
+        
+        // Load all problems referenced in reports
+        const problemIds = [...new Set(allReports.map(r => r.problem_id))];
+        if (problemIds.length > 0) {
+          const { data: problems, error: pError } = await supabaseClient
+            .from('problems')
+            .select('*')
+            .in('id', problemIds);
+          
+          if (!pError) {
+            allProblems = {};
+            problems.forEach(p => {
+              allProblems[p.id] = p;
+            });
+          }
+        }
+
+        updateStats();
+        renderReports();
+      } catch (err) {
+        console.error('Error loading reports:', err);
+        container.innerHTML = '<div class="no-reports"><div class="no-reports-icon">⚠️</div><h2>Error Loading Reports</h2></div>';
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('pendingCount').textContent = allReports.length;
+      document.getElementById('totalCount').textContent = allReports.length;
+    }
+
+    function renderReports() {
+      const container = document.getElementById('reportsContainer');
+
+      if (allReports.length === 0) {
+        container.innerHTML = '<div class="no-reports"><div class="no-reports-icon">🎉</div><h2>All Clear!</h2><p>No pending reports to review.</p></div>';
+        return;
+      }
+
+      container.innerHTML = allReports.map(report => {
+        if (expandedReportId === report.id) {
+          return renderExpandedReport(report);
+        } else {
+          return renderCollapsedReport(report);
+        }
+      }).join('');
+
+      // Re-render MathJax
+      if (window.MathJax) {
+        MathJax.typesetPromise().catch(err => console.error('MathJax error:', err));
+      }
+    }
+
+    function renderCollapsedReport(report) {
+      const types = report.report_type.split(',');
+      const date = new Date(report.created_at).toLocaleDateString();
+      
+      const typeBadges = types.map(type => {
+        const label = type.replace('_', ' ');
+        return `<span class="type-badge ${type}">${label}</span>`;
+      }).join('');
+
+      return `
+        <div class="report-collapsed" onclick="expandReport(${report.id})">
+          <div class="report-collapsed-header">
+            <div class="report-collapsed-left">
+              <div class="report-id-badge">#${report.id}</div>
+              <div class="report-types-compact">${typeBadges}</div>
+            </div>
+            <div class="report-date-small">Problem ${report.problem_id} • ${date}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function expandReport(reportId) {
+      expandedReportId = reportId;
+      renderReports();
+    }
+
+    function closeReport() {
+      expandedReportId = null;
+      renderReports();
+    }
+
+    function renderExpandedReport(report) {
+      const problem = allProblems[report.problem_id];
+      if (!problem) return '<div>Problem not found</div>';
+
+      const details = JSON.parse(report.details || '{}');
+      const types = report.report_type.split(',');
+      const date = new Date(report.created_at).toLocaleString();
+
+      const qualityClass = `quality-${problem.quality || 0}`;
+      const reviewedClass = problem.manually_reviewed ? 'reviewed' : '';
+
+      return `
+        <div class="report-expanded">
+          <div class="report-expanded-header">
+            <div>
+              <h2 style="margin: 0;">Report #${report.id}</h2>
+              <div style="color: #666; font-size: 14px; margin-top: 5px;">${date}</div>
+            </div>
+            <button class="close-report-btn" onclick="closeReport()">✕ Close</button>
+          </div>
+
+          <div class="problem-editor-section">
+            <div class="section-title">📝 Problem Editor - Problem #${problem.id}</div>
+            
+            <div class="problem-card ${qualityClass} ${reviewedClass}" id="problem-${problem.id}">
+              <div class="problem-header">
+                <div class="header-left">
+                  <span class="problem-id">Problem ID: ${problem.id}</span>
+                  <div class="quality-rating">
+                    <span class="quality-label">Quality:</span>
+                    <div class="stars" id="stars-${problem.id}">
+                      ${renderStars(problem.id, problem.quality)}
+                    </div>
+                    <span style="color: #666; font-size: 14px;">(${problem.quality || 0}/5)</span>
+                  </div>
+                </div>
+                <div class="header-right">
+                  <label class="checkbox-label">
+                    <input type="checkbox" 
+                           ${problem.manually_reviewed ? 'checked' : ''} 
+                           onchange="updateReviewStatus(${problem.id}, this.checked)">
+                    Manually Reviewed
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" 
+                           ${problem.finalized ? 'checked' : ''} 
+                           onchange="updateFinalizedStatus(${problem.id}, this.checked)">
+                    Finalized
+                  </label>
+                </div>
+              </div>
+              
+              <button class="toggle-raw-btn" id="toggle-original-btn-${problem.id}" onclick="toggleOriginalSection(${problem.id})">Show Original Problem</button>
+              
+              <div class="original-section" id="original-section-${problem.id}">
+                <div class="section-label">Original Problem Statement:</div>
+                <div class="rendered-problem mathjax-render" id="original-render-${problem.id}"></div>
+                <button class="toggle-raw-btn" style="margin-top: 10px;" id="toggle-original-raw-btn-${problem.id}" onclick="toggleRawText(${problem.id}, 'original')">Show Raw Text</button>
+                <textarea class="raw-textarea" id="raw-original-${problem.id}" onblur="saveProblemText(${problem.id})"></textarea>
+              </div>
+              
+              <div class="rewritten-section">
+                <div class="section-label">Rewritten Problem (AIME Format):</div>
+                <div class="rendered-problem mathjax-render" id="rewritten-render-${problem.id}"></div>
+                <button class="toggle-raw-btn" style="margin-top: 10px;" id="toggle-rewritten-btn-${problem.id}" onclick="toggleRawText(${problem.id}, 'rewritten')">Show Raw Text</button>
+                <textarea class="raw-textarea" id="raw-rewritten-${problem.id}" onblur="saveRewrittenProblem(${problem.id})"></textarea>
+              </div>
+              
+              <div class="fields-row">
+                <div class="field-group">
+                  <label>Answer:</label>
+                  <input type="text" id="answer-${problem.id}" value="${escapeHtml(problem.answer || '')}" onblur="saveProblem(${problem.id})" style="width: 100px;" />
+                </div>
+                
+                <div class="field-group">
+                  <label>AIME Answer (mod 1000):</label>
+                  <input type="text" id="aime-answer-${problem.id}" value="${problem.aime_answer || ''}" onblur="saveProblem(${problem.id})" style="width: 100px;" />
+                </div>
+                
+                <div class="field-group">
+                  <label>Difficulty:</label>
+                  <input type="text" id="difficulty-${problem.id}" value="${problem.difficulty || ''}" onblur="saveProblem(${problem.id})" style="width: 80px;" />
+                </div>
+                
+                <div class="field-group">
+                  <label>Source:</label>
+                  <input type="text" id="source-${problem.id}" value="${escapeHtml(problem.source || '')}" onblur="saveProblem(${problem.id})" style="width: 250px;" />
+                </div>
+              </div>
+              
+              <div style="margin-top: 5px;">
+                <span style="font-weight: bold; font-size: 13px;">Link:</span>
+                <a href="${escapeHtml(problem.link || '#')}" target="_blank" class="link">${problem.link || 'No link'}</a>
+              </div>
+              
+              <div style="margin-top: 10px;">
+                <button onclick="saveProblem(${problem.id})">Save Changes</button>
+                <span class="save-status" id="status-${problem.id}"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="proposed-changes-section">
+            <div class="section-title">💡 Proposed Changes</div>
+            ${renderProposedChanges(report, problem, details, types)}
+          </div>
+
+          <div class="mark-handled-section">
+            <div>
+              <strong style="font-size: 16px;">Done reviewing this report?</strong>
+              <div style="color: #666; font-size: 14px; margin-top: 5px;">Mark as handled to remove from pending list</div>
+            </div>
+            <button class="btn-mark-handled" onclick="markReportHandled(${report.id})">
+              ✓ Mark as Handled
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderProposedChanges(report, problem, details, types) {
+      let changesHTML = '';
+
+      // Quality
+      if (types.includes('quality') && details.quality_rating) {
+        changesHTML += `
+          <div class="change-card">
+            <div class="change-header">
+              <div class="change-title">⭐ Quality Rating: ${details.quality_rating}/5</div>
+              <div class="change-actions">
+                <button class="btn-accept" onclick="acceptQuality(${problem.id}, ${details.quality_rating})">✓ Accept</button>
+                <button class="btn-reject">✗ Reject</button>
+              </div>
+            </div>
+            <div class="change-content">
+              <div class="change-detail"><strong>Current:</strong> ${problem.quality || 0}/5</div>
+              <div class="change-detail"><strong>Proposed:</strong> ${details.quality_rating}/5</div>
+              ${details.quality_details ? `<div class="change-detail"><strong>Reason:</strong> ${escapeHtml(details.quality_details)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      // Difficulty
+      if (types.includes('difficulty') && details.difficulty_rating) {
+        changesHTML += `
+          <div class="change-card">
+            <div class="change-header">
+              <div class="change-title">📊 Difficulty Rating: ${details.difficulty_rating}</div>
+              <div class="change-actions">
+                <button class="btn-accept" onclick="acceptDifficulty(${problem.id}, ${details.difficulty_rating})">✓ Accept</button>
+                <button class="btn-reject">✗ Reject</button>
+              </div>
+            </div>
+            <div class="change-content">
+              <div class="change-detail"><strong>Current:</strong> ${problem.difficulty || 'Not set'}</div>
+              <div class="change-detail"><strong>Proposed:</strong> ${details.difficulty_rating}</div>
+              ${details.difficulty_details ? `<div class="change-detail"><strong>Reason:</strong> ${escapeHtml(details.difficulty_details)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      // Wrong Answer
+      if (types.includes('wrong_answer') && details.proposed_answer) {
+        changesHTML += `
+          <div class="change-card">
+            <div class="change-header">
+              <div class="change-title">✏️ Correct Answer: ${escapeHtml(details.proposed_answer)}</div>
+              <div class="change-actions">
+                <button class="btn-accept" onclick="acceptAnswer(${problem.id}, '${escapeHtml(details.proposed_answer)}')">✓ Accept</button>
+                <button class="btn-reject">✗ Reject</button>
+              </div>
+            </div>
+            <div class="change-content">
+              <div class="change-detail"><strong>Current Answer:</strong> ${problem.answer || 'Not set'}</div>
+              <div class="change-detail"><strong>Current AIME Answer:</strong> ${problem.aime_answer || 'Not set'}</div>
+              <div class="change-detail"><strong>Proposed Answer:</strong> ${escapeHtml(details.proposed_answer)}</div>
+              ${details.answer_details ? `<div class="change-detail"><strong>Reason:</strong> ${escapeHtml(details.answer_details)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      // Problem Statement
+      if (types.includes('problem_statement')) {
+        changesHTML += `
+          <div class="change-card">
+            <div class="change-header">
+              <div class="change-title">📝 Problem Statement Changes</div>
+              <div class="change-actions">
+                <button class="btn-accept" onclick="acceptProblemStatement(${problem.id}, ${report.id})">✓ Accept</button>
+                <button class="btn-reject">✗ Reject</button>
+              </div>
+            </div>
+            <div class="change-content">
+              ${details.proposed_problem ? `<div class="change-detail"><strong>New Problem Text:</strong><br><textarea readonly style="width: 100%; min-height: 80px;">${escapeHtml(details.proposed_problem)}</textarea></div>` : ''}
+              ${details.proposed_problem_answer ? `<div class="change-detail"><strong>New Answer:</strong> ${escapeHtml(details.proposed_problem_answer)}</div>` : ''}
+              ${details.problem_details ? `<div class="change-detail"><strong>Reason:</strong> ${escapeHtml(details.problem_details)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      // Source
+      if (types.includes('source') && details.proposed_source) {
+        changesHTML += `
+          <div class="change-card">
+            <div class="change-header">
+              <div class="change-title">📚 Source: ${escapeHtml(details.proposed_source)}</div>
+              <div class="change-actions">
+                <button class="btn-accept" onclick="acceptSource(${problem.id}, '${escapeHtml(details.proposed_source)}')">✓ Accept</button>
+                <button class="btn-reject">✗ Reject</button>
+              </div>
+            </div>
+            <div class="change-content">
+              <div class="change-detail"><strong>Current:</strong> ${problem.source || 'Not set'}</div>
+              <div class="change-detail"><strong>Proposed:</strong> ${escapeHtml(details.proposed_source)}</div>
+              ${details.source_details ? `<div class="change-detail"><strong>Details:</strong> ${escapeHtml(details.source_details)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      return changesHTML || '<p style="padding: 20px; color: #666;">No specific changes proposed.</p>';
+    }
+
+    // After rendering, populate the textareas and rendered content
+    setTimeout(() => {
+      const reportId = expandedReportId;
+      if (!reportId) return;
+
+      const report = allReports.find(r => r.id === reportId);
+      if (!report) return;
+
+      const problem = allProblems[report.problem_id];
+      if (!problem) return;
+
+      const originalRender = document.getElementById(`original-render-${problem.id}`);
+      const rewrittenRender = document.getElementById(`rewritten-render-${problem.id}`);
+      const originalTextarea = document.getElementById(`raw-original-${problem.id}`);
+      const rewrittenTextarea = document.getElementById(`raw-rewritten-${problem.id}`);
+
+      if (originalRender) setMathContent(originalRender, problem.text || '');
+      if (rewrittenRender) setMathContent(rewrittenRender, problem.rewritten_problem || '');
+      if (originalTextarea) originalTextarea.value = problem.text || '';
+      if (rewrittenTextarea) rewrittenTextarea.value = problem.rewritten_problem || '';
+    }, 100);
+
+    function renderStars(problemId, currentQuality) {
+      const quality = currentQuality || 0;
+      let starsHTML = '';
+      
+      for (let i = 1; i <= 5; i++) {
+        const filled = i <= quality ? 'filled' : '';
+        starsHTML += `<span class="star ${filled}" data-rating="${i}">★</span>`;
+      }
+      
+      return starsHTML;
+    }
+
+    // Star interaction handlers
+    document.addEventListener('click', function(e) {
+      if (e.target && e.target.classList && e.target.classList.contains('star')) {
+        const starsContainer = e.target.parentElement;
+        const problemId = starsContainer.id.replace('stars-', '');
+        const rating = parseInt(e.target.getAttribute('data-rating'));
+        setQuality(problemId, rating);
+      }
+    });
+
+    document.addEventListener('mouseenter', function(e) {
+      if (e.target && e.target.classList && e.target.classList.contains('star')) {
+        const rating = parseInt(e.target.getAttribute('data-rating'));
+        const starsContainer = e.target.parentElement;
+        const allStars = starsContainer.querySelectorAll('.star');
+        
+        allStars.forEach((star, index) => {
+          star.classList.remove('hover');
+          if (index < rating) {
+            star.classList.add('hover');
+          }
+        });
+      }
+    }, true);
+
+    document.addEventListener('mouseleave', function(e) {
+      if (e.target && e.target.classList && e.target.classList.contains('star')) {
+        const starsContainer = e.target.parentElement;
+        const allStars = starsContainer.querySelectorAll('.star');
+        allStars.forEach(star => star.classList.remove('hover'));
+      }
+    }, true);
+
+    function toggleOriginalSection(problemId) {
+      const section = document.getElementById(`original-section-${problemId}`);
+      const btn = document.getElementById(`toggle-original-btn-${problemId}`);
+      
+      if (section.classList.contains('show')) {
+        section.classList.remove('show');
+        btn.textContent = 'Show Original Problem';
+      } else {
+        section.classList.add('show');
+        btn.textContent = 'Hide Original Problem';
+        
+        if (window.MathJax) {
+          MathJax.typesetPromise([section]).catch(err => console.error('MathJax error:', err));
+        }
+      }
+    }
+
+    function toggleRawText(problemId, type) {
+      const textarea = document.getElementById(`raw-${type}-${problemId}`);
+      const btn = document.getElementById(`toggle-${type}-raw-btn-${problemId}`);
+      
+      if (textarea.classList.contains('show')) {
+        textarea.classList.remove('show');
+        btn.textContent = 'Show Raw Text';
+      } else {
+        textarea.classList.add('show');
+        btn.textContent = 'Hide Raw Text';
+      }
+    }
+
+    async function setQuality(problemId, quality) {
+      const { data, error } = await supabaseClient
+        .from('problems')
+        .update({ quality: quality })
+        .eq('id', problemId)
+        .select();
+      
+      if (error) {
+        console.error('Error updating quality:', error);
+        alert('Failed to update quality');
+      } else {
+        allProblems[problemId].quality = quality;
+        
+        const starsContainer = document.getElementById(`stars-${problemId}`);
+        if (starsContainer) {
+          starsContainer.innerHTML = renderStars(problemId, quality);
+        }
+        
+        const card = document.getElementById(`problem-${problemId}`);
+        if (card) {
+          for (let i = 0; i <= 5; i++) {
+            card.classList.remove(`quality-${i}`);
+          }
+          card.classList.add(`quality-${quality}`);
+        }
+
+        showSaveStatus(problemId, '✓ Quality updated');
+      }
+    }
+
+    async function saveRewrittenProblem(problemId) {
+      const text = document.getElementById(`raw-rewritten-${problemId}`).value;
+      
+      const { data, error } = await supabaseClient
+        .from('problems')
+        .update({ rewritten_problem: text })
+        .eq('id', problemId)
+        .select();
+      
+      if (error) {
+        console.error('Error saving rewritten problem:', error);
+        showSaveStatus(problemId, `Error: ${error.message}`, true);
+      } else {
+        allProblems[problemId].rewritten_problem = text;
+        
+        const renderDiv = document.getElementById(`rewritten-render-${problemId}`);
+        if (renderDiv) {
+          setMathContent(renderDiv, text);
+        }
+        
+        showSaveStatus(problemId, '✓ Rewritten problem saved');
+      }
+    }
+
+    async function saveProblemText(problemId) {
+      const text = document.getElementById(`raw-original-${problemId}`).value;
+      
+      const { data, error } = await supabaseClient
+        .from('problems')
+        .update({ text })
+        .eq('id', problemId)
+        .select();
+      
+      if (error) {
+        console.error('Error saving text:', error);
+        showSaveStatus(problemId, `Error: ${error.message}`, true);
+      } else {
+        allProblems[problemId].text = text;
+        
+        const renderDiv = document.getElementById(`original-render-${problemId}`);
+        if (renderDiv) {
+          setMathContent(renderDiv, text);
+        }
+        
+        showSaveStatus(problemId, '✓ Text saved');
+      }
+    }
+
+    async function saveProblem(problemId) {
+      const answer = document.getElementById(`answer-${problemId}`).value;
+      const aimeAnswer = document.getElementById(`aime-answer-${problemId}`).value;
+      const difficulty = document.getElementById(`difficulty-${problemId}`).value;
+      const source = document.getElementById(`source-${problemId}`).value;
+      
+      const updateData = {
+        answer,
+        source,
+        aime_answer: aimeAnswer ? parseInt(aimeAnswer) : null,
+        difficulty: difficulty ? parseFloat(difficulty) : null
+      };
+      
+      const { data, error } = await supabaseClient
+        .from('problems')
+        .update(updateData)
+        .eq('id', problemId)
+        .select();
+      
+      if (error) {
+        console.error('Error saving problem:', error);
+        showSaveStatus(problemId, `Error: ${error.message}`, true);
+      } else {
+        Object.assign(allProblems[problemId], updateData);
+        showSaveStatus(problemId, '✓ Changes saved');
+      }
+    }
+
+    async function updateReviewStatus(problemId, isReviewed) {
+      const { error } = await supabaseClient
+        .from('problems')
+        .update({ manually_reviewed: isReviewed })
+        .eq('id', problemId);
+      
+      if (error) {
+        console.error('Error updating review status:', error);
+        alert('Failed to update review status');
+      } else {
+        allProblems[problemId].manually_reviewed = isReviewed;
+        
+        const card = document.getElementById(`problem-${problemId}`);
+        if (card) {
+          if (isReviewed) {
+            card.classList.add('reviewed');
+          } else {
+            card.classList.remove('reviewed');
+          }
+        }
+        
+        showSaveStatus(problemId, '✓ Review status updated');
+      }
+    }
+
+    async function updateFinalizedStatus(problemId, isFinalized) {
+      const { error } = await supabaseClient
+        .from('problems')
+        .update({ finalized: isFinalized })
+        .eq('id', problemId);
+      
+      if (error) {
+        console.error('Error updating finalized status:', error);
+        alert('Failed to update finalized status');
+      } else {
+        allProblems[problemId].finalized = isFinalized;
+        showSaveStatus(problemId, '✓ Finalized status updated');
+      }
+    }
+
+    function showSaveStatus(problemId, message, isError = false) {
+      const statusEl = document.getElementById(`status-${problemId}`);
+      if (statusEl) {
+        statusEl.textContent = message;
+        statusEl.style.color = isError ? '#dc3545' : '#28a745';
+        setTimeout(() => { statusEl.textContent = ''; }, 2000);
+      }
+    }
+
+    // Accept change functions
+    async function acceptQuality(problemId, quality) {
+      await setQuality(problemId, quality);
+      alert('Quality rating accepted and saved!');
+    }
+
+    async function acceptDifficulty(problemId, difficulty) {
+      document.getElementById(`difficulty-${problemId}`).value = difficulty;
+      await saveProblem(problemId);
+      alert('Difficulty rating accepted and saved!');
+    }
+
+    async function acceptAnswer(problemId, answer) {
+      document.getElementById(`answer-${problemId}`).value = answer;
+      // Also update AIME answer
+      const answerNum = parseInt(answer);
+      if (!isNaN(answerNum)) {
+        document.getElementById(`aime-answer-${problemId}`).value = answerNum;
+      }
+      await saveProblem(problemId);
+      alert('Answer accepted and saved!');
+    }
+
+    async function acceptProblemStatement(problemId, reportId) {
+      const report = allReports.find(r => r.id === reportId);
+      const details = JSON.parse(report.details || '{}');
+      
+      if (details.proposed_problem) {
+        document.getElementById(`raw-rewritten-${problemId}`).value = details.proposed_problem;
+        await saveRewrittenProblem(problemId);
+      }
+      
+      if (details.proposed_problem_answer) {
+        document.getElementById(`answer-${problemId}`).value = details.proposed_problem_answer;
+        const answerNum = parseInt(details.proposed_problem_answer);
+        if (!isNaN(answerNum)) {
+          document.getElementById(`aime-answer-${problemId}`).value = answerNum;
+        }
+        await saveProblem(problemId);
+      }
+      
+      alert('Problem statement changes accepted and saved!');
+    }
+
+    async function acceptSource(problemId, source) {
+      document.getElementById(`source-${problemId}`).value = source;
+      await saveProblem(problemId);
+      alert('Source accepted and saved!');
+    }
+
+    async function markReportHandled(reportId) {
+      if (!confirm('Mark this report as handled? It will be removed from the pending list.')) {
+        return;
+      }
+
+      try {
+        const { error } = await supabaseClient
+          .from('problem_reports')
+          .update({ 
+            handled: true,
+            handled_at: new Date().toISOString()
+          })
+          .eq('id', reportId);
+
+        if (error) throw error;
+
+        // Remove from local array and re-render
+        allReports = allReports.filter(r => r.id !== reportId);
+        expandedReportId = null;
+        updateStats();
+        renderReports();
+      } catch (err) {
+        console.error('Error marking report as handled:', err);
+        alert('Failed to mark report as handled.');
+      }
+    }
+  </script>
+</body>
+</html>
