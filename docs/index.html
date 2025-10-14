@@ -90,6 +90,7 @@
     let chosenProblems = [];
     let problemsLoaded = false;
     let currentUser = null;
+    let problemOverrides = {}; // Track which problems were manually marked correct
 
     async function updateAuthUI() {
       const { data: { session } } = await supabaseClient.auth.getSession();
@@ -140,7 +141,8 @@
               score: score,
               total_problems: totalProblems,
               problems_data: problemsData,
-              completed_at: new Date().toISOString()
+              completed_at: new Date().toISOString(),
+              overrides: problemOverrides // Save which problems were overridden
             }
           ]);
         
@@ -809,7 +811,7 @@
       color: var(--text-tertiary);
     }
     
-    .replace-button, .report-button {
+    .replace-button, .report-button, .override-button {
       display: inline-block;
       margin-top: 12px;
       padding: 8px 16px;
@@ -842,6 +844,23 @@
       background: #ffd43b;
       transform: translateY(-1px);
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .override-button {
+      background: #17a2b8;
+      color: white;
+      margin-right: 8px;
+      display: none;
+    }
+
+    .override-button:hover {
+      background: #138496;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .override-button.show {
+      display: inline-block;
     }
 
     .aops-link-top {
@@ -1291,7 +1310,7 @@
       font-weight: 600;
       transition: all 0.2s;
       font-size: 13px;
-      color: var(--text-primary); /* ADD THIS LINE */
+      color: var(--text-primary);
     }
 
     [data-theme="dark"] .difficulty-btn {
@@ -1887,7 +1906,6 @@
           document.getElementById('currentSource').textContent = currentReportProblemData.source || 'Unknown';
           document.getElementById('problemText').value = currentReportProblemData.rewritten_problem || currentReportProblemData.text || '';
         }
-        // Reset answer reveal sections
         document.getElementById('currentAnswerReveal').style.display = 'none';
         document.getElementById('problemCurrentAnswerReveal').style.display = 'none';
         const showAnswerBtns = document.querySelectorAll('.toggle-raw-btn');
@@ -1910,12 +1928,12 @@
           closeReportModal();
         }
       }
+      
       function toggleCurrentAnswer() {
         const revealDiv = document.getElementById('currentAnswerReveal');
         const btn = event.target;
         
         if (revealDiv.style.display === 'none') {
-          // Show the answer
           if (currentReportProblemData) {
             const answer = currentReportProblemData.aime_answer 
               ? String(currentReportProblemData.aime_answer % 1000) 
@@ -1935,7 +1953,6 @@
         const btn = event.target;
         
         if (revealDiv.style.display === 'none') {
-          // Show the answer
           if (currentReportProblemData) {
             const answer = currentReportProblemData.aime_answer 
               ? String(currentReportProblemData.aime_answer % 1000) 
@@ -2133,6 +2150,7 @@
           <p class="problem-text" id="problem-text-${index}"></p>
           <div class="answer"><span class="answer-label">Answer:</span> <input type="text" maxlength="3" data-index="${index}" placeholder="000" /></div>
           <div style="margin-top: 12px;">
+            <button class="override-button" id="override-${index}" onclick="markAsCorrect(${index})">I was correct</button>
             <button class="replace-button" onclick="replaceProblem(${index})">Replace Problem</button>
             <button class="report-button" onclick="openReportModal(${newProblem.id})">Report Issue</button>
           </div>
@@ -2148,11 +2166,210 @@
         updateProblemNav();
       }
 
+      let answersRevealed = false;
+
+      function markAsCorrect(index) {
+        const problemDiv = document.querySelector(`.problem[data-problem-index="${index}"]`);
+        if (!problemDiv) return;
+        
+        // Track this override
+        problemOverrides[index] = true;
+        
+        // Update the status icon
+        const existingIcon = problemDiv.querySelector('.status-icon');
+        if (existingIcon) existingIcon.remove();
+        
+        const icon = document.createElement('div');
+        icon.className = 'status-icon override show';
+        icon.textContent = '✓';
+        problemDiv.appendChild(icon);
+        
+        // Hide the override button
+        const overrideBtn = document.getElementById(`override-${index}`);
+        if (overrideBtn) {
+          overrideBtn.style.display = 'none';
+        }
+        
+        // Update the summary grid
+        updateSummaryAfterOverride();
+      }
+
+      function updateSummaryAfterOverride() {
+        const summaryDiv = document.getElementById("summary");
+        if (!summaryDiv.innerHTML) return;
+        
+        let correctCount = 0;
+        let results = [];
+        
+        chosenProblems.forEach((p, i) => {
+          const problemDiv = document.querySelector(`.problem[data-problem-index="${i}"]`);
+          const statusIcon = problemDiv?.querySelector('.status-icon');
+          
+          if (statusIcon) {
+            if (statusIcon.classList.contains('correct') || statusIcon.classList.contains('override')) {
+              correctCount++;
+              results.push({ index: i, status: statusIcon.classList.contains('override') ? 'override' : 'correct' });
+            } else if (statusIcon.classList.contains('incorrect')) {
+              results.push({ index: i, status: 'incorrect' });
+            } else {
+              results.push({ index: i, status: 'unanswered' });
+            }
+          } else {
+            results.push({ index: i, status: 'unanswered' });
+          }
+        });
+        
+        summaryDiv.innerHTML = `
+          <div class="summary-header">Score: ${correctCount} / ${chosenProblems.length}</div>
+          <div class="problem-grid">
+            ${results.map(r => `
+              <div class="problem-indicator ${r.status}" title="Problem ${r.index + 1}: ${r.status}">
+                ${r.index + 1}
+              </div>
+            `).join('')}
+          </div>
+          <button class="show-answers-btn" onclick="showAnswers()">Show Answers</button>
+        `;
+        
+        // Re-save the attempt with updated score if user is logged in
+        if (currentUser) {
+          const problemsWithAnswers = chosenProblems.map((p, i) => {
+            const input = document.querySelector(`input[data-index="${i}"]`);
+            return {
+              ...p,
+              user_answer: input?.value?.trim() || null,
+              manually_corrected: problemOverrides[i] || false
+            };
+          });
+          
+          saveMockAttempt(correctCount, chosenProblems.length, document.getElementById("difficulty").value, problemsWithAnswers);
+        }
+      }
+
+      function showAnswers() {
+        answersRevealed = true;
+        chosenProblems.forEach((p, i) => {
+          const problemDiv = document.querySelector(`.problem[data-problem-index="${i}"]`);
+          if (!problemDiv) return;
+          
+          let existingReveal = problemDiv.querySelector('.answer-reveal');
+          if (existingReveal) {
+            existingReveal.remove();
+          }
+          
+          const revealDiv = document.createElement('div');
+          revealDiv.className = 'answer-reveal show';
+          
+          let answerText = '';
+          if (p.aime_answer !== null && p.aime_answer !== undefined) {
+            answerText = String(p.aime_answer % 1000);
+          } else if (p.answer) {
+            answerText = String(p.answer);
+          } else {
+            answerText = 'Not available';
+          }
+          
+          revealDiv.innerHTML = `<strong>Correct Answer:</strong> ${escapeHtml(answerText)}`;
+          problemDiv.appendChild(revealDiv);
+        });
+      }
+
+      async function checkAnswers() {
+        let correctCount = 0;
+        let results = [];
+        problemOverrides = {}; // Reset overrides
+
+        const problemsWithAnswers = chosenProblems.map((p, i) => {
+          const input = document.querySelector(`input[data-index="${i}"]`);
+          return {
+            ...p,
+            user_answer: input?.value?.trim() || null
+          };
+        });
+
+        chosenProblems.forEach((p, i) => {
+          const answerInput = document.querySelector(`input[data-index="${i}"]`);
+          const problemDiv = document.querySelector(`.problem[data-problem-index="${i}"]`);
+          const overrideBtn = document.getElementById(`override-${i}`);
+          
+          const existingIcon = problemDiv?.querySelector('.status-icon');
+          if (existingIcon) existingIcon.remove();
+
+          if (answerInput) {
+            const userAnswer = answerInput.value.trim();
+            
+            if (userAnswer === '') {
+              results.push({ index: i, status: 'unanswered' });
+              if (problemDiv) {
+                const icon = document.createElement('div');
+                icon.className = 'status-icon unanswered';
+                icon.textContent = '–';
+                problemDiv.appendChild(icon);
+                setTimeout(() => icon.classList.add('show'), 50);
+              }
+              // Show override button for unanswered
+              if (overrideBtn) overrideBtn.classList.add('show');
+              return;
+            }
+            
+            let correct = false;
+
+            if (p.aime_answer !== null && p.aime_answer !== undefined) {
+              const expected = String(p.aime_answer % 1000);
+              correct = userAnswer === expected;
+            } else if (p.answer !== null && p.answer !== undefined) {
+              correct = userAnswer === String(p.answer);
+            }
+
+            if (correct) correctCount++;
+            results.push({ index: i, status: correct ? 'correct' : 'incorrect' });
+            
+            if (problemDiv) {
+              const icon = document.createElement('div');
+              icon.className = `status-icon ${correct ? 'correct' : 'incorrect'}`;
+              icon.textContent = correct ? '✓' : '✗';
+              problemDiv.appendChild(icon);
+              setTimeout(() => icon.classList.add('show'), 50);
+            }
+            
+            // Show override button only for incorrect answers
+            if (!correct && overrideBtn) {
+              overrideBtn.classList.add('show');
+            }
+          } else {
+            results.push({ index: i, status: 'unanswered' });
+            // Show override button for unanswered
+            if (overrideBtn) overrideBtn.classList.add('show');
+          }
+        });
+
+        const summaryDiv = document.getElementById("summary");
+        summaryDiv.innerHTML = `
+          <div class="summary-header">Score: ${correctCount} / ${chosenProblems.length}</div>
+          <div class="problem-grid">
+            ${results.map(r => `
+              <div class="problem-indicator ${r.status}" title="Problem ${r.index + 1}: ${r.status}">
+                ${r.index + 1}
+              </div>
+            `).join('')}
+          </div>
+          <button class="show-answers-btn" onclick="showAnswers()">Show Answers</button>
+        `;
+        summaryDiv.classList.add('show');
+
+        if (currentUser) {
+          await saveMockAttempt(correctCount, chosenProblems.length, document.getElementById("difficulty").value, problemsWithAnswers);
+        }
+      }
+
       async function generateMock() {
         if (allProblems.length === 0) {
           alert("Problems are still loading, please wait a moment.");
           return;
         }
+
+        // Reset overrides when generating new mock
+        problemOverrides = {};
 
         const useExpanded = document.getElementById('useExpandedDb').checked;
         const level = document.getElementById("difficulty").value;
@@ -2292,6 +2509,7 @@
             <p class="problem-text" id="problem-text-${i}"></p>
             <div class="answer"><span class="answer-label">Answer:</span> <input type="text" maxlength="3" data-index="${i}" placeholder="000" /></div>
             <div style="margin-top: 12px;">
+              <button class="override-button" id="override-${i}" onclick="markAsCorrect(${i})">I was correct</button>
               <button class="replace-button" onclick="replaceProblem(${i})">Replace Problem</button>
               <button class="report-button" onclick="openReportModal(${p.id})">Report Issue</button>
             </div>
@@ -2308,113 +2526,6 @@
         });
         
         updateProblemNav();
-      }
-
-      let answersRevealed = false;
-
-      function showAnswers() {
-        answersRevealed = true;
-        chosenProblems.forEach((p, i) => {
-          const problemDiv = document.querySelector(`.problem[data-problem-index="${i}"]`);
-          if (!problemDiv) return;
-          
-          let existingReveal = problemDiv.querySelector('.answer-reveal');
-          if (existingReveal) {
-            existingReveal.remove();
-          }
-          
-          const revealDiv = document.createElement('div');
-          revealDiv.className = 'answer-reveal show';
-          
-          let answerText = '';
-          if (p.aime_answer !== null && p.aime_answer !== undefined) {
-            answerText = String(p.aime_answer % 1000);
-          } else if (p.answer) {
-            answerText = String(p.answer);
-          } else {
-            answerText = 'Not available';
-          }
-          
-          revealDiv.innerHTML = `<strong>Correct Answer:</strong> ${escapeHtml(answerText)}`;
-          problemDiv.appendChild(revealDiv);
-        });
-      }
-
-      async function checkAnswers() {
-        let correctCount = 0;
-        let results = [];
-
-        const problemsWithAnswers = chosenProblems.map((p, i) => {
-          const input = document.querySelector(`input[data-index="${i}"]`);
-          return {
-            ...p,
-            user_answer: input?.value?.trim() || null
-          };
-        });
-
-        chosenProblems.forEach((p, i) => {
-          const answerInput = document.querySelector(`input[data-index="${i}"]`);
-          const problemDiv = document.querySelector(`.problem[data-problem-index="${i}"]`);
-          
-          const existingIcon = problemDiv?.querySelector('.status-icon');
-          if (existingIcon) existingIcon.remove();
-
-          if (answerInput) {
-            const userAnswer = answerInput.value.trim();
-            
-            if (userAnswer === '') {
-              results.push({ index: i, status: 'unanswered' });
-              if (problemDiv) {
-                const icon = document.createElement('div');
-                icon.className = 'status-icon unanswered';
-                icon.textContent = '–';
-                problemDiv.appendChild(icon);
-                setTimeout(() => icon.classList.add('show'), 50);
-              }
-              return;
-            }
-            
-            let correct = false;
-
-            if (p.aime_answer !== null && p.aime_answer !== undefined) {
-              const expected = String(p.aime_answer % 1000);
-              correct = userAnswer === expected;
-            } else if (p.answer !== null && p.answer !== undefined) {
-              correct = userAnswer === String(p.answer);
-            }
-
-            if (correct) correctCount++;
-            results.push({ index: i, status: correct ? 'correct' : 'incorrect' });
-            
-            if (problemDiv) {
-              const icon = document.createElement('div');
-              icon.className = `status-icon ${correct ? 'correct' : 'incorrect'}`;
-              icon.textContent = correct ? '✓' : '✗';
-              problemDiv.appendChild(icon);
-              setTimeout(() => icon.classList.add('show'), 50);
-            }
-          } else {
-            results.push({ index: i, status: 'unanswered' });
-          }
-        });
-
-        const summaryDiv = document.getElementById("summary");
-        summaryDiv.innerHTML = `
-          <div class="summary-header">Score: ${correctCount} / ${chosenProblems.length}</div>
-          <div class="problem-grid">
-            ${results.map(r => `
-              <div class="problem-indicator ${r.status}" title="Problem ${r.index + 1}: ${r.status}">
-                ${r.index + 1}
-              </div>
-            `).join('')}
-          </div>
-          <button class="show-answers-btn" onclick="showAnswers()">Show Answers</button>
-        `;
-        summaryDiv.classList.add('show');
-
-        if (currentUser) {
-          await saveMockAttempt(correctCount, chosenProblems.length, document.getElementById("difficulty").value, problemsWithAnswers);
-        }
       }
     </script>
   </div>

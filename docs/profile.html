@@ -24,6 +24,7 @@
       --primary-blue: #0056b3;
       --success-color: #28a745;
       --error-color: #dc3545;
+      --override-color: #17a2b8;
     }
 
     body {
@@ -281,6 +282,7 @@
       padding: 12px;
       border-radius: 6px;
       text-align: center;
+      position: relative;
     }
 
     .answer-box.correct {
@@ -298,6 +300,11 @@
       border: 2px solid #6c757d;
     }
 
+    .answer-box.override {
+      background: rgba(23, 162, 184, 0.1);
+      border: 2px solid var(--override-color);
+    }
+
     .answer-label {
       font-size: 12px;
       font-weight: 600;
@@ -309,6 +316,38 @@
     .answer-value {
       font-size: 20px;
       font-weight: bold;
+    }
+
+    .override-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--override-color);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .override-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(23, 162, 184, 0.15);
+      color: var(--override-color);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 10px;
+      border: 1px solid var(--override-color);
+    }
+
+    .override-icon {
+      font-size: 16px;
     }
 
     .quality-badge {
@@ -374,6 +413,24 @@
 
     .aops-link:hover {
       text-decoration: underline;
+    }
+
+    .override-summary {
+      background: rgba(23, 162, 184, 0.1);
+      border: 2px solid var(--override-color);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-top: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--override-color);
+      font-weight: 600;
+    }
+
+    .override-summary-icon {
+      font-size: 20px;
     }
   </style>
 </head>
@@ -470,6 +527,7 @@
             <div class="summary-stat-label">Completed</div>
           </div>
         </div>
+        <div id="overrideSummary"></div>
       </div>
 
       <div id="problemsList"></div>
@@ -588,6 +646,22 @@
       document.getElementById('detailDifficulty').textContent = attempt.difficulty_level;
       document.getElementById('detailDate').textContent = new Date(attempt.completed_at).toLocaleDateString();
 
+      // Show override summary if there are any overrides
+      const overrides = attempt.overrides || {};
+      const overrideCount = Object.keys(overrides).filter(key => overrides[key]).length;
+      
+      const overrideSummaryDiv = document.getElementById('overrideSummary');
+      if (overrideCount > 0) {
+        overrideSummaryDiv.innerHTML = `
+          <div class="override-summary">
+            <span class="override-summary-icon">ℹ️</span>
+            <span>${overrideCount} problem${overrideCount > 1 ? 's were' : ' was'} manually marked as correct</span>
+          </div>
+        `;
+      } else {
+        overrideSummaryDiv.innerHTML = '';
+      }
+
       // Display problems
       displayProblems(attempt);
 
@@ -606,6 +680,7 @@
       container.innerHTML = '<div class="loading">Loading problems...</div>';
 
       const problems = attempt.problems_data || [];
+      const overrides = attempt.overrides || {};
       
       if (!problems || problems.length === 0) {
         container.innerHTML = '<p>No problem data available for this attempt.</p>';
@@ -615,15 +690,36 @@
       const problemsHTML = problems.map((problem, index) => {
         const userAnswer = problem.user_answer || null;
         const correctAnswer = problem.aime_answer ? String(problem.aime_answer % 1000) : String(problem.answer || '');
-        const isCorrect = userAnswer === correctAnswer;
+        const wasOverridden = problem.manually_corrected || overrides[index];
+        
+        // Determine if the answer was naturally correct
+        const isNaturallyCorrect = userAnswer === correctAnswer;
+        const isCorrect = isNaturallyCorrect || wasOverridden;
         const isUnanswered = !userAnswer;
 
-        const statusClass = isUnanswered ? 'unanswered' : (isCorrect ? 'correct' : 'incorrect');
-        const statusText = isUnanswered ? 'Not Answered' : (isCorrect ? 'Correct' : 'Incorrect');
+        // Determine status class
+        let statusClass = 'unanswered';
+        let statusText = 'Not Answered';
+        
+        if (!isUnanswered) {
+          if (isNaturallyCorrect) {
+            statusClass = 'correct';
+            statusText = 'Correct';
+          } else if (wasOverridden) {
+            statusClass = 'override';
+            statusText = 'Manually Marked Correct';
+          } else {
+            statusClass = 'incorrect';
+            statusText = 'Incorrect';
+          }
+        }
 
         const qualityBadge = problem.quality ? 
           `<span class="quality-badge quality-${problem.quality}">${'★'.repeat(problem.quality)} ${problem.quality}/5</span>` : 
           '';
+
+        const overrideBadgeHTML = wasOverridden ? '<span class="override-badge">Override</span>' : '';
+        const overrideIndicatorHTML = wasOverridden ? '<div class="override-indicator"><span class="override-icon">✓</span>Manually marked as correct</div>' : '';
 
         return `
           <div class="problem-detail mathjax-process">
@@ -638,7 +734,8 @@
             <div class="problem-text">${problem.rewritten_problem || problem.text || 'Problem text not available'}</div>
             
             <div class="answer-section">
-              <div class="answer-box ${statusClass}">
+              <div class="answer-box ${statusClass}" style="position: relative;">
+                ${overrideBadgeHTML}
                 <div class="answer-label">Your Answer</div>
                 <div class="answer-value">${userAnswer || '—'}</div>
               </div>
@@ -651,6 +748,8 @@
                 <div class="answer-value" style="font-size: 16px;">${statusText}</div>
               </div>
             </div>
+            
+            ${overrideIndicatorHTML}
             
             ${problem.link ? `<a href="${problem.link}" target="_blank" class="aops-link">View on AoPS →</a>` : ''}
           </div>
