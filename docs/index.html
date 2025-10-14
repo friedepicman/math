@@ -23,8 +23,6 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/latin-modern-roman@1.0.0/style.min.css">
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/latin-modern-roman@1.0.0/style.min.css">
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.4/dist/umd/supabase.min.js"></script>
 
   <script>
@@ -47,9 +45,7 @@
         element.innerHTML = '<em>No content</em>';
         return;
       }
-      // Use textContent to safely insert the content, then let MathJax process it
       element.textContent = content;
-      // Re-render MathJax for this element
       if (window.MathJax) {
         MathJax.typesetPromise([element]).catch(err => console.error('MathJax error:', err));
       }
@@ -79,7 +75,6 @@
           allProblems.push(...data);
           from += chunkSize;
           
-          // Update loading progress
           const loadingEl = document.getElementById('loadingProgress');
           if (loadingEl) {
             loadingEl.textContent = `Loading problems... ${allProblems.length}`;
@@ -96,7 +91,6 @@
     let problemsLoaded = false;
     let currentUser = null;
 
-    // Authentication functions
     async function updateAuthUI() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       currentUser = session?.user || null;
@@ -105,13 +99,11 @@
       const userInfo = document.querySelector('.user-info');
       
       if (currentUser) {
-        // User is logged in
         if (authButton) {
           authButton.textContent = 'Profile';
           authButton.href = 'profile.html';
         }
         
-        // Add user info and sign out button
         if (userInfo) {
           const displayName = currentUser.user_metadata?.display_name || currentUser.email;
           userInfo.innerHTML = `
@@ -120,7 +112,6 @@
           `;
         }
       } else {
-        // User is not logged in
         if (authButton) {
           authButton.textContent = 'Login';
           authButton.href = 'login.html';
@@ -137,7 +128,7 @@
     }
 
     async function saveMockAttempt(score, totalProblems, difficulty, problemsData) {
-      if (!currentUser) return; // User not logged in
+      if (!currentUser) return;
       
       try {
         const { error } = await supabaseClient
@@ -242,8 +233,7 @@
       margin: 0;
       padding: 0;
       background: var(--bg-primary);
-      background-image: 
-        linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+      background-image: linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-secondary) 100%);
       font-size: 17px;
       line-height: 1.7;
       color: var(--text-primary);
@@ -887,13 +877,15 @@
     
     .modal-content {
       background-color: var(--bg-card);
-      margin: 10% auto;
+      margin: 5% auto;
       padding: 32px;
       border-radius: 12px;
       width: 90%;
-      max-width: 500px;
+      max-width: 700px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.3);
       animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      max-height: 85vh;
+      overflow-y: auto;
     }
     
     @keyframes modalSlideIn {
@@ -944,6 +936,7 @@
       transition: border-color 0.2s;
       background: var(--bg-card);
       color: var(--text-primary);
+      box-sizing: border-box;
     }
     
     .modal-select:focus, .modal-textarea:focus {
@@ -1223,7 +1216,6 @@
       color: var(--primary-blue-light);
     }
 
-    /* Star rating styles */
     .quality-selector {
       display: flex;
       margin-top: 10px;
@@ -1263,6 +1255,63 @@
       color: var(--text-tertiary);
       font-size: 14px;
       margin-left: 5px;
+    }
+
+    .quality-rating {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 15px 0;
+    }
+
+    .report-section {
+      margin: 20px 0;
+      padding: 15px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      border-left: 4px solid var(--primary-blue);
+      display: none;
+    }
+
+    .section-divider {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary-blue);
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .difficulty-btn {
+      padding: 10px 5px;
+      background: white;
+      border: 2px solid var(--border-strong);
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+      font-size: 13px;
+    }
+
+    .difficulty-btn:hover {
+      background: var(--bg-secondary);
+      border-color: var(--primary-blue);
+    }
+
+    .difficulty-btn.selected {
+      background: var(--primary-blue);
+      color: white;
+      border-color: var(--primary-blue);
+    }
+
+    .modal-preview {
+      padding: 15px;
+      background: white;
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      min-height: 100px;
+      margin-bottom: 15px;
+      line-height: 1.8;
     }
 
     @media (max-width: 768px) {
@@ -1427,21 +1476,119 @@
     <div id="summary"></div>
     <div id="problems"></div>
 
+    <!-- Report Modal -->
     <div id="reportModal" class="modal">
       <div class="modal-content">
         <span class="modal-close" onclick="closeReportModal()">&times;</span>
         <div class="modal-header">Report Problem Issue</div>
         
-        <label class="modal-label">Issue Type:</label>
-        <select id="reportType" class="modal-select">
-          <option value="wrong_answer">Wrong Answer</option>
-          <option value="wrong_latex">Wrong LaTeX / Formatting</option>
-          <option value="unclear_problem">Unclear Problem Statement</option>
-          <option value="other">Other</option>
-        </select>
-        
-        <label class="modal-label">Additional Details (Optional):</label>
-        <textarea id="reportDetails" class="modal-textarea" placeholder="Please provide any additional information about the issue..."></textarea>
+        <label class="modal-label">Select Issues to Report:</label>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="reportQuality" onchange="toggleReportSection('quality')">
+            <span>Quality Rating</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="reportDifficulty" onchange="toggleReportSection('difficulty')">
+            <span>Difficulty Rating</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="reportAnswer" onchange="toggleReportSection('answer')">
+            <span>Wrong Answer</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="reportProblem" onchange="toggleReportSection('problem')">
+            <span>Problem Statement</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="reportSource" onchange="toggleReportSection('source')">
+            <span>Source</span>
+          </label>
+        </div>
+
+        <!-- Quality Section -->
+        <div id="qualitySection" class="report-section">
+          <div class="section-divider">Quality Rating</div>
+          <div class="quality-rating" style="justify-content: center;">
+            <div class="stars" id="reportQualityStars">
+              <span class="star" data-rating="1">★</span>
+              <span class="star" data-rating="2">★</span>
+              <span class="star" data-rating="3">★</span>
+              <span class="star" data-rating="4">★</span>
+              <span class="star" data-rating="5">★</span>
+            </div>
+            <span id="reportQualityText" style="margin-left: 10px; color: #666;">(0/5)</span>
+          </div>
+          <label class="modal-label">Additional Details (Optional):</label>
+          <textarea id="qualityDetails" class="modal-textarea" placeholder="Explain your quality rating..."></textarea>
+        </div>
+
+        <!-- Difficulty Section -->
+        <div id="difficultySection" class="report-section">
+          <div class="section-divider">Difficulty Rating</div>
+          <div style="display: grid; grid-template-columns: repeat(9, 1fr); gap: 8px; margin-bottom: 15px;">
+            <button type="button" class="difficulty-btn" data-diff="1.0">1.0</button>
+            <button type="button" class="difficulty-btn" data-diff="1.5">1.5</button>
+            <button type="button" class="difficulty-btn" data-diff="2.0">2.0</button>
+            <button type="button" class="difficulty-btn" data-diff="2.5">2.5</button>
+            <button type="button" class="difficulty-btn" data-diff="3.0">3.0</button>
+            <button type="button" class="difficulty-btn" data-diff="3.5">3.5</button>
+            <button type="button" class="difficulty-btn" data-diff="4.0">4.0</button>
+            <button type="button" class="difficulty-btn" data-diff="4.5">4.5</button>
+            <button type="button" class="difficulty-btn" data-diff="5.0">5.0</button>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(9, 1fr); gap: 8px; margin-bottom: 15px;">
+            <button type="button" class="difficulty-btn" data-diff="5.5">5.5</button>
+            <button type="button" class="difficulty-btn" data-diff="6.0">6.0</button>
+            <button type="button" class="difficulty-btn" data-diff="6.5">6.5</button>
+            <button type="button" class="difficulty-btn" data-diff="7.0">7.0</button>
+            <button type="button" class="difficulty-btn" data-diff="7.5">7.5</button>
+            <button type="button" class="difficulty-btn" data-diff="8.0">8.0</button>
+            <button type="button" class="difficulty-btn" data-diff="8.5">8.5</button>
+            <button type="button" class="difficulty-btn" data-diff="9.0">9.0</button>
+          </div>
+          <div style="text-align: center; margin-bottom: 15px;">
+            <strong>Selected Difficulty: <span id="selectedDifficulty">None</span></strong>
+          </div>
+          <label class="modal-label">Additional Details (Optional):</label>
+          <textarea id="difficultyDetails" class="modal-textarea" placeholder="Explain your difficulty rating..."></textarea>
+        </div>
+
+        <!-- Answer Section -->
+        <div id="answerSection" class="report-section">
+          <div class="section-divider">Correct Answer</div>
+          <label class="modal-label">Current Answer: <strong id="currentAnswer">-</strong></label>
+          <label class="modal-label">Your Proposed Answer:</label>
+          <input type="text" id="proposedAnswer" maxlength="3" placeholder="000" style="width: 100px; padding: 8px; border: 2px solid var(--border-strong); border-radius: 6px; text-align: center; font-size: 18px; font-weight: bold;">
+          <label class="modal-label" style="margin-top: 15px;">Additional Details (Optional):</label>
+          <textarea id="answerDetails" class="modal-textarea" placeholder="Explain why this is the correct answer..."></textarea>
+        </div>
+
+        <!-- Problem Statement Section -->
+        <div id="problemSection" class="report-section">
+          <div class="section-divider">Problem Statement</div>
+          <label class="modal-label">Edit Problem Statement (LaTeX):</label>
+          <textarea id="problemText" class="modal-textarea" style="min-height: 150px; font-family: 'Courier New', monospace;" oninput="updateProblemPreview()"></textarea>
+          
+          <label class="modal-label">Preview:</label>
+          <div id="problemPreview" class="modal-preview mathjax-render"></div>
+          
+          <label class="modal-label">Answer for Modified Problem:</label>
+          <input type="text" id="problemAnswer" maxlength="3" placeholder="000" style="width: 100px; padding: 8px; border: 2px solid var(--border-strong); border-radius: 6px; text-align: center; font-size: 18px; font-weight: bold;">
+          
+          <label class="modal-label" style="margin-top: 15px;">Additional Details (Optional):</label>
+          <textarea id="problemDetails" class="modal-textarea" placeholder="Explain your changes..."></textarea>
+        </div>
+
+        <!-- Source Section -->
+        <div id="sourceSection" class="report-section">
+          <div class="section-divider">Source</div>
+          <label class="modal-label">Current Source: <strong id="currentSource">-</strong></label>
+          <label class="modal-label">Corrected Source:</label>
+          <input type="text" id="proposedSource" placeholder="e.g., AMC 12A 2020/15" style="width: 100%; padding: 10px; border: 2px solid var(--border-strong); border-radius: 6px; box-sizing: border-box;">
+          <label class="modal-label" style="margin-top: 15px;">Additional Details (Optional):</label>
+          <textarea id="sourceDetails" class="modal-textarea" placeholder="Provide source information or link..."></textarea>
+        </div>
         
         <button class="modal-submit" id="submitReport">Submit Report</button>
       </div>
@@ -1469,7 +1616,7 @@
       }
 
       // Quality selector logic
-      let selectedQuality = 3; // Default to 3 stars
+      let selectedQuality = 3;
 
       function updateQualityStars() {
         const stars = document.querySelectorAll('#qualityStars .star');
@@ -1512,7 +1659,6 @@
         }
       }, true);
 
-      // Initialize quality stars
       updateQualityStars();
 
       let navVisible = false;
@@ -1676,13 +1822,54 @@
         }
       });
 
+      // Report Modal Functions
       let currentReportProblemId = null;
+      let reportQualityRating = 0;
+      let reportDifficultyRating = null;
+      let currentReportProblemData = null;
 
       function openReportModal(problemId) {
         currentReportProblemId = problemId;
+        
+        currentReportProblemData = chosenProblems.find(p => p.id === problemId);
+        
+        document.getElementById('reportQuality').checked = false;
+        document.getElementById('reportDifficulty').checked = false;
+        document.getElementById('reportAnswer').checked = false;
+        document.getElementById('reportProblem').checked = false;
+        document.getElementById('reportSource').checked = false;
+        
+        document.querySelectorAll('.report-section').forEach(section => {
+          section.style.display = 'none';
+        });
+        
+        reportQualityRating = 0;
+        reportDifficultyRating = null;
+        document.querySelectorAll('#reportQualityStars .star').forEach(star => star.classList.remove('filled'));
+        document.getElementById('reportQualityText').textContent = '(0/5)';
+        document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('selected'));
+        document.getElementById('selectedDifficulty').textContent = 'None';
+        
+        document.getElementById('qualityDetails').value = '';
+        document.getElementById('difficultyDetails').value = '';
+        document.getElementById('proposedAnswer').value = '';
+        document.getElementById('answerDetails').value = '';
+        document.getElementById('problemText').value = '';
+        document.getElementById('problemAnswer').value = '';
+        document.getElementById('problemDetails').value = '';
+        document.getElementById('proposedSource').value = '';
+        document.getElementById('sourceDetails').value = '';
+        
+        if (currentReportProblemData) {
+          const currentAns = currentReportProblemData.aime_answer ? 
+            String(currentReportProblemData.aime_answer % 1000) : 
+            String(currentReportProblemData.answer || '-');
+          document.getElementById('currentAnswer').textContent = currentAns;
+          document.getElementById('currentSource').textContent = currentReportProblemData.source || 'Unknown';
+          document.getElementById('problemText').value = currentReportProblemData.rewritten_problem || currentReportProblemData.text || '';
+        }
+        
         document.getElementById('reportModal').style.display = 'block';
-        document.getElementById('reportDetails').value = '';
-        document.getElementById('reportType').value = 'wrong_answer';
       }
 
       function closeReportModal() {
@@ -1697,6 +1884,71 @@
         }
       }
 
+      function toggleReportSection(section) {
+        const checkbox = document.getElementById(`report${section.charAt(0).toUpperCase() + section.slice(1)}`);
+        const sectionDiv = document.getElementById(`${section}Section`);
+        
+        if (checkbox.checked) {
+          sectionDiv.style.display = 'block';
+        } else {
+          sectionDiv.style.display = 'none';
+        }
+      }
+
+      // Quality star handlers for report modal
+      document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('star') && e.target.closest('#reportQualityStars')) {
+          reportQualityRating = parseInt(e.target.getAttribute('data-rating'));
+          updateReportQualityStars();
+        }
+        
+        if (e.target.classList.contains('difficulty-btn')) {
+          document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('selected'));
+          e.target.classList.add('selected');
+          reportDifficultyRating = parseFloat(e.target.getAttribute('data-diff'));
+          document.getElementById('selectedDifficulty').textContent = reportDifficultyRating.toFixed(1);
+        }
+      });
+
+      function updateReportQualityStars() {
+        const stars = document.querySelectorAll('#reportQualityStars .star');
+        stars.forEach((star, index) => {
+          if (index < reportQualityRating) {
+            star.classList.add('filled');
+          } else {
+            star.classList.remove('filled');
+          }
+        });
+        document.getElementById('reportQualityText').textContent = `(${reportQualityRating}/5)`;
+      }
+
+      document.addEventListener('mouseenter', function(e) {
+        if (e.target.classList.contains('star') && e.target.closest('#reportQualityStars')) {
+          const rating = parseInt(e.target.getAttribute('data-rating'));
+          const stars = document.querySelectorAll('#reportQualityStars .star');
+          stars.forEach((star, index) => {
+            star.classList.remove('hover');
+            if (index < rating) {
+              star.classList.add('hover');
+            }
+          });
+        }
+      }, true);
+
+      document.addEventListener('mouseleave', function(e) {
+        if (e.target.classList.contains('star') && e.target.closest('#reportQualityStars')) {
+          const stars = document.querySelectorAll('#reportQualityStars .star');
+          stars.forEach(star => star.classList.remove('hover'));
+        }
+      }, true);
+
+      function updateProblemPreview() {
+        const text = document.getElementById('problemText').value;
+        const preview = document.getElementById('problemPreview');
+        
+        setMathContent(preview, text);
+      }
+
       document.getElementById('submitReport').addEventListener('click', async () => {
         if (!currentReportProblemId) return;
 
@@ -1704,8 +1956,48 @@
         submitButton.disabled = true;
         submitButton.textContent = 'Submitting...';
 
-        const reportType = document.getElementById('reportType').value;
-        const details = document.getElementById('reportDetails').value.trim();
+        const reportData = {
+          problem_id: currentReportProblemId,
+          report_types: []
+        };
+
+        if (document.getElementById('reportQuality').checked) {
+          reportData.report_types.push('quality');
+          reportData.quality_rating = reportQualityRating;
+          reportData.quality_details = document.getElementById('qualityDetails').value.trim() || null;
+        }
+
+        if (document.getElementById('reportDifficulty').checked) {
+          reportData.report_types.push('difficulty');
+          reportData.difficulty_rating = reportDifficultyRating;
+          reportData.difficulty_details = document.getElementById('difficultyDetails').value.trim() || null;
+        }
+
+        if (document.getElementById('reportAnswer').checked) {
+          reportData.report_types.push('wrong_answer');
+          reportData.proposed_answer = document.getElementById('proposedAnswer').value.trim() || null;
+          reportData.answer_details = document.getElementById('answerDetails').value.trim() || null;
+        }
+
+        if (document.getElementById('reportProblem').checked) {
+          reportData.report_types.push('problem_statement');
+          reportData.proposed_problem = document.getElementById('problemText').value.trim() || null;
+          reportData.proposed_problem_answer = document.getElementById('problemAnswer').value.trim() || null;
+          reportData.problem_details = document.getElementById('problemDetails').value.trim() || null;
+        }
+
+        if (document.getElementById('reportSource').checked) {
+          reportData.report_types.push('source');
+          reportData.proposed_source = document.getElementById('proposedSource').value.trim() || null;
+          reportData.source_details = document.getElementById('sourceDetails').value.trim() || null;
+        }
+
+        if (reportData.report_types.length === 0) {
+          alert('Please select at least one issue to report.');
+          submitButton.disabled = false;
+          submitButton.textContent = 'Submit Report';
+          return;
+        }
 
         try {
           const { error } = await supabaseClient
@@ -1713,9 +2005,8 @@
             .insert([
               {
                 problem_id: currentReportProblemId,
-                report_type: reportType,
-                details: details || null
-                // created_at will be set automatically by the database
+                report_type: reportData.report_types.join(','),
+                details: JSON.stringify(reportData)
               }
             ]);
 
@@ -1987,7 +2278,6 @@
         let correctCount = 0;
         let results = [];
 
-        // Add user answers to problems data
         const problemsWithAnswers = chosenProblems.map((p, i) => {
           const input = document.querySelector(`input[data-index="${i}"]`);
           return {
