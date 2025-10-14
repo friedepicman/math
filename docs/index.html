@@ -129,30 +129,40 @@
     }
 
     async function saveMockAttempt(score, totalProblems, difficulty, problemsData) {
-      if (!currentUser) return;
+      if (!currentUser) {
+        console.log('No user logged in, skipping save');
+        return;
+      }
       
       try {
-        const { error } = await supabaseClient
+        const attemptData = {
+          user_id: currentUser.id,
+          difficulty_level: parseInt(difficulty),
+          score: score,
+          total_problems: totalProblems,
+          problems_data: problemsData,
+          completed_at: new Date().toISOString()
+        };
+        
+        // Only add overrides if there are any
+        if (Object.keys(problemOverrides).length > 0) {
+          attemptData.overrides = problemOverrides;
+        }
+        
+        const { data, error } = await supabaseClient
           .from('mock_attempts')
-          .insert([
-            {
-              user_id: currentUser.id,
-              difficulty_level: parseInt(difficulty),
-              score: score,
-              total_problems: totalProblems,
-              problems_data: problemsData,
-              completed_at: new Date().toISOString(),
-              overrides: problemOverrides // Save which problems were overridden
-            }
-          ]);
+          .insert([attemptData])
+          .select();
         
         if (error) {
           console.error('Error saving attempt:', error);
+          alert('Failed to save mock attempt: ' + error.message);
         } else {
-          console.log('Mock attempt saved successfully');
+          console.log('Mock attempt saved successfully', data);
         }
       } catch (err) {
         console.error('Error saving mock attempt:', err);
+        alert('Failed to save mock attempt: ' + err.message);
       }
     }
 
@@ -2242,6 +2252,7 @@
             };
           });
           
+          console.log('Updating mock attempt after override...');
           saveMockAttempt(correctCount, chosenProblems.length, document.getElementById("difficulty").value, problemsWithAnswers);
         }
       }
@@ -2283,7 +2294,8 @@
           const input = document.querySelector(`input[data-index="${i}"]`);
           return {
             ...p,
-            user_answer: input?.value?.trim() || null
+            user_answer: input?.value?.trim() || null,
+            manually_corrected: false // Initialize as false
           };
         });
 
@@ -2357,8 +2369,12 @@
         `;
         summaryDiv.classList.add('show');
 
+        // Save attempt immediately after checking
         if (currentUser) {
+          console.log('Saving mock attempt...');
           await saveMockAttempt(correctCount, chosenProblems.length, document.getElementById("difficulty").value, problemsWithAnswers);
+        } else {
+          console.log('User not logged in, not saving attempt');
         }
       }
 
