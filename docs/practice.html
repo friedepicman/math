@@ -127,14 +127,12 @@
         html += `<div class="shield-back shield-${tier.name}-back"></div>`;
       }
       
-      // Design B & C: 6 outward triangles
+      // Design B & C: 4 outward triangles (corners only, no left/right)
       if (tier.design === 'B' || tier.design === 'C') {
-        html += `<div class="shield-tri-top shield-${tier.name}-tri"></div>`;
         html += `<div class="shield-tri-topleft shield-${tier.name}-tri"></div>`;
         html += `<div class="shield-tri-topright shield-${tier.name}-tri"></div>`;
-        html += `<div class="shield-tri-bottomleft shield-${tier.name}-tri"></div>`;
         html += `<div class="shield-tri-bottomright shield-${tier.name}-tri"></div>`;
-        html += `<div class="shield-tri-bottom shield-${tier.name}-tri"></div>`;
+        html += `<div class="shield-tri-bottomleft shield-${tier.name}-tri"></div>`;
       }
       
       // Design A, B, C: Side trapezoids
@@ -383,9 +381,9 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 75px;
-      height: 80px;
-      margin-right: -12px;
+      width: 65px;
+      height: 68px;
+      margin-right: -10px;
     }
 
     .level-shield {
@@ -489,84 +487,60 @@
     }
 
     /* === TIERS 81-100: Design B - Stretched trapezoids + equilateral triangles === */
-    /* Triangles: equilateral, side = 60% of outer hex (~28px), attached & behind hexagon */
+    /* 4 triangles only (no left/right), smaller size, touching hex */
     .shield-container-designB .shield-horn-left,
     .shield-container-designB .shield-horn-right {
       width: 14px;
     }
 
-    /* Equilateral triangle: 28px side, ~24px height */
-    /* All triangles behind hexagon (z-index: 0) and touching edges */
+    /* Equilateral triangle: ~13px side (30% smaller than 18px) */
+    /* Position at midpoint of each angled hex edge */
     
-    /* Top triangle - points up */
-    .shield-tri-top {
-      position: absolute;
-      top: -12px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 28px;
-      height: 24px;
-      z-index: 0;
-      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-    }
-
-    /* Top-left triangle - points up-left (30° from vertical) */
+    /* Top-left edge - points up-left (~-30° from vertical) */
     .shield-tri-topleft {
       position: absolute;
-      top: -2px;
-      left: -4px;
-      width: 28px;
-      height: 24px;
+      top: 6px;
+      left: 11px;
+      width: 13px;
+      height: 11px;
       z-index: 0;
-      transform: rotate(-60deg);
+      transform: rotate(-30deg);
       clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
     }
 
-    /* Top-right triangle - points up-right (30° from vertical) */
+    /* Top-right edge - points up-right (~30° from vertical) */
     .shield-tri-topright {
       position: absolute;
-      top: -2px;
-      right: -4px;
-      width: 28px;
-      height: 24px;
+      top: 6px;
+      right: 11px;
+      width: 13px;
+      height: 11px;
       z-index: 0;
-      transform: rotate(60deg);
+      transform: rotate(30deg);
       clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
     }
 
-    /* Bottom-left triangle - points down-left */
-    .shield-tri-bottomleft {
-      position: absolute;
-      bottom: -2px;
-      left: -4px;
-      width: 28px;
-      height: 24px;
-      z-index: 0;
-      transform: rotate(-120deg);
-      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-    }
-
-    /* Bottom-right triangle - points down-right */
+    /* Bottom-right edge - points down-right (~150°) */
     .shield-tri-bottomright {
       position: absolute;
-      bottom: -2px;
-      right: -4px;
-      width: 28px;
-      height: 24px;
+      bottom: 6px;
+      right: 11px;
+      width: 13px;
+      height: 11px;
       z-index: 0;
-      transform: rotate(120deg);
+      transform: rotate(150deg);
       clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
     }
 
-    /* Bottom triangle - points down */
-    .shield-tri-bottom {
+    /* Bottom-left edge - points down-left (~-150° or 210°) */
+    .shield-tri-bottomleft {
       position: absolute;
-      bottom: -12px;
-      left: 50%;
-      transform: translateX(-50%) rotate(180deg);
-      width: 28px;
-      height: 24px;
+      bottom: 6px;
+      left: 11px;
+      width: 13px;
+      height: 11px;
       z-index: 0;
+      transform: rotate(-150deg);
       clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
     }
 
