@@ -3,7 +3,7 @@
 <head>
   <!-- 
     LATEST VERSION - Updated: Compact layout with rewritten preview by default
-    Version: 2024-01-07-v4 - SECURITY FIXED
+    Version: 2024-01-07-v5 - Added problem type dropdown
   -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -130,7 +130,7 @@
       font-size: 13px;
     }
     
-    .field-group input {
+    .field-group input, .field-group select {
       margin: 0;
     }
     
@@ -346,6 +346,29 @@
     .sign-out-btn:hover {
       background: #c82333;
     }
+    
+    .type-select {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      min-width: 130px;
+    }
+    
+    .type-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    
+    .type-badge.algebra { background: #667eea; color: white; }
+    .type-badge.geometry { background: #f5576c; color: white; }
+    .type-badge.number_theory { background: #4facfe; color: white; }
+    .type-badge.counting { background: #43e97b; color: white; }
+    .type-badge.none { background: #ccc; color: #666; }
   </style>
 
   <script>
@@ -400,6 +423,10 @@
       <label>
         <input type="checkbox" id="showUnratedOnly" />
         Show only unrated problems
+      </label>
+      <label>
+        <input type="checkbox" id="showUntypedOnly" />
+        Show only untyped problems
       </label>
       <button onclick="loadProblems()">Refresh</button>
     </div>
@@ -519,6 +546,7 @@
       const showUnfinalized = document.getElementById('showUnfinalizedOnly').checked;
       const showRated = document.getElementById('showRatedOnly').checked;
       const showUnrated = document.getElementById('showUnratedOnly').checked;
+      const showUntyped = document.getElementById('showUntypedOnly').checked;
       
       allProblems = allData.filter(p => {
         // Review status filters
@@ -532,6 +560,9 @@
         // Rating status filters
         if (showRated && (!p.quality || p.quality === 0)) return false;
         if (showUnrated && p.quality && p.quality > 0) return false;
+        
+        // Type filter
+        if (showUntyped && p.type) return false;
         
         return true;
       });
@@ -547,12 +578,14 @@
       const unreviewed = total - reviewed;
       const finalized = allProblems.filter(p => p.finalized).length;
       const rated = allProblems.filter(p => p.quality && p.quality > 0).length;
+      const typed = allProblems.filter(p => p.type).length;
       
       document.getElementById('stats').innerHTML = `
         <strong>Total problems:</strong> ${total} | 
         <strong>Reviewed:</strong> ${reviewed} (${total > 0 ? Math.round(reviewed/total*100) : 0}%) | 
         <strong>Finalized:</strong> ${finalized} (${total > 0 ? Math.round(finalized/total*100) : 0}%) | 
         <strong>Rated:</strong> ${rated} (${total > 0 ? Math.round(rated/total*100) : 0}%) | 
+        <strong>Typed:</strong> ${typed} (${total > 0 ? Math.round(typed/total*100) : 0}%) | 
         <strong>Unreviewed:</strong> ${unreviewed}
       `;
     }
@@ -603,6 +636,17 @@
       }
       
       return starsHTML;
+    }
+
+    function getTypeBadge(type) {
+      if (!type) return '<span class="type-badge none">No Type</span>';
+      const labels = {
+        algebra: 'Algebra',
+        geometry: 'Geometry',
+        number_theory: 'Number Theory',
+        counting: 'Counting'
+      };
+      return `<span class="type-badge ${type}">${labels[type] || type}</span>`;
     }
 
     // Add event delegation for star clicks and hovers
@@ -707,6 +751,7 @@
           <div class="problem-header">
             <div class="header-left">
               <span class="problem-id">Problem ID: ${p.id}</span>
+              ${getTypeBadge(p.type)}
               <div class="quality-rating">
                 <span class="quality-label">Quality:</span>
                 <div class="stars" id="stars-${p.id}">
@@ -766,6 +811,17 @@
             </div>
             
             <div class="field-group">
+              <label>Type:</label>
+              <select id="type-${p.id}" class="type-select" onchange="saveProblem(${p.id})">
+                <option value="">None</option>
+                <option value="algebra">Algebra</option>
+                <option value="geometry">Geometry</option>
+                <option value="number_theory">Number Theory</option>
+                <option value="counting">Counting</option>
+              </select>
+            </div>
+            
+            <div class="field-group">
               <label>Source:</label>
               <input type="text" id="source-${p.id}" value="" onblur="saveProblem(${p.id})" style="width: 250px;" />
             </div>
@@ -804,6 +860,7 @@
         document.getElementById(`aime-answer-${p.id}`).value = p.aime_answer || '';
         document.getElementById(`difficulty-${p.id}`).value = p.difficulty || '';
         document.getElementById(`source-${p.id}`).value = p.source || '';
+        document.getElementById(`type-${p.id}`).value = p.type || '';
         
         // Safely set link
         if (p.link) {
@@ -928,6 +985,7 @@
       const aimeAnswer = document.getElementById(`aime-answer-${problemId}`).value;
       const difficulty = document.getElementById(`difficulty-${problemId}`).value;
       const source = document.getElementById(`source-${problemId}`).value;
+      const type = document.getElementById(`type-${problemId}`).value;
       const statusEl = document.getElementById(`status-${problemId}`);
       
       statusEl.textContent = 'Saving...';
@@ -936,6 +994,7 @@
       const updateData = {
         answer,
         source,
+        type: type || null,
         aime_answer: aimeAnswer ? parseInt(aimeAnswer) : null,
         difficulty: difficulty ? parseFloat(difficulty) : null
       };
@@ -961,6 +1020,16 @@
           problem.aime_answer = aimeAnswer ? parseInt(aimeAnswer) : null;
           problem.difficulty = difficulty ? parseFloat(difficulty) : null;
           problem.source = source;
+          problem.type = type || null;
+        }
+        
+        // Update the type badge in the header
+        const headerLeft = document.querySelector(`#problem-${problemId} .header-left`);
+        if (headerLeft) {
+          const existingBadge = headerLeft.querySelector('.type-badge');
+          if (existingBadge) {
+            existingBadge.outerHTML = getTypeBadge(type || null);
+          }
         }
         
         setTimeout(() => { statusEl.textContent = ''; }, 2000);
@@ -1054,6 +1123,9 @@
       if (this.checked) {
         document.getElementById('showRatedOnly').checked = false;
       }
+      loadProblems();
+    });
+    document.getElementById('showUntypedOnly').addEventListener('change', function() {
       loadProblems();
     });
   </script>

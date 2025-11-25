@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Practice math problems with adaptive XP tracking. Improve your skills in algebra, geometry, number theory, and counting." />
+  <link rel="icon" type="image/png" href="256px_transparentBG.png">
+  <title>Practice Mode - Mock AIME</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.4/dist/umd/supabase.min.js"></script>
+
+  <script>
+    const SUPABASE_URL = 'https://ftdbplxkyaocyrjpmjyb.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0ZGJwbHhreWFvY3lyanBtanliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMDgxMDUsImV4cCI6MjA2NzY4NDEwNX0.hE0V09JxdLYNbZqPVH3HZxNpLPP2rXIaBsNGUHO3upc';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // XP table by difficulty
+    const XP_TABLE = {
+      1: 5, 1.5: 10, 2: 15, 2.5: 20, 3: 25, 3.5: 30, 4: 40, 4.5: 50,
+      5: 60, 5.5: 70, 6: 80, 6.5: 90, 7: 100, 7.5: 120, 8: 140,
+      8.5: 160, 9: 180, 9.5: 210, 10: 220
+    };
+
+    function getXpForDifficulty(difficulty) {
+      const d = Math.round(difficulty * 2) / 2; // Round to nearest 0.5
+      return XP_TABLE[d] || XP_TABLE[Math.floor(d)] || 5;
+    }
+
+    function escapeHtml(text) {
+      if (!text) return text;
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function setMathContent(element, content) {
+      if (!content) {
+        element.innerHTML = '<em>No content</em>';
+        return;
+      }
+      element.textContent = content;
+      if (window.MathJax) {
+        MathJax.typesetPromise([element]).catch(err => console.error('MathJax error:', err));
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --bg-primary: #f8f9fa;
+      --bg-secondary: #e9ecef;
+      --bg-card: #ffffff;
+      --text-primary: #212529;
+      --text-secondary: #495057;
+      --text-tertiary: #6c757d;
+      --border-color: #dee2e6;
+      --border-strong: #adb5bd;
+      --primary-blue: #0056b3;
+      --primary-blue-light: #0056b3;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
+      --accent-primary: #0056b3;
+      --accent-secondary: #00aa66;
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #1a1a1a;
+      --bg-secondary: #2d2d2d;
+      --bg-card: #2d2d2d;
+      --text-primary: #e0e0e0;
+      --text-secondary: #b0b0b0;
+      --text-tertiary: #888888;
+      --border-color: #404040;
+      --border-strong: #555555;
+      --primary-blue: #4a9eff;
+      --primary-blue-light: #6bb3ff;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--bg-primary);
+      font-size: 17px;
+      line-height: 1.7;
+      color: var(--text-primary);
+      transition: background 0.3s, color 0.3s;
+    }
+    
+    h1 {
+      text-align: center;
+      color: var(--accent-primary);
+      font-weight: 700;
+      font-size: 2.4rem;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.5px;
+    }
+    
+    nav {
+      background: #0056b3;
+      box-shadow: 0 2px 8px rgba(0, 86, 179, 0.3);
+      margin-bottom: 48px;
+      border-bottom: 3px solid var(--accent-secondary);
+    }
+    
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 20px 24px;
+      transition: all 0.2s;
+      display: inline-block;
+      font-weight: 500;
+    }
+    
+    nav a:hover {
+      background: rgba(255,255,255,0.15);
+      border-radius: 4px;
+    }
+
+    .dark-mode-toggle {
+      background: transparent;
+      border: 2px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 20px;
+      transition: all 0.2s;
+    }
+
+    .dark-mode-toggle:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.5);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+      border: 2px solid var(--border-color);
+    }
+
+    .card-header {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent-primary);
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    /* XP Bars */
+    .xp-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+    }
+
+    .xp-bar-wrapper {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .xp-bar-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .xp-bar-value {
+      font-weight: 700;
+      color: var(--accent-primary);
+    }
+
+    .xp-bar-track {
+      height: 12px;
+      background: var(--border-color);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .xp-bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.5s ease, background 0.3s;
+    }
+
+    .xp-bar-fill.algebra { background: linear-gradient(90deg, #667eea, #764ba2); }
+    .xp-bar-fill.geometry { background: linear-gradient(90deg, #f093fb, #f5576c); }
+    .xp-bar-fill.number_theory { background: linear-gradient(90deg, #4facfe, #00f2fe); }
+    .xp-bar-fill.counting { background: linear-gradient(90deg, #43e97b, #38f9d7); }
+    .xp-bar-fill.general { background: linear-gradient(90deg, #fa709a, #fee140); }
+
+    /* Filters */
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-group label {
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .type-checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .type-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--bg-secondary);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+
+    .type-checkbox:hover {
+      border-color: var(--primary-blue);
+    }
+
+    .type-checkbox.selected {
+      background: var(--primary-blue);
+      color: white;
+    }
+
+    .type-checkbox input {
+      display: none;
+    }
+
+    select {
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: 2px solid var(--border-strong);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--primary-blue);
+    }
+
+    button {
+      padding: 12px 24px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary-blue);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 86, 179, 0.3);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+
+    .btn-skip {
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      border: 2px solid var(--border-strong);
+    }
+
+    .btn-skip:hover {
+      background: var(--border-color);
+    }
+
+    /* Problem Display */
+    .problem-card {
+      border-left: 5px solid var(--primary-blue);
+      position: relative;
+    }
+
+    .problem-meta {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .problem-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .badge-difficulty {
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+    }
+
+    .badge-type {
+      background: var(--primary-blue);
+      color: white;
+    }
+
+    .badge-xp {
+      background: linear-gradient(135deg, #ffc107, #ff9800);
+      color: #000;
+    }
+
+    .problem-text {
+      font-size: 17px;
+      line-height: 1.8;
+      margin-bottom: 20px;
+    }
+
+    .answer-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .answer-input {
+      padding: 12px 16px;
+      font-size: 18px;
+      width: 120px;
+      text-align: center;
+      border: 2px solid var(--border-strong);
+      border-radius: 8px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .answer-input:focus {
+      outline: none;
+      border-color: var(--primary-blue);
+      box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+    }
+
+    /* Result Display */
+    .result-display {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .result-display.show {
+      display: block;
+      animation: slideIn 0.3s ease;
+    }
+
+    .result-display.correct {
+      background: linear-gradient(135deg, #d4edda, #c3e6cb);
+      border: 2px solid #28a745;
+      color: #155724;
+    }
+
+    .result-display.incorrect {
+      background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+      border: 2px solid #dc3545;
+      color: #721c24;
+    }
+
+    [data-theme="dark"] .result-display.correct {
+      background: linear-gradient(135deg, #1b5e20, #2e7d32);
+      color: #a5d6a7;
+    }
+
+    [data-theme="dark"] .result-display.incorrect {
+      background: linear-gradient(135deg, #b71c1c, #c62828);
+      color: #ef9a9a;
+    }
+
+    .result-header {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .xp-change {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .xp-change.positive { color: #28a745; }
+    .xp-change.negative { color: #dc3545; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Stats */
+    .stats-row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent-primary);
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--border-color);
+      border-top: 4px solid var(--primary-blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-tertiary);
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    /* Login prompt */
+    .login-prompt {
+      background: linear-gradient(135deg, #e7f3ff, #cce5ff);
+      border: 2px solid var(--primary-blue);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    [data-theme="dark"] .login-prompt {
+      background: linear-gradient(135deg, #1a3a52, #0d47a1);
+    }
+
+    .login-prompt a {
+      color: var(--primary-blue);
+      font-weight: 600;
+    }
+
+    .aops-link {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      color: var(--primary-blue);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .aops-link:hover {
+      background: var(--bg-secondary);
+    }
+
+    @media (max-width: 768px) {
+      h1 { font-size: 1.8rem; }
+      .xp-container { grid-template-columns: 1fr 1fr; }
+      nav a { padding: 16px 12px; font-size: 14px; }
+    }
+  </style>
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <nav>
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
+      <a href="index.html" style="display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 600; padding: 16px 0;">
+        <img src="256px_transparentBG.png" alt="Mock AIME Logo" style="height: 40px; width: auto;">
+        Mock AIME
+      </a>
+      <div style="display: flex; gap: 0; align-items: center;">
+        <a href="index.html">Mock Test</a>
+        <a href="practice.html" style="background: rgba(255,255,255,0.15);">Practice</a>
+        <a href="search.html">Search</a>
+        <a href="login.html" class="auth-button">Login</a>
+        <div class="user-info"></div>
+        <button class="dark-mode-toggle" onclick="toggleDarkMode()">🌙 Dark</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1>Practice Mode</h1>
+    <p style="text-align: center; color: var(--text-tertiary); margin-bottom: 32px;">
+      Solve problems to earn XP. Correct answers give XP, wrong answers lose some.
+    </p>
+
+    <div id="loginPrompt" class="login-prompt" style="display: none;">
+      ⚠️ <a href="login.html">Log in</a> to save your XP progress!
+    </div>
+
+    <!-- XP Display -->
+    <div class="card">
+      <div class="card-header">Your XP</div>
+      <div class="xp-container">
+        <div class="xp-bar-wrapper">
+          <div class="xp-bar-label">
+            <span>Algebra</span>
+            <span class="xp-bar-value" id="xp-algebra-value">0</span>
+          </div>
+          <div class="xp-bar-track">
+            <div class="xp-bar-fill algebra" id="xp-algebra-bar" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="xp-bar-wrapper">
+          <div class="xp-bar-label">
+            <span>Geometry</span>
+            <span class="xp-bar-value" id="xp-geometry-value">0</span>
+          </div>
+          <div class="xp-bar-track">
+            <div class="xp-bar-fill geometry" id="xp-geometry-bar" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="xp-bar-wrapper">
+          <div class="xp-bar-label">
+            <span>Number Theory</span>
+            <span class="xp-bar-value" id="xp-number_theory-value">0</span>
+          </div>
+          <div class="xp-bar-track">
+            <div class="xp-bar-fill number_theory" id="xp-number_theory-bar" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="xp-bar-wrapper">
+          <div class="xp-bar-label">
+            <span>Counting</span>
+            <span class="xp-bar-value" id="xp-counting-value">0</span>
+          </div>
+          <div class="xp-bar-track">
+            <div class="xp-bar-fill counting" id="xp-counting-bar" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="xp-bar-wrapper" style="grid-column: 1 / -1;">
+          <div class="xp-bar-label">
+            <span>🌟 General XP</span>
+            <span class="xp-bar-value" id="xp-general-value">0</span>
+          </div>
+          <div class="xp-bar-track">
+            <div class="xp-bar-fill general" id="xp-general-bar" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Session Stats -->
+    <div class="card">
+      <div class="card-header">Session Stats</div>
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-value" id="session-solved">0</div>
+          <div class="stat-label">Solved</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="session-correct">0</div>
+          <div class="stat-label">Correct</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="session-accuracy">0%</div>
+          <div class="stat-label">Accuracy</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value xp-change positive" id="session-xp">+0</div>
+          <div class="stat-label">XP Earned</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card">
+      <div class="card-header">Settings</div>
+      
+      <div style="margin-bottom: 16px;">
+        <label style="font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 8px;">Problem Types:</label>
+        <div class="type-checkboxes">
+          <label class="type-checkbox selected" data-type="algebra">
+            <input type="checkbox" checked> Algebra
+          </label>
+          <label class="type-checkbox selected" data-type="geometry">
+            <input type="checkbox" checked> Geometry
+          </label>
+          <label class="type-checkbox selected" data-type="number_theory">
+            <input type="checkbox" checked> Number Theory
+          </label>
+          <label class="type-checkbox selected" data-type="counting">
+            <input type="checkbox" checked> Counting
+          </label>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Min Difficulty:</label>
+          <select id="minDifficulty">
+            <option value="1">1</option>
+            <option value="1.5">1.5</option>
+            <option value="2">2</option>
+            <option value="2.5">2.5</option>
+            <option value="3" selected>3</option>
+            <option value="3.5">3.5</option>
+            <option value="4">4</option>
+            <option value="4.5">4.5</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Max Difficulty:</label>
+          <select id="maxDifficulty">
+            <option value="5">5</option>
+            <option value="5.5">5.5</option>
+            <option value="6">6</option>
+            <option value="6.5">6.5</option>
+            <option value="7" selected>7</option>
+            <option value="7.5">7.5</option>
+            <option value="8">8</option>
+            <option value="8.5">8.5</option>
+            <option value="9">9</option>
+            <option value="9.5">9.5</option>
+            <option value="10">10</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="startBtn" onclick="startPractice()">Start Practice</button>
+    </div>
+
+    <!-- Problem Area -->
+    <div id="problemArea" style="display: none;">
+      <div class="card problem-card">
+        <a href="#" target="_blank" class="aops-link" id="aopsLink">View Discussion</a>
+        <div class="problem-meta">
+          <span class="problem-badge badge-type" id="problemType">Algebra</span>
+          <span class="problem-badge badge-difficulty" id="problemDifficulty">Difficulty: 5.0</span>
+          <span class="problem-badge badge-xp" id="problemXp">+60 XP</span>
+        </div>
+        <div class="problem-text" id="problemText"></div>
+        
+        <div class="answer-section">
+          <span style="font-weight: 500;">Answer:</span>
+          <input type="text" class="answer-input" id="answerInput" maxlength="3" placeholder="000" />
+          <button class="btn-primary" id="submitBtn" onclick="submitAnswer()">Submit</button>
+          <button class="btn-skip" onclick="skipProblem()">Skip</button>
+        </div>
+
+        <div class="result-display" id="resultDisplay">
+          <div class="result-header" id="resultHeader"></div>
+          <div id="resultDetails"></div>
+          <button class="btn-primary" style="margin-top: 16px;" onclick="nextProblem()">Next Problem</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="card" style="display: none;">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading problems...</p>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="card" style="display: none;">
+      <div class="empty-state">
+        <div class="empty-state-icon">😕</div>
+        <p>No problems found matching your filters.<br>Try selecting more types or adjusting difficulty range.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let allProblems = [];
+    let filteredProblems = [];
+    let currentProblem = null;
+    let currentUser = null;
+    let usedProblemIds = new Set();
+    
+    // XP State
+    let userXp = {
+      algebra: 0,
+      geometry: 0,
+      number_theory: 0,
+      counting: 0,
+      general: 0
+    };
+
+    // Session stats
+    let sessionStats = {
+      solved: 0,
+      correct: 0,
+      xpEarned: 0
+    };
+
+    // Selected types
+    let selectedTypes = new Set(['algebra', 'geometry', 'number_theory', 'counting']);
+
+    // Dark mode
+    function toggleDarkMode() {
+      const html = document.documentElement;
+      const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      document.querySelector('.dark-mode-toggle').textContent = newTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+    }
+
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    if (savedTheme === 'dark') {
+      document.querySelector('.dark-mode-toggle').textContent = '☀️ Light';
+    }
+
+    // Type checkbox handlers
+    document.querySelectorAll('.type-checkbox').forEach(el => {
+      el.addEventListener('click', () => {
+        const type = el.dataset.type;
+        const input = el.querySelector('input');
+        
+        if (selectedTypes.has(type)) {
+          if (selectedTypes.size > 1) { // Keep at least one selected
+            selectedTypes.delete(type);
+            el.classList.remove('selected');
+            input.checked = false;
+          }
+        } else {
+          selectedTypes.add(type);
+          el.classList.add('selected');
+          input.checked = true;
+        }
+      });
+    });
+
+    // Auth
+    async function updateAuthUI() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      currentUser = session?.user || null;
+      
+      const authButton = document.querySelector('.auth-button');
+      const loginPrompt = document.getElementById('loginPrompt');
+      
+      if (currentUser) {
+        if (authButton) {
+          authButton.textContent = 'Profile';
+          authButton.href = 'profile.html';
+        }
+        loginPrompt.style.display = 'none';
+        await loadUserXp();
+      } else {
+        loginPrompt.style.display = 'block';
+      }
+    }
+
+    // Load user XP from database
+    async function loadUserXp() {
+      if (!currentUser) return;
+      
+      const { data, error } = await supabaseClient
+        .from('user_profiles')
+        .select('xp_algebra, xp_geometry, xp_number_theory, xp_counting, xp_general')
+        .eq('id', currentUser.id)
+        .single();
+      
+      if (data) {
+        userXp.algebra = data.xp_algebra || 0;
+        userXp.geometry = data.xp_geometry || 0;
+        userXp.number_theory = data.xp_number_theory || 0;
+        userXp.counting = data.xp_counting || 0;
+        userXp.general = data.xp_general || 0;
+        updateXpDisplay();
+      }
+    }
+
+    // Save user XP to database
+    async function saveUserXp() {
+      if (!currentUser) return;
+      
+      const { error } = await supabaseClient
+        .from('user_profiles')
+        .update({
+          xp_algebra: userXp.algebra,
+          xp_geometry: userXp.geometry,
+          xp_number_theory: userXp.number_theory,
+          xp_counting: userXp.counting,
+          xp_general: userXp.general
+        })
+        .eq('id', currentUser.id);
+      
+      if (error) {
+        console.error('Error saving XP:', error);
+      }
+    }
+
+    // Update XP display
+    function updateXpDisplay() {
+      const maxXp = 10000; // For bar display purposes
+      
+      ['algebra', 'geometry', 'number_theory', 'counting', 'general'].forEach(type => {
+        const value = userXp[type];
+        document.getElementById(`xp-${type}-value`).textContent = value;
+        document.getElementById(`xp-${type}-bar`).style.width = Math.min(value / maxXp * 100, 100) + '%';
+      });
+    }
+
+    // Update session stats display
+    function updateSessionStats() {
+      document.getElementById('session-solved').textContent = sessionStats.solved;
+      document.getElementById('session-correct').textContent = sessionStats.correct;
+      
+      const accuracy = sessionStats.solved > 0 
+        ? Math.round(sessionStats.correct / sessionStats.solved * 100) 
+        : 0;
+      document.getElementById('session-accuracy').textContent = accuracy + '%';
+      
+      const xpEl = document.getElementById('session-xp');
+      xpEl.textContent = (sessionStats.xpEarned >= 0 ? '+' : '') + sessionStats.xpEarned;
+      xpEl.className = 'stat-value xp-change ' + (sessionStats.xpEarned >= 0 ? 'positive' : 'negative');
+    }
+
+    // Load problems
+    async function loadProblems() {
+      document.getElementById('loadingState').style.display = 'block';
+      
+      let allData = [];
+      let from = 0;
+      const chunkSize = 1000;
+      
+      while (true) {
+        const { data, error } = await supabaseClient
+          .from('problems')
+          .select('*')
+          .range(from, from + chunkSize - 1);
+        
+        if (error || data.length === 0) break;
+        allData.push(...data);
+        from += chunkSize;
+      }
+      
+      // Filter to usable problems (with type and valid answer)
+      allProblems = allData.filter(p => 
+        p.type && 
+        p.manually_reviewed && 
+        (p.aime_answer !== null || p.answer !== null)
+      );
+      
+      document.getElementById('loadingState').style.display = 'none';
+      console.log('Loaded', allProblems.length, 'practice-ready problems');
+    }
+
+    // Filter problems based on settings
+    function filterProblems() {
+      const minDiff = parseFloat(document.getElementById('minDifficulty').value);
+      const maxDiff = parseFloat(document.getElementById('maxDifficulty').value);
+      
+      filteredProblems = allProblems.filter(p => {
+        const diff = parseFloat(p.difficulty);
+        return selectedTypes.has(p.type) &&
+               diff >= minDiff &&
+               diff <= maxDiff &&
+               !usedProblemIds.has(p.id);
+      });
+    }
+
+    // Get next problem
+    function getNextProblem() {
+      filterProblems();
+      
+      if (filteredProblems.length === 0) {
+        return null;
+      }
+      
+      const idx = Math.floor(Math.random() * filteredProblems.length);
+      return filteredProblems[idx];
+    }
+
+    // Display problem
+    function displayProblem(problem) {
+      currentProblem = problem;
+      usedProblemIds.add(problem.id);
+      
+      document.getElementById('problemArea').style.display = 'block';
+      document.getElementById('emptyState').style.display = 'none';
+      
+      // Set type badge
+      const typeNames = {
+        algebra: 'Algebra',
+        geometry: 'Geometry', 
+        number_theory: 'Number Theory',
+        counting: 'Counting'
+      };
+      document.getElementById('problemType').textContent = typeNames[problem.type] || problem.type;
+      
+      // Set difficulty
+      const diff = parseFloat(problem.difficulty).toFixed(1);
+      document.getElementById('problemDifficulty').textContent = `Difficulty: ${diff}`;
+      
+      // Set XP
+      const xp = getXpForDifficulty(parseFloat(problem.difficulty));
+      document.getElementById('problemXp').textContent = `+${xp} XP`;
+      
+      // Set problem text
+      const problemText = problem.rewritten_problem || problem.text || '';
+      setMathContent(document.getElementById('problemText'), problemText);
+      
+      // Set AoPS link
+      document.getElementById('aopsLink').href = problem.link || '#';
+      
+      // Reset answer input and result
+      document.getElementById('answerInput').value = '';
+      document.getElementById('answerInput').disabled = false;
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('resultDisplay').classList.remove('show', 'correct', 'incorrect');
+      
+      // Focus answer input
+      setTimeout(() => document.getElementById('answerInput').focus(), 100);
+    }
+
+    // Start practice
+    async function startPractice() {
+      if (allProblems.length === 0) {
+        await loadProblems();
+      }
+      
+      const problem = getNextProblem();
+      
+      if (problem) {
+        displayProblem(problem);
+      } else {
+        document.getElementById('problemArea').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block';
+      }
+    }
+
+    // Submit answer
+    async function submitAnswer() {
+      if (!currentProblem) return;
+      
+      const userAnswer = document.getElementById('answerInput').value.trim();
+      if (!userAnswer) return;
+      
+      // Get correct answer
+      let correctAnswer;
+      if (currentProblem.aime_answer !== null && currentProblem.aime_answer !== undefined) {
+        correctAnswer = String(currentProblem.aime_answer % 1000);
+      } else {
+        correctAnswer = String(currentProblem.answer);
+      }
+      
+      const isCorrect = userAnswer === correctAnswer;
+      const difficulty = parseFloat(currentProblem.difficulty);
+      const baseXp = getXpForDifficulty(difficulty);
+      const xpChange = isCorrect ? baseXp : -Math.round(baseXp / 5);
+      
+      // Update XP
+      const problemType = currentProblem.type;
+      userXp[problemType] = Math.max(0, userXp[problemType] + xpChange);
+      userXp.general = Math.max(0, userXp.general + xpChange);
+      
+      // Update session stats
+      sessionStats.solved++;
+      if (isCorrect) sessionStats.correct++;
+      sessionStats.xpEarned += xpChange;
+      
+      // Save to database
+      await saveUserXp();
+      
+      // Update displays
+      updateXpDisplay();
+      updateSessionStats();
+      
+      // Show result
+      const resultDisplay = document.getElementById('resultDisplay');
+      resultDisplay.className = 'result-display show ' + (isCorrect ? 'correct' : 'incorrect');
+      
+      document.getElementById('resultHeader').textContent = isCorrect ? '✓ Correct!' : '✗ Incorrect';
+      document.getElementById('resultDetails').innerHTML = `
+        <div style="margin-bottom: 8px;">
+          ${isCorrect ? '' : `Correct answer: <strong>${escapeHtml(correctAnswer)}</strong><br>`}
+        </div>
+        <div class="xp-change ${xpChange >= 0 ? 'positive' : 'negative'}">
+          ${xpChange >= 0 ? '+' : ''}${xpChange} XP
+        </div>
+      `;
+      
+      // Disable input
+      document.getElementById('answerInput').disabled = true;
+      document.getElementById('submitBtn').disabled = true;
+    }
+
+    // Skip problem
+    function skipProblem() {
+      nextProblem();
+    }
+
+    // Next problem
+    function nextProblem() {
+      const problem = getNextProblem();
+      
+      if (problem) {
+        displayProblem(problem);
+      } else {
+        document.getElementById('problemArea').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block';
+      }
+    }
+
+    // Enter key to submit
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target.id === 'answerInput') {
+        if (!document.getElementById('submitBtn').disabled) {
+          submitAnswer();
+        }
+      }
+    });
+
+    // Init
+    window.onload = async () => {
+      await updateAuthUI();
+      await loadProblems();
+      updateXpDisplay();
+      updateSessionStats();
+    };
+  </script>
+</body>
+</html>
