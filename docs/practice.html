@@ -93,6 +93,20 @@
       return { level: 1, currentXp: totalXp, xpForNext: firstLevelXp, progress: (totalXp / firstLevelXp) * 100 };
     }
 
+    function getShieldClass(level) {
+      if (level >= 101) return 'shield-master';
+      if (level >= 91) return 'shield-legendary';
+      if (level >= 81) return 'shield-obsidian';
+      if (level >= 71) return 'shield-diamond';
+      if (level >= 61) return 'shield-ruby';
+      if (level >= 51) return 'shield-amethyst';
+      if (level >= 41) return 'shield-sapphire';
+      if (level >= 31) return 'shield-emerald';
+      if (level >= 21) return 'shield-gold';
+      if (level >= 11) return 'shield-silver';
+      return 'shield-bronze';
+    }
+
     function getXpForDifficulty(difficulty) {
       const d = Math.round(difficulty * 2) / 2; // Round to nearest 0.5
       return XP_TABLE[d] || XP_TABLE[Math.floor(d)] || 5;
@@ -311,6 +325,140 @@
       grid-column: 1 / -1;
       background: linear-gradient(135deg, var(--bg-secondary), var(--border-color));
       border: 2px solid var(--border-color);
+    }
+
+    /* Level Shields */
+    .level-shield {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 42px;
+      font-weight: 700;
+      font-size: 14px;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+      position: relative;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      margin-right: 4px;
+    }
+
+    .level-shield::before {
+      content: '';
+      position: absolute;
+      inset: 2px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      z-index: -1;
+    }
+
+    /* Bronze: 1-10 */
+    .shield-bronze {
+      background: linear-gradient(135deg, #cd7f32, #8b4513);
+    }
+    .shield-bronze::before {
+      background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+    }
+
+    /* Silver: 11-20 */
+    .shield-silver {
+      background: linear-gradient(135deg, #c0c0c0, #808080);
+    }
+    .shield-silver::before {
+      background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%);
+    }
+
+    /* Gold: 21-30 */
+    .shield-gold {
+      background: linear-gradient(135deg, #ffd700, #b8860b);
+      color: #333;
+      text-shadow: 0 1px 1px rgba(255,255,255,0.3);
+    }
+    .shield-gold::before {
+      background: linear-gradient(180deg, rgba(255,255,255,0.5) 0%, transparent 50%);
+    }
+
+    /* Emerald: 31-40 */
+    .shield-emerald {
+      background: linear-gradient(135deg, #50c878, #228b22);
+    }
+    .shield-emerald::before {
+      background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+    }
+
+    /* Sapphire: 41-50 */
+    .shield-sapphire {
+      background: linear-gradient(135deg, #0f52ba, #082567);
+    }
+    .shield-sapphire::before {
+      background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+    }
+
+    /* Amethyst: 51-60 */
+    .shield-amethyst {
+      background: linear-gradient(135deg, #9966cc, #663399);
+    }
+    .shield-amethyst::before {
+      background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+    }
+
+    /* Ruby: 61-70 */
+    .shield-ruby {
+      background: linear-gradient(135deg, #e0115f, #9b111e);
+    }
+    .shield-ruby::before {
+      background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+    }
+
+    /* Diamond: 71-80 */
+    .shield-diamond {
+      background: linear-gradient(135deg, #b9f2ff, #4dd0e1, #00acc1);
+      color: #006064;
+      text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+    }
+    .shield-diamond::before {
+      background: linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 50%);
+    }
+
+    /* Obsidian: 81-90 */
+    .shield-obsidian {
+      background: linear-gradient(135deg, #3d3d3d, #1a1a1a, #0d0d0d);
+      border: 1px solid #555;
+    }
+    .shield-obsidian::before {
+      background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+    }
+
+    /* Legendary: 91-100 */
+    .shield-legendary {
+      background: linear-gradient(135deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff);
+      background-size: 300% 300%;
+      animation: legendaryShift 3s ease infinite;
+    }
+    .shield-legendary::before {
+      background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%);
+    }
+
+    @keyframes legendaryShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    /* Master: 101-105 */
+    .shield-master {
+      background: linear-gradient(135deg, #ffd700, #ffec8b, #ffd700, #b8860b);
+      background-size: 200% 200%;
+      animation: masterShine 2s ease-in-out infinite;
+      box-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700;
+      color: #333;
+      text-shadow: 0 0 5px #fff;
+    }
+    .shield-master::before {
+      background: linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 50%);
+    }
+
+    @keyframes masterShine {
+      0%, 100% { background-position: 0% 50%; filter: brightness(1); }
+      50% { background-position: 100% 50%; filter: brightness(1.2); }
     }
 
     /* Filters */
@@ -810,7 +958,9 @@
         <div class="xp-bar-wrapper">
           <div class="xp-bar-label">
             <span>Algebra</span>
-            <span class="xp-bar-value">Lv. <span id="level-algebra">1</span></span>
+            <span class="xp-bar-value">
+              <span class="level-shield shield-bronze" id="shield-algebra">1</span>
+            </span>
           </div>
           <div class="xp-bar-track">
             <div class="xp-bar-fill algebra" id="xp-algebra-bar" style="width: 0%"></div>
@@ -820,7 +970,9 @@
         <div class="xp-bar-wrapper">
           <div class="xp-bar-label">
             <span>Geometry</span>
-            <span class="xp-bar-value">Lv. <span id="level-geometry">1</span></span>
+            <span class="xp-bar-value">
+              <span class="level-shield shield-bronze" id="shield-geometry">1</span>
+            </span>
           </div>
           <div class="xp-bar-track">
             <div class="xp-bar-fill geometry" id="xp-geometry-bar" style="width: 0%"></div>
@@ -830,7 +982,9 @@
         <div class="xp-bar-wrapper">
           <div class="xp-bar-label">
             <span>Number Theory</span>
-            <span class="xp-bar-value">Lv. <span id="level-number_theory">1</span></span>
+            <span class="xp-bar-value">
+              <span class="level-shield shield-bronze" id="shield-number_theory">1</span>
+            </span>
           </div>
           <div class="xp-bar-track">
             <div class="xp-bar-fill number_theory" id="xp-number_theory-bar" style="width: 0%"></div>
@@ -840,7 +994,9 @@
         <div class="xp-bar-wrapper">
           <div class="xp-bar-label">
             <span>Counting</span>
-            <span class="xp-bar-value">Lv. <span id="level-counting">1</span></span>
+            <span class="xp-bar-value">
+              <span class="level-shield shield-bronze" id="shield-counting">1</span>
+            </span>
           </div>
           <div class="xp-bar-track">
             <div class="xp-bar-fill counting" id="xp-counting-bar" style="width: 0%"></div>
@@ -850,12 +1006,14 @@
         <div class="xp-bar-wrapper general-bar">
           <div class="xp-bar-label">
             <span>🌟 Overall</span>
-            <span class="xp-bar-value">Lv. <span id="level-general">1</span></span>
+            <span class="xp-bar-value">
+              <span class="level-shield shield-bronze" id="shield-general">1</span>
+            </span>
           </div>
           <div class="xp-bar-track">
             <div class="xp-bar-fill general" id="xp-general-bar" style="width: 0%"></div>
           </div>
-          <div class="xp-sublabel" id="xp-general-sublabel">0 / 25 XP</div>
+          <div class="xp-sublabel" id="xp-general-sublabel">0 / 100 XP</div>
         </div>
       </div>
     </div>
@@ -1138,8 +1296,10 @@
         const isGeneral = type === 'general';
         const levelInfo = getLevelFromXp(totalXp, isGeneral);
         
-        // Update level number
-        document.getElementById(`level-${type}`).textContent = levelInfo.level;
+        // Update shield
+        const shield = document.getElementById(`shield-${type}`);
+        shield.textContent = levelInfo.level;
+        shield.className = `level-shield ${getShieldClass(levelInfo.level)}`;
         
         // Update progress bar (progress to next level)
         document.getElementById(`xp-${type}-bar`).style.width = levelInfo.progress + '%';
