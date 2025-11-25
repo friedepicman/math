@@ -369,9 +369,9 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 56px;
-      height: 60px;
-      margin-right: -10px;
+      width: 70px;
+      height: 70px;
+      margin-right: -14px;
     }
 
     .level-shield {
@@ -454,28 +454,24 @@
     /* === TIERS 51-80: Triple layer + side horns + animation === */
     .shield-horn-left, .shield-horn-right {
       position: absolute;
-      width: 14px;
-      height: 22px;
-      top: 8px;
+      width: 18px;
+      height: 28px;
+      top: 2px;
       z-index: 1;
-      border: 3px solid transparent;
-      border-radius: 0 0 0 100%;
-      background: transparent;
+      border-radius: 50% 50% 50% 50%;
+      transform-origin: bottom center;
     }
 
     .shield-horn-left {
-      left: -4px;
-      border-left-color: currentColor;
-      border-bottom-color: currentColor;
-      transform: rotate(20deg);
+      left: -6px;
+      transform: rotate(-40deg) skewX(-10deg);
+      border-radius: 80% 20% 50% 50%;
     }
 
     .shield-horn-right {
-      right: -4px;
-      border-radius: 0 0 100% 0;
-      border-right-color: currentColor;
-      border-bottom-color: currentColor;
-      transform: rotate(-20deg);
+      right: -6px;
+      transform: rotate(40deg) skewX(10deg);
+      border-radius: 20% 80% 50% 50%;
     }
 
     /* Amethyst: 51-60 */
@@ -486,8 +482,8 @@
       animation: rainbowShift 3s ease infinite;
     }
     .shield-amethyst-horn {
-      color: #9966cc;
-      filter: drop-shadow(0 0 4px #9966cc);
+      background: linear-gradient(to top, #3d1f5c, #9966cc);
+      box-shadow: 0 0 8px #9966cc;
     }
 
     /* Ruby: 61-70 */
@@ -498,8 +494,8 @@
       animation: rainbowShift 3s ease infinite;
     }
     .shield-ruby-horn {
-      color: #e0115f;
-      filter: drop-shadow(0 0 4px #e0115f);
+      background: linear-gradient(to top, #5c0a1f, #e0115f);
+      box-shadow: 0 0 8px #e0115f;
     }
 
     /* Diamond: 71-80 */
@@ -512,11 +508,12 @@
       animation: rainbowShift 3s ease infinite;
     }
     .shield-diamond-horn {
-      color: #4dd0e1;
-      filter: drop-shadow(0 0 6px #4dd0e1);
+      background: linear-gradient(to top, #006064, #4dd0e1, #b9f2ff);
+      box-shadow: 0 0 10px #4dd0e1;
     }
 
     /* === TIERS 81-100: Triple layer + horns + ripple animation === */
+    .shield-container-ripple::before,
     .shield-container-ripple::after {
       content: '';
       position: absolute;
@@ -524,7 +521,11 @@
       height: 53px;
       clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
       z-index: -1;
-      animation: ripplePulse 2s ease-out infinite;
+      animation: ripplePulse 1.5s ease-out infinite;
+    }
+
+    .shield-container-ripple::before {
+      animation-delay: 0.75s;
     }
 
     @keyframes ripplePulse {
@@ -532,12 +533,8 @@
         transform: scale(1);
         opacity: 0.8;
       }
-      50% {
-        transform: scale(1.3);
-        opacity: 0.4;
-      }
       100% {
-        transform: scale(1.6);
+        transform: scale(2);
         opacity: 0;
       }
     }
@@ -549,11 +546,12 @@
       background: linear-gradient(135deg, #4a4a4a, #2a2a2a, #1a1a1a);
     }
     .shield-obsidian-horn {
-      color: #666;
-      filter: drop-shadow(0 0 4px #444);
+      background: linear-gradient(to top, #1a1a1a, #555, #777);
+      box-shadow: 0 0 8px rgba(100,100,100,0.5);
     }
+    .shield-container-obsidian::before,
     .shield-container-obsidian::after {
-      background: radial-gradient(circle, #666 0%, transparent 70%);
+      background: rgba(100, 100, 100, 0.6);
     }
 
     /* Legendary: 91-100 */
@@ -571,12 +569,13 @@
       animation: legendaryInner 3s ease infinite;
     }
     .shield-legendary-horn {
-      color: #ffd700;
-      filter: drop-shadow(0 0 6px #ffd700) drop-shadow(0 0 12px #ff4500);
+      background: linear-gradient(to top, #8b0000, #ff4500, #ffd700);
+      box-shadow: 0 0 12px #ff4500;
       animation: legendaryHorn 2s ease infinite;
     }
+    .shield-container-legendary::before,
     .shield-container-legendary::after {
-      background: radial-gradient(circle, #ffd700 0%, #ff4500 30%, transparent 70%);
+      background: linear-gradient(135deg, #ff4500, #ffd700, #ff4500);
     }
 
     @keyframes legendaryOuter {
@@ -592,8 +591,8 @@
       50% { background-position: 100% 50%; }
     }
     @keyframes legendaryHorn {
-      0%, 100% { filter: drop-shadow(0 0 6px #ffd700) drop-shadow(0 0 12px #ff4500); }
-      50% { filter: drop-shadow(0 0 10px #ffd700) drop-shadow(0 0 20px #ff4500) drop-shadow(0 0 30px #ff0000); }
+      0%, 100% { box-shadow: 0 0 12px #ff4500; }
+      50% { box-shadow: 0 0 20px #ff4500, 0 0 30px #ffd700; }
     }
 
     /* === TIER 101-105: Everything + top horn === */
@@ -626,16 +625,17 @@
       animation: masterInner 2s ease infinite;
     }
     .shield-master-horn {
-      color: #ffd700;
-      filter: drop-shadow(0 0 8px #ffd700) drop-shadow(0 0 16px #ffd700);
+      background: linear-gradient(to top, #8b6914, #daa520, #ffd700, #fff8dc);
+      box-shadow: 0 0 15px #ffd700;
       animation: masterHorn 1.5s ease infinite;
     }
     .shield-horn-top-master {
       background: linear-gradient(to top, #ffd700, #fff);
       animation: masterTopHorn 1.5s ease infinite;
     }
+    .shield-container-master::before,
     .shield-container-master::after {
-      background: radial-gradient(circle, #ffd700 0%, #ffec8b 30%, transparent 70%);
+      background: linear-gradient(135deg, #ffd700, #ffec8b, #ffd700);
     }
 
     @keyframes masterOuter {
@@ -651,8 +651,8 @@
       50% { background-position: 100% 50%; filter: brightness(1.3); }
     }
     @keyframes masterHorn {
-      0%, 100% { filter: drop-shadow(0 0 8px #ffd700) drop-shadow(0 0 16px #ffd700); }
-      50% { filter: drop-shadow(0 0 12px #ffd700) drop-shadow(0 0 24px #ffd700) drop-shadow(0 0 36px #ffec8b); }
+      0%, 100% { box-shadow: 0 0 15px #ffd700; }
+      50% { box-shadow: 0 0 25px #ffd700, 0 0 40px #ffec8b; }
     }
     @keyframes masterTopHorn {
       0%, 100% { filter: drop-shadow(0 0 4px #ffd700); }
