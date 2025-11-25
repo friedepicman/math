@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Enriched Problems Viewer - Mock AIME</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.4/dist/umd/supabase.min.js"></script>
+  
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1400px;
+      margin: auto;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      color: #004488;
+    }
+    .controls {
+      margin: 20px 0;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.05);
+    }
+    .filter-row {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .filter-group label {
+      font-weight: bold;
+      font-size: 14px;
+    }
+    select, input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #004488;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #003366;
+    }
+    .stats {
+      margin: 20px 0;
+      padding: 15px;
+      background: #e3f2fd;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    .problem-card {
+      background: white;
+      padding: 20px;
+      margin: 15px 0;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.05);
+      border-left: 4px solid #004488;
+    }
+    .problem-card.proof {
+      border-left-color: #dc3545;
+    }
+    .problem-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .problem-id {
+      font-weight: bold;
+      color: #666;
+      font-size: 14px;
+    }
+    .badges {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+    .badge-type {
+      background: #e3f2fd;
+      color: #004488;
+    }
+    .badge-type.proof {
+      background: #ffebee;
+      color: #dc3545;
+    }
+    .badge-answer {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .badge-answer.unreasonable {
+      background: #fff3e0;
+      color: #ef6c00;
+    }
+    .badge-stars {
+      background: #fff9c4;
+      color: #f57f17;
+    }
+    .badge-difficulty {
+      background: #f3e5f5;
+      color: #7b1fa2;
+    }
+    .badge-aime {
+      background: #e0f2f1;
+      color: #00695c;
+    }
+    .problem-content {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 15px 0;
+      line-height: 1.6;
+    }
+    .problem-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #dee2e6;
+    }
+    .meta-item {
+      font-size: 14px;
+    }
+    .meta-label {
+      font-weight: bold;
+      color: #666;
+    }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin: 20px 0;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+    }
+    .pagination button {
+      padding: 8px 16px;
+    }
+    .pagination span {
+      font-size: 16px;
+      font-weight: bold;
+    }
+  </style>
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <h1>🔍 Enriched Problems Database Viewer</h1>
+
+  <div class="controls">
+    <div class="filter-row">
+      <div class="filter-group">
+        <label>Problem Type:</label>
+        <select id="filterType">
+          <option value="all">All</option>
+          <option value="numerical">Numerical</option>
+          <option value="proof">Proof</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Reasonable Answer:</label>
+        <select id="filterReasonable">
+          <option value="all">All</option>
+          <option value="true">Yes</option>
+          <option value="false">No</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Min AIME Suitability:</label>
+        <select id="filterSuitability">
+          <option value="1">1+ Stars</option>
+          <option value="2">2+ Stars</option>
+          <option value="3">3+ Stars</option>
+          <option value="4">4+ Stars</option>
+          <option value="5">5 Stars</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Difficulty Range:</label>
+        <div style="display: flex; gap: 5px; align-items: center;">
+          <input type="number" id="minDifficulty" step="0.5" min="1" max="10" value="1" style="width: 70px;" />
+          <span>to</span>
+          <input type="number" id="maxDifficulty" step="0.5" min="1" max="10" value="10" style="width: 70px;" />
+        </div>
+      </div>
+
+      <button onclick="loadProblems()" style="margin-top: 20px;">Apply Filters</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats">Loading...</div>
+
+  <div class="pagination">
+    <button onclick="goToPage(1)">First</button>
+    <button onclick="goToPage(currentPage - 1)">Previous</button>
+    <span id="pageInfo">Page 1 of 1</span>
+    <button onclick="goToPage(currentPage + 1)">Next</button>
+    <button onclick="goToPage(totalPages)">Last</button>
+  </div>
+
+  <div id="problems"></div>
+
+  <div class="pagination">
+    <button onclick="goToPage(1)">First</button>
+    <button onclick="goToPage(currentPage - 1)">Previous</button>
+    <span id="pageInfo2">Page 1 of 1</span>
+    <button onclick="goToPage(currentPage + 1)">Next</button>
+    <button onclick="goToPage(totalPages)">Last</button>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://ftdbplxkyaocyrjpmjyb.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0ZGJwbHhreWFvY3lyanBtanliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMDgxMDUsImV4cCI6MjA2NzY4NDEwNX0.hE0V09JxdLYNbZqPVH3HZxNpLPP2rXIaBsNGUHO3upc';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let allProblems = [];
+    let currentPage = 1;
+    let totalPages = 1;
+    const problemsPerPage = 20;
+
+    async function loadProblems() {
+      document.getElementById('problems').innerHTML = '<p>Loading problems...</p>';
+      
+      const { data, error } = await supabaseClient
+        .from('problems_enriched')
+        .select('*')
+        .order('id', { ascending: true });
+      
+      if (error) {
+        console.error('Error loading problems:', error);
+        document.getElementById('problems').innerHTML = '<p>Error loading problems. Make sure the table exists!</p>';
+        return;
+      }
+      
+      // Apply filters
+      const filterType = document.getElementById('filterType').value;
+      const filterReasonable = document.getElementById('filterReasonable').value;
+      const filterSuitability = parseInt(document.getElementById('filterSuitability').value);
+      const minDiff = parseFloat(document.getElementById('minDifficulty').value);
+      const maxDiff = parseFloat(document.getElementById('maxDifficulty').value);
+      
+      allProblems = data.filter(p => {
+        if (filterType !== 'all' && p.problem_type !== filterType) return false;
+        if (filterReasonable !== 'all' && p.reasonable_answer !== (filterReasonable === 'true')) return false;
+        if (p.aime_suitability < filterSuitability) return false;
+        if (p.difficulty < minDiff || p.difficulty > maxDiff) return false;
+        return true;
+      });
+      
+      currentPage = 1;
+      updateStats();
+      renderProblems();
+    }
+
+    function updateStats() {
+      const total = allProblems.length;
+      const numerical = allProblems.filter(p => p.problem_type === 'numerical').length;
+      const proof = allProblems.filter(p => p.problem_type === 'proof').length;
+      const reasonable = allProblems.filter(p => p.reasonable_answer).length;
+      const avgDifficulty = total > 0 ? (allProblems.reduce((sum, p) => sum + (p.difficulty || 0), 0) / total).toFixed(1) : 0;
+      
+      const suitabilityDist = [0, 0, 0, 0, 0, 0];
+      allProblems.forEach(p => suitabilityDist[p.aime_suitability]++);
+      
+      document.getElementById('stats').innerHTML = `
+        <strong>Total:</strong> ${total} problems | 
+        <strong>Numerical:</strong> ${numerical} (${(numerical/total*100).toFixed(1)}%) | 
+        <strong>Proof:</strong> ${proof} (${(proof/total*100).toFixed(1)}%) | 
+        <strong>Reasonable Answer:</strong> ${reasonable} (${(reasonable/total*100).toFixed(1)}%) | 
+        <strong>Avg Difficulty:</strong> ${avgDifficulty}<br>
+        <strong>AIME Suitability:</strong> 
+        1★: ${suitabilityDist[1]} | 
+        2★: ${suitabilityDist[2]} | 
+        3★: ${suitabilityDist[3]} | 
+        4★: ${suitabilityDist[4]} | 
+        5★: ${suitabilityDist[5]}
+      `;
+    }
+
+    function goToPage(page) {
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      renderProblems();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderProblems() {
+      const container = document.getElementById('problems');
+      
+      if (allProblems.length === 0) {
+        container.innerHTML = '<p>No problems match your filters.</p>';
+        return;
+      }
+      
+      totalPages = Math.ceil(allProblems.length / problemsPerPage);
+      const startIdx = (currentPage - 1) * problemsPerPage;
+      const endIdx = Math.min(startIdx + problemsPerPage, allProblems.length);
+      const pageProblems = allProblems.slice(startIdx, endIdx);
+      
+      updatePaginationControls();
+      
+      container.innerHTML = '';
+      
+      pageProblems.forEach(p => {
+        const card = document.createElement('div');
+        card.className = `problem-card ${p.problem_type === 'proof' ? 'proof' : ''}`;
+        
+        const stars = '★'.repeat(p.aime_suitability || 0);
+        
+        card.innerHTML = `
+          <div class="problem-header">
+            <span class="problem-id">ID: ${p.id}</span>
+            <div class="badges">
+              <span class="badge badge-type ${p.problem_type === 'proof' ? 'proof' : ''}">${p.problem_type || 'unknown'}</span>
+              <span class="badge badge-answer ${!p.reasonable_answer ? 'unreasonable' : ''}">${p.reasonable_answer ? '✓ Clean Answer' : '✗ Messy Answer'}</span>
+              <span class="badge badge-stars">${stars} (${p.aime_suitability}/5)</span>
+              <span class="badge badge-difficulty">D: ${p.difficulty ? p.difficulty.toFixed(1) : '?'}</span>
+              ${p.aime_answer !== null ? `<span class="badge badge-aime">AIME: ${p.aime_answer}</span>` : ''}
+            </div>
+          </div>
+          
+          <div class="problem-content" id="problem-${p.id}"></div>
+          
+          <div class="problem-meta">
+            <div class="meta-item">
+              <span class="meta-label">Source:</span> ${escapeHtml(p.source || 'Unknown')}
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Answer:</span> ${escapeHtml(p.answer || 'N/A')}
+            </div>
+            ${p.solution ? `<div class="meta-item" style="grid-column: 1 / -1;">
+              <span class="meta-label">Solution:</span> <span style="color: #666; font-size: 13px;">(Available)</span>
+            </div>` : ''}
+          </div>
+        `;
+        
+        container.appendChild(card);
+        
+        // Safely set problem text with MathJax
+        const problemDiv = document.getElementById(`problem-${p.id}`);
+        problemDiv.textContent = p.problem || 'No problem text';
+      });
+      
+      // Render MathJax
+      if (window.MathJax) {
+        MathJax.typesetPromise().catch(err => console.error('MathJax error:', err));
+      }
+    }
+
+    function updatePaginationControls() {
+      const pageInfo = `Page ${currentPage} of ${totalPages}`;
+      document.getElementById('pageInfo').textContent = pageInfo;
+      document.getElementById('pageInfo2').textContent = pageInfo;
+      
+      document.querySelectorAll('button').forEach(btn => {
+        if (btn.textContent === 'Previous' || btn.textContent === 'First') {
+          btn.disabled = currentPage === 1;
+        }
+        if (btn.textContent === 'Next' || btn.textContent === 'Last') {
+          btn.disabled = currentPage === totalPages;
+        }
+      });
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Load on page load
+    window.onload = loadProblems;
+  </script>
+</body>
+</html>
