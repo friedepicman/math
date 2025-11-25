@@ -432,6 +432,438 @@
     .override-summary-icon {
       font-size: 20px;
     }
+
+    /* Level Shields */
+    .levels-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .level-card {
+      text-align: center;
+      padding: 15px;
+      background: var(--bg-primary);
+      border-radius: 8px;
+    }
+
+    .level-card.general-card {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      border: 2px solid var(--border-color);
+    }
+
+    .level-card-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+
+    .level-card-xp {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+    }
+
+    .level-shield-container {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 65px;
+      height: 68px;
+    }
+
+    .level-shield {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 42px;
+      font-weight: 700;
+      font-size: 14px;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+      position: relative;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      z-index: 2;
+    }
+
+    /* Simple hexagons: 1-30 */
+    .shield-bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); }
+    .shield-silver { background: linear-gradient(135deg, #c0c0c0, #808080); }
+    .shield-gold { background: linear-gradient(135deg, #ffd700, #b8860b); color: #333; text-shadow: 0 1px 1px rgba(255,255,255,0.3); }
+
+    /* Triple layer hexagons: 31+ */
+    .shield-container-layered .shield-outer {
+      position: absolute;
+      width: 46px;
+      height: 53px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      z-index: 1;
+    }
+
+    .shield-container-layered .shield-middle {
+      position: absolute;
+      width: 42px;
+      height: 48px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      z-index: 2;
+    }
+
+    .shield-container-layered .level-shield {
+      width: 34px;
+      height: 39px;
+      font-size: 13px;
+      z-index: 3;
+    }
+
+    /* Emerald: 31-40 */
+    .shield-emerald-outer { background: linear-gradient(135deg, #1a5c2e, #0d2e17); }
+    .shield-emerald-middle { background: linear-gradient(135deg, #2e8b4a, #1a5c2e); }
+    .shield-emerald { background: linear-gradient(135deg, #50c878, #2e8b4a); animation: rainbowShift 3s ease infinite; }
+
+    /* Sapphire: 41-50 */
+    .shield-sapphire-outer { background: linear-gradient(135deg, #041a40, #020d20); }
+    .shield-sapphire-middle { background: linear-gradient(135deg, #0a3d8f, #041a40); }
+    .shield-sapphire { background: linear-gradient(135deg, #0f52ba, #0a3d8f); animation: rainbowShift 3s ease infinite; }
+
+    @keyframes rainbowShift {
+      0%, 100% { filter: hue-rotate(0deg) brightness(1); }
+      50% { filter: hue-rotate(30deg) brightness(1.1); }
+    }
+
+    /* Design A: 51-80 - Side trapezoids */
+    .shield-horn-left, .shield-horn-right {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 18px;
+      z-index: 0;
+    }
+    .shield-horn-left { left: 1px; clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 75%); }
+    .shield-horn-right { right: 1px; clip-path: polygon(0% 0%, 100% 0%, 100% 75%, 0% 100%); }
+    .shield-container-designB .shield-horn-left,
+    .shield-container-designB .shield-horn-right { width: 14px; }
+
+    /* Amethyst: 51-60 */
+    .shield-amethyst-outer { background: linear-gradient(135deg, #3d1f5c, #1f0f2e); }
+    .shield-amethyst-middle { background: linear-gradient(135deg, #5c2d8a, #3d1f5c); }
+    .shield-amethyst { background: linear-gradient(135deg, #9966cc, #5c2d8a); animation: rainbowShift 3s ease infinite; }
+    .shield-amethyst-horn { background: linear-gradient(to left, #3d1f5c, #9966cc); }
+    .shield-horn-right.shield-amethyst-horn { background: linear-gradient(to right, #3d1f5c, #9966cc); }
+
+    /* Ruby: 61-70 */
+    .shield-ruby-outer { background: linear-gradient(135deg, #5c0a1f, #2e050f); }
+    .shield-ruby-middle { background: linear-gradient(135deg, #8a1530, #5c0a1f); }
+    .shield-ruby { background: linear-gradient(135deg, #e0115f, #8a1530); animation: rainbowShift 3s ease infinite; }
+    .shield-ruby-horn { background: linear-gradient(to left, #5c0a1f, #e0115f); }
+    .shield-horn-right.shield-ruby-horn { background: linear-gradient(to right, #5c0a1f, #e0115f); }
+
+    /* Diamond: 71-80 */
+    .shield-diamond-outer { background: linear-gradient(135deg, #006064, #003033); }
+    .shield-diamond-middle { background: linear-gradient(135deg, #00838f, #006064); }
+    .shield-diamond { background: linear-gradient(135deg, #b9f2ff, #4dd0e1, #00acc1); color: #003033; text-shadow: 0 1px 1px rgba(255,255,255,0.5); animation: rainbowShift 3s ease infinite; }
+    .shield-diamond-horn { background: linear-gradient(to left, #006064, #4dd0e1); }
+    .shield-horn-right.shield-diamond-horn { background: linear-gradient(to right, #006064, #4dd0e1); }
+
+    /* Design B: 81-100 - Triangles */
+    .shield-tri-topleft, .shield-tri-topright, .shield-tri-bottomleft, .shield-tri-bottomright {
+      position: absolute;
+      width: 13px;
+      height: 11px;
+      z-index: 0;
+      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    }
+    .shield-tri-topleft { top: 6px; left: 11px; transform: rotate(-30deg); }
+    .shield-tri-topright { top: 6px; right: 11px; transform: rotate(30deg); }
+    .shield-tri-bottomright { bottom: 6px; right: 11px; transform: rotate(150deg); }
+    .shield-tri-bottomleft { bottom: 6px; left: 11px; transform: rotate(-150deg); }
+
+    /* Ripple effect for 81+ */
+    .shield-container-ripple::before,
+    .shield-container-ripple::after {
+      content: '';
+      position: absolute;
+      width: 46px;
+      height: 53px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      z-index: -1;
+      animation: ripplePulse 1.5s ease-out infinite;
+    }
+    .shield-container-ripple::before { animation-delay: 0.75s; }
+    @keyframes ripplePulse {
+      0% { transform: scale(1); opacity: 0.8; }
+      100% { transform: scale(2); opacity: 0; }
+    }
+
+    /* Obsidian: 81-90 */
+    .shield-obsidian-outer { background: linear-gradient(135deg, #1a1a1a, #0a0a0a); }
+    .shield-obsidian-middle { background: linear-gradient(135deg, #333, #1a1a1a); }
+    .shield-obsidian { background: linear-gradient(135deg, #4a4a4a, #2a2a2a, #1a1a1a); }
+    .shield-obsidian-horn { background: linear-gradient(to left, #1a1a1a, #555); }
+    .shield-horn-right.shield-obsidian-horn { background: linear-gradient(to right, #1a1a1a, #555); }
+    .shield-obsidian-tri { background: linear-gradient(135deg, #333, #555); }
+    .shield-container-obsidian::before, .shield-container-obsidian::after { background: rgba(100, 100, 100, 0.6); }
+
+    /* Legendary: 91-100 */
+    .shield-legendary-outer { background: linear-gradient(135deg, #8b0000, #4a0080); animation: legendaryOuter 3s ease infinite; }
+    .shield-legendary-middle { background: linear-gradient(135deg, #ff4500, #8b008b); animation: legendaryMiddle 3s ease infinite; }
+    .shield-legendary { background: linear-gradient(135deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff); background-size: 300% 300%; animation: legendaryInner 3s ease infinite; }
+    .shield-legendary-horn { background: linear-gradient(to left, #8b0000, #ff4500); }
+    .shield-horn-right.shield-legendary-horn { background: linear-gradient(to right, #8b0000, #ff4500); }
+    .shield-legendary-tri { background: linear-gradient(135deg, #ff4500, #ffd700); }
+    .shield-container-legendary::before, .shield-container-legendary::after { background: linear-gradient(135deg, #ff4500, #ffd700, #ff4500); }
+
+    @keyframes legendaryOuter { 0%, 100% { filter: hue-rotate(0deg); } 50% { filter: hue-rotate(60deg); } }
+    @keyframes legendaryMiddle { 0%, 100% { filter: hue-rotate(0deg); } 50% { filter: hue-rotate(-60deg); } }
+    @keyframes legendaryInner { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+    /* Design C: 101-105 - Back shield */
+    .shield-back {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -45%);
+      width: 44px;
+      height: 54px;
+      z-index: -1;
+      clip-path: polygon(50% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%, 0% 0%);
+      border-radius: 0 0 8px 8px;
+    }
+
+    /* Master: 101-105 */
+    .shield-master-outer { background: linear-gradient(135deg, #8b6914, #4a3508); animation: masterOuter 2s ease infinite; }
+    .shield-master-middle { background: linear-gradient(135deg, #daa520, #8b6914); animation: masterMiddle 2s ease infinite; }
+    .shield-master { background: linear-gradient(135deg, #ffd700, #ffec8b, #ffd700, #daa520); background-size: 200% 200%; color: #4a3508; text-shadow: 0 0 4px rgba(255,215,0,0.8); animation: masterInner 2s ease infinite; }
+    .shield-master-horn { background: linear-gradient(to left, #8b6914, #ffd700); }
+    .shield-horn-right.shield-master-horn { background: linear-gradient(to right, #8b6914, #ffd700); }
+    .shield-master-tri { background: linear-gradient(135deg, #daa520, #ffd700); }
+    .shield-master-back { background: linear-gradient(to bottom, #8b6914, #4a3508); box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+    .shield-container-master::before, .shield-container-master::after { background: linear-gradient(135deg, #ffd700, #ffec8b, #ffd700); }
+
+    @keyframes masterOuter { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.3); } }
+    @keyframes masterMiddle { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.2); } }
+    @keyframes masterInner { 0%, 100% { background-position: 0% 50%; filter: brightness(1); } 50% { background-position: 100% 50%; filter: brightness(1.3); } }
+
+    /* Level Shields */
+    .levels-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .level-card {
+      text-align: center;
+      padding: 15px;
+      background: var(--bg-primary);
+      border-radius: 8px;
+    }
+
+    .level-card.general-card {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      border: 2px solid var(--border-color);
+    }
+
+    .level-card-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+
+    .level-card-xp {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+    }
+
+    .level-shield-container {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 65px;
+      height: 68px;
+    }
+
+    .level-shield {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 42px;
+      font-weight: 700;
+      font-size: 14px;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+      position: relative;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      z-index: 2;
+    }
+
+    /* Simple hexagons: 1-30 */
+    .shield-bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); }
+    .shield-silver { background: linear-gradient(135deg, #c0c0c0, #808080); }
+    .shield-gold { background: linear-gradient(135deg, #ffd700, #b8860b); color: #333; text-shadow: 0 1px 1px rgba(255,255,255,0.3); }
+
+    /* Triple layer hexagons: 31+ */
+    .shield-container-layered .shield-outer {
+      position: absolute;
+      width: 46px;
+      height: 53px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      z-index: 1;
+    }
+
+    .shield-container-layered .shield-middle {
+      position: absolute;
+      width: 42px;
+      height: 48px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      z-index: 2;
+    }
+
+    .shield-container-layered .level-shield {
+      width: 34px;
+      height: 39px;
+      font-size: 13px;
+      z-index: 3;
+    }
+
+    /* Emerald: 31-40 */
+    .shield-emerald-outer { background: linear-gradient(135deg, #1a5c2e, #0d2e17); }
+    .shield-emerald-middle { background: linear-gradient(135deg, #2e8b4a, #1a5c2e); }
+    .shield-emerald { background: linear-gradient(135deg, #50c878, #2e8b4a); animation: rainbowShift 3s ease infinite; }
+
+    /* Sapphire: 41-50 */
+    .shield-sapphire-outer { background: linear-gradient(135deg, #041a40, #020d20); }
+    .shield-sapphire-middle { background: linear-gradient(135deg, #0a3d8f, #041a40); }
+    .shield-sapphire { background: linear-gradient(135deg, #0f52ba, #0a3d8f); animation: rainbowShift 3s ease infinite; }
+
+    @keyframes rainbowShift {
+      0%, 100% { filter: hue-rotate(0deg) brightness(1); }
+      50% { filter: hue-rotate(30deg) brightness(1.1); }
+    }
+
+    /* Design A: 51-80 - Side trapezoids */
+    .shield-horn-left, .shield-horn-right {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 18px;
+      z-index: 0;
+    }
+    .shield-horn-left { left: 1px; clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 75%); }
+    .shield-horn-right { right: 1px; clip-path: polygon(0% 0%, 100% 0%, 100% 75%, 0% 100%); }
+    .shield-container-designB .shield-horn-left,
+    .shield-container-designB .shield-horn-right { width: 14px; }
+
+    /* Amethyst: 51-60 */
+    .shield-amethyst-outer { background: linear-gradient(135deg, #3d1f5c, #1f0f2e); }
+    .shield-amethyst-middle { background: linear-gradient(135deg, #5c2d8a, #3d1f5c); }
+    .shield-amethyst { background: linear-gradient(135deg, #9966cc, #5c2d8a); animation: rainbowShift 3s ease infinite; }
+    .shield-amethyst-horn { background: linear-gradient(to left, #3d1f5c, #9966cc); }
+    .shield-horn-right.shield-amethyst-horn { background: linear-gradient(to right, #3d1f5c, #9966cc); }
+
+    /* Ruby: 61-70 */
+    .shield-ruby-outer { background: linear-gradient(135deg, #5c0a1f, #2e050f); }
+    .shield-ruby-middle { background: linear-gradient(135deg, #8a1530, #5c0a1f); }
+    .shield-ruby { background: linear-gradient(135deg, #e0115f, #8a1530); animation: rainbowShift 3s ease infinite; }
+    .shield-ruby-horn { background: linear-gradient(to left, #5c0a1f, #e0115f); }
+    .shield-horn-right.shield-ruby-horn { background: linear-gradient(to right, #5c0a1f, #e0115f); }
+
+    /* Diamond: 71-80 */
+    .shield-diamond-outer { background: linear-gradient(135deg, #006064, #003033); }
+    .shield-diamond-middle { background: linear-gradient(135deg, #00838f, #006064); }
+    .shield-diamond { background: linear-gradient(135deg, #b9f2ff, #4dd0e1, #00acc1); color: #003033; text-shadow: 0 1px 1px rgba(255,255,255,0.5); animation: rainbowShift 3s ease infinite; }
+    .shield-diamond-horn { background: linear-gradient(to left, #006064, #4dd0e1); }
+    .shield-horn-right.shield-diamond-horn { background: linear-gradient(to right, #006064, #4dd0e1); }
+
+    /* Design B: 81-100 - Triangles */
+    .shield-tri-topleft, .shield-tri-topright, .shield-tri-bottomleft, .shield-tri-bottomright {
+      position: absolute;
+      width: 13px;
+      height: 11px;
+      z-index: 0;
+      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    }
+    .shield-tri-topleft { top: 6px; left: 11px; transform: rotate(-30deg); }
+    .shield-tri-topright { top: 6px; right: 11px; transform: rotate(30deg); }
+    .shield-tri-bottomright { bottom: 6px; right: 11px; transform: rotate(150deg); }
+    .shield-tri-bottomleft { bottom: 6px; left: 11px; transform: rotate(-150deg); }
+
+    /* Ripple effect for 81+ */
+    .shield-container-ripple::before,
+    .shield-container-ripple::after {
+      content: '';
+      position: absolute;
+      width: 46px;
+      height: 53px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      z-index: -1;
+      animation: ripplePulse 1.5s ease-out infinite;
+    }
+    .shield-container-ripple::before { animation-delay: 0.75s; }
+    @keyframes ripplePulse {
+      0% { transform: scale(1); opacity: 0.8; }
+      100% { transform: scale(2); opacity: 0; }
+    }
+
+    /* Obsidian: 81-90 */
+    .shield-obsidian-outer { background: linear-gradient(135deg, #1a1a1a, #0a0a0a); }
+    .shield-obsidian-middle { background: linear-gradient(135deg, #333, #1a1a1a); }
+    .shield-obsidian { background: linear-gradient(135deg, #4a4a4a, #2a2a2a, #1a1a1a); }
+    .shield-obsidian-horn { background: linear-gradient(to left, #1a1a1a, #555); }
+    .shield-horn-right.shield-obsidian-horn { background: linear-gradient(to right, #1a1a1a, #555); }
+    .shield-obsidian-tri { background: linear-gradient(135deg, #333, #555); }
+    .shield-container-obsidian::before, .shield-container-obsidian::after { background: rgba(100, 100, 100, 0.6); }
+
+    /* Legendary: 91-100 */
+    .shield-legendary-outer { background: linear-gradient(135deg, #8b0000, #4a0080); animation: legendaryOuter 3s ease infinite; }
+    .shield-legendary-middle { background: linear-gradient(135deg, #ff4500, #8b008b); animation: legendaryMiddle 3s ease infinite; }
+    .shield-legendary { background: linear-gradient(135deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff); background-size: 300% 300%; animation: legendaryInner 3s ease infinite; }
+    .shield-legendary-horn { background: linear-gradient(to left, #8b0000, #ff4500); }
+    .shield-horn-right.shield-legendary-horn { background: linear-gradient(to right, #8b0000, #ff4500); }
+    .shield-legendary-tri { background: linear-gradient(135deg, #ff4500, #ffd700); }
+    .shield-container-legendary::before, .shield-container-legendary::after { background: linear-gradient(135deg, #ff4500, #ffd700, #ff4500); }
+
+    @keyframes legendaryOuter { 0%, 100% { filter: hue-rotate(0deg); } 50% { filter: hue-rotate(60deg); } }
+    @keyframes legendaryMiddle { 0%, 100% { filter: hue-rotate(0deg); } 50% { filter: hue-rotate(-60deg); } }
+    @keyframes legendaryInner { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+    /* Design C: 101-105 - Back shield */
+    .shield-back {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -45%);
+      width: 44px;
+      height: 54px;
+      z-index: -1;
+      clip-path: polygon(50% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%, 0% 0%);
+      border-radius: 0 0 8px 8px;
+    }
+
+    /* Master: 101-105 */
+    .shield-master-outer { background: linear-gradient(135deg, #8b6914, #4a3508); animation: masterOuter 2s ease infinite; }
+    .shield-master-middle { background: linear-gradient(135deg, #daa520, #8b6914); animation: masterMiddle 2s ease infinite; }
+    .shield-master { background: linear-gradient(135deg, #ffd700, #ffec8b, #ffd700, #daa520); background-size: 200% 200%; color: #4a3508; text-shadow: 0 0 4px rgba(255,215,0,0.8); animation: masterInner 2s ease infinite; }
+    .shield-master-horn { background: linear-gradient(to left, #8b6914, #ffd700); }
+    .shield-horn-right.shield-master-horn { background: linear-gradient(to right, #8b6914, #ffd700); }
+    .shield-master-tri { background: linear-gradient(135deg, #daa520, #ffd700); }
+    .shield-master-back { background: linear-gradient(to bottom, #8b6914, #4a3508); box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+    .shield-container-master::before, .shield-container-master::after { background: linear-gradient(135deg, #ffd700, #ffec8b, #ffd700); }
+
+    @keyframes masterOuter { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.3); } }
+    @keyframes masterMiddle { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.2); } }
+    @keyframes masterInner { 0%, 100% { background-position: 0% 50%; filter: brightness(1); } 50% { background-position: 100% 50%; filter: brightness(1.3); } }
   </style>
 </head>
 <body>
@@ -439,6 +871,7 @@
     <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
       <a href="index.html" style="font-size: 20px; font-weight: 600; padding: 16px 0;">Mock AIME</a>
       <div style="display: flex; gap: 0; align-items: center;">
+        <a href="practice.html">Practice</a>
         <a href="search.html">Search</a>
         <a href="admin.html">Admin</a>
         <a href="profile.html">Profile</a>
@@ -472,6 +905,14 @@
         <div class="stat-card">
           <div class="stat-number" id="totalProblems">0</div>
           <div class="stat-label">Problems Solved</div>
+        </div>
+      </div>
+
+      <!-- Practice Levels Section -->
+      <div class="section">
+        <h2>Practice Levels</h2>
+        <div class="levels-section" id="levelsContainer">
+          <div class="loading">Loading levels...</div>
         </div>
       </div>
 
@@ -543,10 +984,111 @@
     let currentUser = null;
     let allAttempts = [];
 
+    // Level system constants
+    const LEVEL_TIERS = [
+      [1, 25], [11, 100], [21, 200], [31, 300], [41, 500],
+      [51, 700], [61, 1000], [71, 1500], [81, 2000], [91, 3000], [101, 5000]
+    ];
+    const MAX_LEVEL = 105;
+    const GENERAL_MULTIPLIER = 4;
+
+    // Precompute XP tables
+    const XP_FOR_LEVEL = [0];
+    const XP_FOR_LEVEL_GENERAL = [0];
+    
+    function getXpForLevelUp(level, isGeneral = false) {
+      if (level >= MAX_LEVEL) return Infinity;
+      let baseXp = LEVEL_TIERS[0][1];
+      for (let i = LEVEL_TIERS.length - 1; i >= 0; i--) {
+        if (level >= LEVEL_TIERS[i][0]) {
+          baseXp = LEVEL_TIERS[i][1];
+          break;
+        }
+      }
+      return isGeneral ? baseXp * GENERAL_MULTIPLIER : baseXp;
+    }
+
+    // Initialize XP tables
+    for (let level = 1; level <= MAX_LEVEL; level++) {
+      XP_FOR_LEVEL[level] = (XP_FOR_LEVEL[level - 1] || 0) + getXpForLevelUp(level);
+      XP_FOR_LEVEL_GENERAL[level] = (XP_FOR_LEVEL_GENERAL[level - 1] || 0) + getXpForLevelUp(level, true);
+    }
+
+    function getLevelFromXp(totalXp, isGeneral = false) {
+      const xpTable = isGeneral ? XP_FOR_LEVEL_GENERAL : XP_FOR_LEVEL;
+      for (let level = MAX_LEVEL; level >= 1; level--) {
+        const xpNeeded = xpTable[level - 1] || 0;
+        if (totalXp >= xpNeeded) {
+          const xpIntoLevel = totalXp - xpNeeded;
+          const xpForNext = getXpForLevelUp(level, isGeneral);
+          return {
+            level: Math.min(level, MAX_LEVEL),
+            currentXp: xpIntoLevel,
+            xpForNext: xpForNext
+          };
+        }
+      }
+      const firstLevelXp = isGeneral ? 25 * GENERAL_MULTIPLIER : 25;
+      return { level: 1, currentXp: totalXp, xpForNext: firstLevelXp };
+    }
+
+    function getShieldTier(level) {
+      if (level >= 101) return { name: 'master', layered: true, design: 'C', ripple: true };
+      if (level >= 91) return { name: 'legendary', layered: true, design: 'B', ripple: true };
+      if (level >= 81) return { name: 'obsidian', layered: true, design: 'B', ripple: true };
+      if (level >= 71) return { name: 'diamond', layered: true, design: 'A', ripple: false };
+      if (level >= 61) return { name: 'ruby', layered: true, design: 'A', ripple: false };
+      if (level >= 51) return { name: 'amethyst', layered: true, design: 'A', ripple: false };
+      if (level >= 41) return { name: 'sapphire', layered: true, design: null, ripple: false };
+      if (level >= 31) return { name: 'emerald', layered: true, design: null, ripple: false };
+      if (level >= 21) return { name: 'gold', layered: false, design: null, ripple: false };
+      if (level >= 11) return { name: 'silver', layered: false, design: null, ripple: false };
+      return { name: 'bronze', layered: false, design: null, ripple: false };
+    }
+
+    function buildShieldHtml(level) {
+      const tier = getShieldTier(level);
+      let html = '';
+      
+      let containerClasses = 'level-shield-container';
+      if (tier.layered) containerClasses += ' shield-container-layered';
+      if (tier.design === 'B' || tier.design === 'C') containerClasses += ' shield-container-designB';
+      if (tier.ripple) containerClasses += ` shield-container-ripple shield-container-${tier.name}`;
+      
+      html += `<div class="${containerClasses}">`;
+      
+      if (tier.design === 'C') {
+        html += `<div class="shield-back shield-${tier.name}-back"></div>`;
+      }
+      
+      if (tier.design === 'B' || tier.design === 'C') {
+        html += `<div class="shield-tri-topleft shield-${tier.name}-tri"></div>`;
+        html += `<div class="shield-tri-topright shield-${tier.name}-tri"></div>`;
+        html += `<div class="shield-tri-bottomright shield-${tier.name}-tri"></div>`;
+        html += `<div class="shield-tri-bottomleft shield-${tier.name}-tri"></div>`;
+      }
+      
+      if (tier.design === 'A' || tier.design === 'B' || tier.design === 'C') {
+        html += `<div class="shield-horn-left shield-${tier.name}-horn"></div>`;
+        html += `<div class="shield-horn-right shield-${tier.name}-horn"></div>`;
+      }
+      
+      if (tier.layered) {
+        html += `<div class="shield-outer shield-${tier.name}-outer"></div>`;
+        html += `<div class="shield-middle shield-${tier.name}-middle"></div>`;
+      }
+      
+      html += `<div class="level-shield shield-${tier.name}">${level}</div>`;
+      html += '</div>';
+      
+      return html;
+    }
+
     window.onload = async () => {
       await checkAuth();
       await loadUserData();
       await loadStats();
+      await loadLevels();
       await loadRecentAttempts();
     };
 
@@ -602,6 +1144,49 @@
       document.getElementById('totalProblems').textContent = totalProblems;
     }
 
+    async function loadLevels() {
+      if (!currentUser) return;
+
+      const { data: profile } = await supabaseClient
+        .from('user_profiles')
+        .select('xp_algebra, xp_geometry, xp_number_theory, xp_counting, xp_general')
+        .eq('id', currentUser.id)
+        .single();
+
+      const xp = {
+        algebra: profile?.xp_algebra || 0,
+        geometry: profile?.xp_geometry || 0,
+        number_theory: profile?.xp_number_theory || 0,
+        counting: profile?.xp_counting || 0,
+        general: profile?.xp_general || 0
+      };
+
+      const container = document.getElementById('levelsContainer');
+      
+      const types = [
+        { key: 'algebra', label: 'Algebra', isGeneral: false },
+        { key: 'geometry', label: 'Geometry', isGeneral: false },
+        { key: 'number_theory', label: 'Number Theory', isGeneral: false },
+        { key: 'counting', label: 'Counting', isGeneral: false },
+        { key: 'general', label: '🌟 Overall', isGeneral: true }
+      ];
+
+      container.innerHTML = types.map(type => {
+        const levelInfo = getLevelFromXp(xp[type.key], type.isGeneral);
+        const xpText = levelInfo.level >= MAX_LEVEL 
+          ? `MAX (${xp[type.key].toLocaleString()} XP)`
+          : `${levelInfo.currentXp.toLocaleString()} / ${levelInfo.xpForNext.toLocaleString()} XP`;
+        
+        return `
+          <div class="level-card ${type.isGeneral ? 'general-card' : ''}">
+            <div class="level-card-label">${type.label}</div>
+            ${buildShieldHtml(levelInfo.level)}
+            <div class="level-card-xp">${xpText}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
     async function loadRecentAttempts() {
       if (!currentUser) return;
 
@@ -635,18 +1220,15 @@
     function viewMockDetail(index) {
       const attempt = allAttempts[index];
       
-      // Hide profile overview, show detail view
       document.getElementById('profileOverview').style.display = 'none';
       document.getElementById('mockDetailView').classList.add('active');
 
-      // Update summary
       const percentage = Math.round((attempt.score / attempt.total_problems) * 100);
       document.getElementById('detailScore').textContent = `${attempt.score}/${attempt.total_problems}`;
       document.getElementById('detailPercentage').textContent = `${percentage}%`;
       document.getElementById('detailDifficulty').textContent = attempt.difficulty_level;
       document.getElementById('detailDate').textContent = new Date(attempt.completed_at).toLocaleDateString();
 
-      // Show override summary if there are any overrides
       const overrides = attempt.overrides || {};
       const overrideCount = Object.keys(overrides).filter(key => overrides[key]).length;
       
@@ -662,10 +1244,7 @@
         overrideSummaryDiv.innerHTML = '';
       }
 
-      // Display problems
       displayProblems(attempt);
-
-      // Scroll to top
       window.scrollTo(0, 0);
     }
 
@@ -692,12 +1271,10 @@
         const correctAnswer = problem.aime_answer ? String(problem.aime_answer % 1000) : String(problem.answer || '');
         const wasOverridden = problem.manually_corrected || overrides[index];
         
-        // Determine if the answer was naturally correct
         const isNaturallyCorrect = userAnswer === correctAnswer;
         const isCorrect = isNaturallyCorrect || wasOverridden;
         const isUnanswered = !userAnswer;
 
-        // Determine status class
         let statusClass = 'unanswered';
         let statusText = 'Not Answered';
         
@@ -758,13 +1335,11 @@
 
       container.innerHTML = problemsHTML;
 
-      // Render MathJax
       if (window.MathJax) {
         MathJax.typesetPromise().catch(err => console.error('MathJax error:', err));
       }
     }
 
-    // Profile form submission
     document.getElementById('profileForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       
