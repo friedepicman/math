@@ -93,18 +93,54 @@
       return { level: 1, currentXp: totalXp, xpForNext: firstLevelXp, progress: (totalXp / firstLevelXp) * 100 };
     }
 
-    function getShieldClass(level) {
-      if (level >= 101) return 'shield-master';
-      if (level >= 91) return 'shield-legendary';
-      if (level >= 81) return 'shield-obsidian';
-      if (level >= 71) return 'shield-diamond';
-      if (level >= 61) return 'shield-ruby';
-      if (level >= 51) return 'shield-amethyst';
-      if (level >= 41) return 'shield-sapphire';
-      if (level >= 31) return 'shield-emerald';
-      if (level >= 21) return 'shield-gold';
-      if (level >= 11) return 'shield-silver';
-      return 'shield-bronze';
+    function getShieldTier(level) {
+      // Returns tier info for building the shield
+      if (level >= 101) return { name: 'master', layered: true, horns: true, ripple: true, topHorn: true };
+      if (level >= 91) return { name: 'legendary', layered: true, horns: true, ripple: true, topHorn: false };
+      if (level >= 81) return { name: 'obsidian', layered: true, horns: true, ripple: true, topHorn: false };
+      if (level >= 71) return { name: 'diamond', layered: true, horns: true, ripple: false, topHorn: false };
+      if (level >= 61) return { name: 'ruby', layered: true, horns: true, ripple: false, topHorn: false };
+      if (level >= 51) return { name: 'amethyst', layered: true, horns: true, ripple: false, topHorn: false };
+      if (level >= 41) return { name: 'sapphire', layered: true, horns: false, ripple: false, topHorn: false };
+      if (level >= 31) return { name: 'emerald', layered: true, horns: false, ripple: false, topHorn: false };
+      if (level >= 21) return { name: 'gold', layered: false, horns: false, ripple: false, topHorn: false };
+      if (level >= 11) return { name: 'silver', layered: false, horns: false, ripple: false, topHorn: false };
+      return { name: 'bronze', layered: false, horns: false, ripple: false, topHorn: false };
+    }
+
+    function buildShieldHtml(level) {
+      const tier = getShieldTier(level);
+      let html = '';
+      
+      let containerClasses = 'level-shield-container';
+      if (tier.layered) containerClasses += ' shield-container-layered';
+      if (tier.ripple) containerClasses += ` shield-container-ripple shield-container-${tier.name}`;
+      
+      html += `<div class="${containerClasses}">`;
+      
+      // Top horn (master only)
+      if (tier.topHorn) {
+        html += `<div class="shield-horn-top shield-horn-top-master"></div>`;
+      }
+      
+      // Side horns (51+)
+      if (tier.horns) {
+        html += `<div class="shield-horn-left shield-${tier.name}-horn"></div>`;
+        html += `<div class="shield-horn-right shield-${tier.name}-horn"></div>`;
+      }
+      
+      // Outer layer (31+)
+      if (tier.layered) {
+        html += `<div class="shield-outer shield-${tier.name}-outer"></div>`;
+        html += `<div class="shield-middle shield-${tier.name}-middle"></div>`;
+      }
+      
+      // Inner shield (always)
+      html += `<div class="level-shield shield-${tier.name}">${level}</div>`;
+      
+      html += '</div>';
+      
+      return html;
     }
 
     function getXpForDifficulty(difficulty) {
@@ -328,6 +364,16 @@
     }
 
     /* Level Shields */
+    .level-shield-container {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 60px;
+      margin-right: -10px;
+    }
+
     .level-shield {
       display: inline-flex;
       align-items: center;
@@ -340,31 +386,18 @@
       text-shadow: 0 1px 2px rgba(0,0,0,0.3);
       position: relative;
       clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-      margin-right: 4px;
+      z-index: 2;
     }
 
-    .level-shield::before {
-      content: '';
-      position: absolute;
-      inset: 2px;
-      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-      z-index: -1;
-    }
-
+    /* === TIERS 1-30: Simple hexagon === */
     /* Bronze: 1-10 */
     .shield-bronze {
       background: linear-gradient(135deg, #cd7f32, #8b4513);
-    }
-    .shield-bronze::before {
-      background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 50%);
     }
 
     /* Silver: 11-20 */
     .shield-silver {
       background: linear-gradient(135deg, #c0c0c0, #808080);
-    }
-    .shield-silver::before {
-      background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%);
     }
 
     /* Gold: 21-30 */
@@ -373,92 +406,257 @@
       color: #333;
       text-shadow: 0 1px 1px rgba(255,255,255,0.3);
     }
-    .shield-gold::before {
-      background: linear-gradient(180deg, rgba(255,255,255,0.5) 0%, transparent 50%);
+
+    /* === TIERS 31-50: Triple layer + rainbow animation === */
+    .shield-container-layered .shield-outer {
+      position: absolute;
+      width: 46px;
+      height: 53px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      z-index: 0;
+    }
+
+    .shield-container-layered .shield-middle {
+      position: absolute;
+      width: 42px;
+      height: 48px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      z-index: 1;
+    }
+
+    .shield-container-layered .level-shield {
+      width: 34px;
+      height: 39px;
+      font-size: 13px;
     }
 
     /* Emerald: 31-40 */
+    .shield-emerald-outer { background: linear-gradient(135deg, #1a5c2e, #0d2e17); }
+    .shield-emerald-middle { background: linear-gradient(135deg, #2e8b4a, #1a5c2e); }
     .shield-emerald {
-      background: linear-gradient(135deg, #50c878, #228b22);
-    }
-    .shield-emerald::before {
-      background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+      background: linear-gradient(135deg, #50c878, #2e8b4a);
+      animation: rainbowShift 3s ease infinite;
     }
 
     /* Sapphire: 41-50 */
+    .shield-sapphire-outer { background: linear-gradient(135deg, #041a40, #020d20); }
+    .shield-sapphire-middle { background: linear-gradient(135deg, #0a3d8f, #041a40); }
     .shield-sapphire {
-      background: linear-gradient(135deg, #0f52ba, #082567);
+      background: linear-gradient(135deg, #0f52ba, #0a3d8f);
+      animation: rainbowShift 3s ease infinite;
     }
-    .shield-sapphire::before {
-      background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+
+    @keyframes rainbowShift {
+      0%, 100% { filter: hue-rotate(0deg) brightness(1); }
+      50% { filter: hue-rotate(30deg) brightness(1.1); }
+    }
+
+    /* === TIERS 51-80: Triple layer + side horns + animation === */
+    .shield-horn-left, .shield-horn-right {
+      position: absolute;
+      width: 14px;
+      height: 22px;
+      top: 8px;
+      z-index: 1;
+      border: 3px solid transparent;
+      border-radius: 0 0 0 100%;
+      background: transparent;
+    }
+
+    .shield-horn-left {
+      left: -4px;
+      border-left-color: currentColor;
+      border-bottom-color: currentColor;
+      transform: rotate(20deg);
+    }
+
+    .shield-horn-right {
+      right: -4px;
+      border-radius: 0 0 100% 0;
+      border-right-color: currentColor;
+      border-bottom-color: currentColor;
+      transform: rotate(-20deg);
     }
 
     /* Amethyst: 51-60 */
+    .shield-amethyst-outer { background: linear-gradient(135deg, #3d1f5c, #1f0f2e); }
+    .shield-amethyst-middle { background: linear-gradient(135deg, #5c2d8a, #3d1f5c); }
     .shield-amethyst {
-      background: linear-gradient(135deg, #9966cc, #663399);
+      background: linear-gradient(135deg, #9966cc, #5c2d8a);
+      animation: rainbowShift 3s ease infinite;
     }
-    .shield-amethyst::before {
-      background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+    .shield-amethyst-horn {
+      color: #9966cc;
+      filter: drop-shadow(0 0 4px #9966cc);
     }
 
     /* Ruby: 61-70 */
+    .shield-ruby-outer { background: linear-gradient(135deg, #5c0a1f, #2e050f); }
+    .shield-ruby-middle { background: linear-gradient(135deg, #8a1530, #5c0a1f); }
     .shield-ruby {
-      background: linear-gradient(135deg, #e0115f, #9b111e);
+      background: linear-gradient(135deg, #e0115f, #8a1530);
+      animation: rainbowShift 3s ease infinite;
     }
-    .shield-ruby::before {
-      background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+    .shield-ruby-horn {
+      color: #e0115f;
+      filter: drop-shadow(0 0 4px #e0115f);
     }
 
     /* Diamond: 71-80 */
+    .shield-diamond-outer { background: linear-gradient(135deg, #006064, #003033); }
+    .shield-diamond-middle { background: linear-gradient(135deg, #00838f, #006064); }
     .shield-diamond {
       background: linear-gradient(135deg, #b9f2ff, #4dd0e1, #00acc1);
-      color: #006064;
+      color: #003033;
       text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+      animation: rainbowShift 3s ease infinite;
     }
-    .shield-diamond::before {
-      background: linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 50%);
+    .shield-diamond-horn {
+      color: #4dd0e1;
+      filter: drop-shadow(0 0 6px #4dd0e1);
+    }
+
+    /* === TIERS 81-100: Triple layer + horns + ripple animation === */
+    .shield-container-ripple::after {
+      content: '';
+      position: absolute;
+      width: 46px;
+      height: 53px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      z-index: -1;
+      animation: ripplePulse 2s ease-out infinite;
+    }
+
+    @keyframes ripplePulse {
+      0% {
+        transform: scale(1);
+        opacity: 0.8;
+      }
+      50% {
+        transform: scale(1.3);
+        opacity: 0.4;
+      }
+      100% {
+        transform: scale(1.6);
+        opacity: 0;
+      }
     }
 
     /* Obsidian: 81-90 */
+    .shield-obsidian-outer { background: linear-gradient(135deg, #1a1a1a, #0a0a0a); }
+    .shield-obsidian-middle { background: linear-gradient(135deg, #333, #1a1a1a); }
     .shield-obsidian {
-      background: linear-gradient(135deg, #3d3d3d, #1a1a1a, #0d0d0d);
-      border: 1px solid #555;
+      background: linear-gradient(135deg, #4a4a4a, #2a2a2a, #1a1a1a);
     }
-    .shield-obsidian::before {
-      background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+    .shield-obsidian-horn {
+      color: #666;
+      filter: drop-shadow(0 0 4px #444);
+    }
+    .shield-container-obsidian::after {
+      background: radial-gradient(circle, #666 0%, transparent 70%);
     }
 
     /* Legendary: 91-100 */
+    .shield-legendary-outer { 
+      background: linear-gradient(135deg, #8b0000, #4a0080); 
+      animation: legendaryOuter 3s ease infinite;
+    }
+    .shield-legendary-middle { 
+      background: linear-gradient(135deg, #ff4500, #8b008b); 
+      animation: legendaryMiddle 3s ease infinite;
+    }
     .shield-legendary {
       background: linear-gradient(135deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff);
       background-size: 300% 300%;
-      animation: legendaryShift 3s ease infinite;
+      animation: legendaryInner 3s ease infinite;
     }
-    .shield-legendary::before {
-      background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%);
+    .shield-legendary-horn {
+      color: #ffd700;
+      filter: drop-shadow(0 0 6px #ffd700) drop-shadow(0 0 12px #ff4500);
+      animation: legendaryHorn 2s ease infinite;
+    }
+    .shield-container-legendary::after {
+      background: radial-gradient(circle, #ffd700 0%, #ff4500 30%, transparent 70%);
     }
 
-    @keyframes legendaryShift {
+    @keyframes legendaryOuter {
+      0%, 100% { filter: hue-rotate(0deg); }
+      50% { filter: hue-rotate(60deg); }
+    }
+    @keyframes legendaryMiddle {
+      0%, 100% { filter: hue-rotate(0deg); }
+      50% { filter: hue-rotate(-60deg); }
+    }
+    @keyframes legendaryInner {
       0%, 100% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
     }
+    @keyframes legendaryHorn {
+      0%, 100% { filter: drop-shadow(0 0 6px #ffd700) drop-shadow(0 0 12px #ff4500); }
+      50% { filter: drop-shadow(0 0 10px #ffd700) drop-shadow(0 0 20px #ff4500) drop-shadow(0 0 30px #ff0000); }
+    }
+
+    /* === TIER 101-105: Everything + top horn === */
+    .shield-horn-top {
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 16px;
+      background: linear-gradient(to top, #ffd700, #fff8dc);
+      z-index: 3;
+      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    }
 
     /* Master: 101-105 */
-    .shield-master {
-      background: linear-gradient(135deg, #ffd700, #ffec8b, #ffd700, #b8860b);
-      background-size: 200% 200%;
-      animation: masterShine 2s ease-in-out infinite;
-      box-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700;
-      color: #333;
-      text-shadow: 0 0 5px #fff;
+    .shield-master-outer { 
+      background: linear-gradient(135deg, #8b6914, #4a3508); 
+      animation: masterOuter 2s ease infinite;
     }
-    .shield-master::before {
-      background: linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 50%);
+    .shield-master-middle { 
+      background: linear-gradient(135deg, #daa520, #8b6914); 
+      animation: masterMiddle 2s ease infinite;
+    }
+    .shield-master {
+      background: linear-gradient(135deg, #ffd700, #ffec8b, #ffd700, #daa520);
+      background-size: 200% 200%;
+      color: #4a3508;
+      text-shadow: 0 0 4px rgba(255,215,0,0.8);
+      animation: masterInner 2s ease infinite;
+    }
+    .shield-master-horn {
+      color: #ffd700;
+      filter: drop-shadow(0 0 8px #ffd700) drop-shadow(0 0 16px #ffd700);
+      animation: masterHorn 1.5s ease infinite;
+    }
+    .shield-horn-top-master {
+      background: linear-gradient(to top, #ffd700, #fff);
+      animation: masterTopHorn 1.5s ease infinite;
+    }
+    .shield-container-master::after {
+      background: radial-gradient(circle, #ffd700 0%, #ffec8b 30%, transparent 70%);
     }
 
-    @keyframes masterShine {
+    @keyframes masterOuter {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.3); }
+    }
+    @keyframes masterMiddle {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.2); }
+    }
+    @keyframes masterInner {
       0%, 100% { background-position: 0% 50%; filter: brightness(1); }
-      50% { background-position: 100% 50%; filter: brightness(1.2); }
+      50% { background-position: 100% 50%; filter: brightness(1.3); }
+    }
+    @keyframes masterHorn {
+      0%, 100% { filter: drop-shadow(0 0 8px #ffd700) drop-shadow(0 0 16px #ffd700); }
+      50% { filter: drop-shadow(0 0 12px #ffd700) drop-shadow(0 0 24px #ffd700) drop-shadow(0 0 36px #ffec8b); }
+    }
+    @keyframes masterTopHorn {
+      0%, 100% { filter: drop-shadow(0 0 4px #ffd700); }
+      50% { filter: drop-shadow(0 0 10px #ffd700) drop-shadow(0 0 20px #ffec8b); }
     }
 
     /* Filters */
@@ -958,9 +1156,7 @@
         <div class="xp-bar-wrapper">
           <div class="xp-bar-label">
             <span>Algebra</span>
-            <span class="xp-bar-value">
-              <span class="level-shield shield-bronze" id="shield-algebra">1</span>
-            </span>
+            <span class="xp-bar-value" id="shield-wrapper-algebra"></span>
           </div>
           <div class="xp-bar-track">
             <div class="xp-bar-fill algebra" id="xp-algebra-bar" style="width: 0%"></div>
@@ -970,9 +1166,7 @@
         <div class="xp-bar-wrapper">
           <div class="xp-bar-label">
             <span>Geometry</span>
-            <span class="xp-bar-value">
-              <span class="level-shield shield-bronze" id="shield-geometry">1</span>
-            </span>
+            <span class="xp-bar-value" id="shield-wrapper-geometry"></span>
           </div>
           <div class="xp-bar-track">
             <div class="xp-bar-fill geometry" id="xp-geometry-bar" style="width: 0%"></div>
@@ -982,9 +1176,7 @@
         <div class="xp-bar-wrapper">
           <div class="xp-bar-label">
             <span>Number Theory</span>
-            <span class="xp-bar-value">
-              <span class="level-shield shield-bronze" id="shield-number_theory">1</span>
-            </span>
+            <span class="xp-bar-value" id="shield-wrapper-number_theory"></span>
           </div>
           <div class="xp-bar-track">
             <div class="xp-bar-fill number_theory" id="xp-number_theory-bar" style="width: 0%"></div>
@@ -994,9 +1186,7 @@
         <div class="xp-bar-wrapper">
           <div class="xp-bar-label">
             <span>Counting</span>
-            <span class="xp-bar-value">
-              <span class="level-shield shield-bronze" id="shield-counting">1</span>
-            </span>
+            <span class="xp-bar-value" id="shield-wrapper-counting"></span>
           </div>
           <div class="xp-bar-track">
             <div class="xp-bar-fill counting" id="xp-counting-bar" style="width: 0%"></div>
@@ -1006,9 +1196,7 @@
         <div class="xp-bar-wrapper general-bar">
           <div class="xp-bar-label">
             <span>🌟 Overall</span>
-            <span class="xp-bar-value">
-              <span class="level-shield shield-bronze" id="shield-general">1</span>
-            </span>
+            <span class="xp-bar-value" id="shield-wrapper-general"></span>
           </div>
           <div class="xp-bar-track">
             <div class="xp-bar-fill general" id="xp-general-bar" style="width: 0%"></div>
@@ -1297,9 +1485,8 @@
         const levelInfo = getLevelFromXp(totalXp, isGeneral);
         
         // Update shield
-        const shield = document.getElementById(`shield-${type}`);
-        shield.textContent = levelInfo.level;
-        shield.className = `level-shield ${getShieldClass(levelInfo.level)}`;
+        const wrapper = document.getElementById(`shield-wrapper-${type}`);
+        wrapper.innerHTML = buildShieldHtml(levelInfo.level);
         
         // Update progress bar (progress to next level)
         document.getElementById(`xp-${type}-bar`).style.width = levelInfo.progress + '%';
