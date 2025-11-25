@@ -168,6 +168,21 @@
       font-size: 16px;
       font-weight: bold;
     }
+    .toggle-solution-btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .toggle-solution-btn:hover {
+      background: #218838;
+    }
+    .solution-content {
+      line-height: 1.6;
+    }
   </style>
 
   <script>
@@ -340,7 +355,15 @@
       
       container.innerHTML = '';
       
+      // Clear solutions map
+      solutionsMap = {};
+      
       pageProblems.forEach(p => {
+        // Store solution for this problem
+        if (p.solution) {
+          solutionsMap[p.id] = p.solution;
+        }
+        
         const card = document.createElement('div');
         card.className = `problem-card ${p.problem_type === 'proof' ? 'proof' : ''}`;
         
@@ -368,7 +391,8 @@
               <span class="meta-label">Answer:</span> ${escapeHtml(p.answer || 'N/A')}
             </div>
             ${p.solution ? `<div class="meta-item" style="grid-column: 1 / -1;">
-              <span class="meta-label">Solution:</span> <span style="color: #666; font-size: 13px;">(Available)</span>
+              <button class="toggle-solution-btn" onclick="toggleSolution(${p.id})">Show Solution</button>
+              <div class="solution-content" id="solution-${p.id}" style="display: none; margin-top: 10px; padding: 15px; background: #f0f7ff; border-radius: 4px; border-left: 3px solid #004488;"></div>
             </div>` : ''}
           </div>
         `;
@@ -406,6 +430,35 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    // Store solutions for toggle access
+    let solutionsMap = {};
+
+    function toggleSolution(id) {
+      const solutionDiv = document.getElementById(`solution-${id}`);
+      const btn = solutionDiv.previousElementSibling;
+      
+      if (solutionDiv.style.display === 'none') {
+        // Show solution
+        solutionDiv.style.display = 'block';
+        btn.textContent = 'Hide Solution';
+        
+        // Set content if not already set
+        if (!solutionDiv.hasAttribute('data-loaded')) {
+          solutionDiv.textContent = solutionsMap[id] || 'No solution available';
+          solutionDiv.setAttribute('data-loaded', 'true');
+          
+          // Render MathJax for this solution
+          if (window.MathJax) {
+            MathJax.typesetPromise([solutionDiv]).catch(err => console.error('MathJax error:', err));
+          }
+        }
+      } else {
+        // Hide solution
+        solutionDiv.style.display = 'none';
+        btn.textContent = 'Show Solution';
+      }
     }
 
     // Load on page load
