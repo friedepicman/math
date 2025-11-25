@@ -369,9 +369,9 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 70px;
-      height: 70px;
-      margin-right: -14px;
+      width: 60px;
+      height: 65px;
+      margin-right: -10px;
     }
 
     .level-shield {
@@ -454,24 +454,51 @@
     /* === TIERS 51-80: Triple layer + side horns + animation === */
     .shield-horn-left, .shield-horn-right {
       position: absolute;
-      width: 18px;
-      height: 28px;
-      top: 2px;
+      top: 10px;
       z-index: 1;
-      border-radius: 50% 50% 50% 50%;
-      transform-origin: bottom center;
+      display: flex;
+      align-items: flex-start;
     }
 
     .shield-horn-left {
-      left: -6px;
-      transform: rotate(-40deg) skewX(-10deg);
-      border-radius: 80% 20% 50% 50%;
+      left: 0px;
+      flex-direction: row-reverse;
     }
 
     .shield-horn-right {
-      right: -6px;
-      transform: rotate(40deg) skewX(10deg);
-      border-radius: 20% 80% 50% 50%;
+      right: 0px;
+      flex-direction: row;
+    }
+
+    /* Trapezoid part (horizontal base) */
+    .shield-horn-left::before,
+    .shield-horn-right::before {
+      content: '';
+      width: 10px;
+      height: 14px;
+      clip-path: polygon(0% 20%, 100% 0%, 100% 100%, 0% 80%);
+    }
+
+    .shield-horn-right::before {
+      clip-path: polygon(0% 0%, 100% 20%, 100% 80%, 0% 100%);
+    }
+
+    /* Triangle tip (pointing up) */
+    .shield-horn-left::after,
+    .shield-horn-right::after {
+      content: '';
+      width: 8px;
+      height: 16px;
+      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+      margin-top: -3px;
+    }
+
+    .shield-horn-left::after {
+      margin-right: -1px;
+    }
+
+    .shield-horn-right::after {
+      margin-left: -1px;
     }
 
     /* Amethyst: 51-60 */
@@ -481,9 +508,10 @@
       background: linear-gradient(135deg, #9966cc, #5c2d8a);
       animation: rainbowShift 3s ease infinite;
     }
-    .shield-amethyst-horn {
+    .shield-amethyst-horn::before,
+    .shield-amethyst-horn::after {
       background: linear-gradient(to top, #3d1f5c, #9966cc);
-      box-shadow: 0 0 8px #9966cc;
+      box-shadow: 0 0 6px #9966cc;
     }
 
     /* Ruby: 61-70 */
@@ -493,9 +521,10 @@
       background: linear-gradient(135deg, #e0115f, #8a1530);
       animation: rainbowShift 3s ease infinite;
     }
-    .shield-ruby-horn {
+    .shield-ruby-horn::before,
+    .shield-ruby-horn::after {
       background: linear-gradient(to top, #5c0a1f, #e0115f);
-      box-shadow: 0 0 8px #e0115f;
+      box-shadow: 0 0 6px #e0115f;
     }
 
     /* Diamond: 71-80 */
@@ -507,9 +536,10 @@
       text-shadow: 0 1px 1px rgba(255,255,255,0.5);
       animation: rainbowShift 3s ease infinite;
     }
-    .shield-diamond-horn {
-      background: linear-gradient(to top, #006064, #4dd0e1, #b9f2ff);
-      box-shadow: 0 0 10px #4dd0e1;
+    .shield-diamond-horn::before,
+    .shield-diamond-horn::after {
+      background: linear-gradient(to top, #006064, #4dd0e1);
+      box-shadow: 0 0 6px #4dd0e1;
     }
 
     /* === TIERS 81-100: Triple layer + horns + ripple animation === */
@@ -545,9 +575,10 @@
     .shield-obsidian {
       background: linear-gradient(135deg, #4a4a4a, #2a2a2a, #1a1a1a);
     }
-    .shield-obsidian-horn {
-      background: linear-gradient(to top, #1a1a1a, #555, #777);
-      box-shadow: 0 0 8px rgba(100,100,100,0.5);
+    .shield-obsidian-horn::before,
+    .shield-obsidian-horn::after {
+      background: linear-gradient(to top, #1a1a1a, #555);
+      box-shadow: 0 0 4px rgba(100,100,100,0.5);
     }
     .shield-container-obsidian::before,
     .shield-container-obsidian::after {
@@ -568,10 +599,10 @@
       background-size: 300% 300%;
       animation: legendaryInner 3s ease infinite;
     }
-    .shield-legendary-horn {
+    .shield-legendary-horn::before,
+    .shield-legendary-horn::after {
       background: linear-gradient(to top, #8b0000, #ff4500, #ffd700);
-      box-shadow: 0 0 12px #ff4500;
-      animation: legendaryHorn 2s ease infinite;
+      box-shadow: 0 0 8px #ff4500;
     }
     .shield-container-legendary::before,
     .shield-container-legendary::after {
@@ -590,19 +621,15 @@
       0%, 100% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
     }
-    @keyframes legendaryHorn {
-      0%, 100% { box-shadow: 0 0 12px #ff4500; }
-      50% { box-shadow: 0 0 20px #ff4500, 0 0 30px #ffd700; }
-    }
 
     /* === TIER 101-105: Everything + top horn === */
     .shield-horn-top {
       position: absolute;
-      top: -8px;
+      top: -6px;
       left: 50%;
       transform: translateX(-50%);
-      width: 4px;
-      height: 16px;
+      width: 10px;
+      height: 14px;
       background: linear-gradient(to top, #ffd700, #fff8dc);
       z-index: 3;
       clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
@@ -624,10 +651,10 @@
       text-shadow: 0 0 4px rgba(255,215,0,0.8);
       animation: masterInner 2s ease infinite;
     }
-    .shield-master-horn {
-      background: linear-gradient(to top, #8b6914, #daa520, #ffd700, #fff8dc);
-      box-shadow: 0 0 15px #ffd700;
-      animation: masterHorn 1.5s ease infinite;
+    .shield-master-horn::before,
+    .shield-master-horn::after {
+      background: linear-gradient(to top, #8b6914, #daa520, #ffd700);
+      box-shadow: 0 0 10px #ffd700;
     }
     .shield-horn-top-master {
       background: linear-gradient(to top, #ffd700, #fff);
@@ -649,10 +676,6 @@
     @keyframes masterInner {
       0%, 100% { background-position: 0% 50%; filter: brightness(1); }
       50% { background-position: 100% 50%; filter: brightness(1.3); }
-    }
-    @keyframes masterHorn {
-      0%, 100% { box-shadow: 0 0 15px #ffd700; }
-      50% { box-shadow: 0 0 25px #ffd700, 0 0 40px #ffec8b; }
     }
     @keyframes masterTopHorn {
       0%, 100% { filter: drop-shadow(0 0 4px #ffd700); }
