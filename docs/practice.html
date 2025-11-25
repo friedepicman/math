@@ -21,6 +21,78 @@
       8.5: 160, 9: 180, 9.5: 210, 10: 220
     };
 
+    // Level thresholds: [startLevel, xpPerLevel]
+    const LEVEL_TIERS = [
+      [1, 25],    // Levels 1-10: 25 XP each
+      [11, 100],  // Levels 11-20: 100 XP each
+      [21, 200],  // Levels 21-30: 200 XP each
+      [31, 300],  // Levels 31-40: 300 XP each
+      [41, 500],  // Levels 41-50: 500 XP each
+      [51, 700],  // Levels 51-60: 700 XP each
+      [61, 1000], // Levels 61-70: 1000 XP each
+      [71, 1500], // Levels 71-80: 1500 XP each
+      [81, 2000], // Levels 81-90: 2000 XP each
+      [91, 3000], // Levels 91-100: 3000 XP each
+      [101, 5000] // Levels 101-105: 5000 XP each
+    ];
+
+    const MAX_LEVEL = 105;
+    const GENERAL_MULTIPLIER = 4;
+
+    // Precompute cumulative XP needed to reach each level (for regular types)
+    const XP_FOR_LEVEL = [0]; // XP_FOR_LEVEL[n] = total XP needed to reach level n
+    for (let level = 1; level <= MAX_LEVEL; level++) {
+      const xpNeeded = getXpForLevelUp(level);
+      XP_FOR_LEVEL[level] = (XP_FOR_LEVEL[level - 1] || 0) + xpNeeded;
+    }
+
+    // Precompute for general (4x XP required)
+    const XP_FOR_LEVEL_GENERAL = [0];
+    for (let level = 1; level <= MAX_LEVEL; level++) {
+      const xpNeeded = getXpForLevelUp(level) * GENERAL_MULTIPLIER;
+      XP_FOR_LEVEL_GENERAL[level] = (XP_FOR_LEVEL_GENERAL[level - 1] || 0) + xpNeeded;
+    }
+
+    function getXpForLevelUp(level, isGeneral = false) {
+      // Returns XP needed to go from `level` to `level + 1`
+      if (level >= MAX_LEVEL) return Infinity;
+      
+      let baseXp;
+      for (let i = LEVEL_TIERS.length - 1; i >= 0; i--) {
+        if (level >= LEVEL_TIERS[i][0]) {
+          baseXp = LEVEL_TIERS[i][1];
+          break;
+        }
+      }
+      baseXp = baseXp || LEVEL_TIERS[0][1];
+      
+      return isGeneral ? baseXp * GENERAL_MULTIPLIER : baseXp;
+    }
+
+    function getLevelFromXp(totalXp, isGeneral = false) {
+      // Returns { level, currentXp, xpForNext, progress }
+      const xpTable = isGeneral ? XP_FOR_LEVEL_GENERAL : XP_FOR_LEVEL;
+      
+      for (let level = MAX_LEVEL; level >= 1; level--) {
+        const xpNeeded = xpTable[level - 1] || 0;
+        if (totalXp >= xpNeeded) {
+          const xpIntoLevel = totalXp - xpNeeded;
+          const xpForNext = getXpForLevelUp(level, isGeneral);
+          const progress = level >= MAX_LEVEL ? 100 : Math.min((xpIntoLevel / xpForNext) * 100, 100);
+          
+          return {
+            level: Math.min(level, MAX_LEVEL),
+            currentXp: xpIntoLevel,
+            xpForNext: xpForNext,
+            progress: progress
+          };
+        }
+      }
+      
+      const firstLevelXp = isGeneral ? 25 * GENERAL_MULTIPLIER : 25;
+      return { level: 1, currentXp: totalXp, xpForNext: firstLevelXp, progress: (totalXp / firstLevelXp) * 100 };
+    }
+
     function getXpForDifficulty(difficulty) {
       const d = Math.round(difficulty * 2) / 2; // Round to nearest 0.5
       return XP_TABLE[d] || XP_TABLE[Math.floor(d)] || 5;
@@ -209,6 +281,19 @@
     .xp-bar-fill.number_theory { background: linear-gradient(90deg, #4facfe, #00f2fe); }
     .xp-bar-fill.counting { background: linear-gradient(90deg, #43e97b, #38f9d7); }
     .xp-bar-fill.general { background: linear-gradient(90deg, #fa709a, #fee140); }
+
+    .xp-sublabel {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    .general-bar {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, var(--bg-secondary), var(--border-color));
+      border: 2px solid var(--border-color);
+    }
 
     /* Filters */
     .filter-row {
@@ -535,6 +620,30 @@
     .xp-change.positive { color: #28a745; }
     .xp-change.negative { color: #dc3545; }
 
+    .level-up-notification {
+      margin-top: 12px;
+      padding: 12px;
+      background: linear-gradient(135deg, #ffecd2, #fcb69f);
+      border-radius: 8px;
+      animation: levelUpPulse 0.5s ease-out;
+    }
+
+    [data-theme="dark"] .level-up-notification {
+      background: linear-gradient(135deg, #434343, #000000);
+    }
+
+    .level-up-item {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 4px 0;
+    }
+
+    @keyframes levelUpPulse {
+      0% { transform: scale(0.8); opacity: 0; }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
     @keyframes slideIn {
       from { opacity: 0; transform: translateY(-10px); }
       to { opacity: 1; transform: translateY(0); }
@@ -678,52 +787,57 @@
 
     <!-- XP Display -->
     <div class="card">
-      <div class="card-header">Your XP</div>
+      <div class="card-header">Your Levels</div>
       <div class="xp-container">
         <div class="xp-bar-wrapper">
           <div class="xp-bar-label">
             <span>Algebra</span>
-            <span class="xp-bar-value" id="xp-algebra-value">0</span>
+            <span class="xp-bar-value">Lv. <span id="level-algebra">1</span></span>
           </div>
           <div class="xp-bar-track">
             <div class="xp-bar-fill algebra" id="xp-algebra-bar" style="width: 0%"></div>
           </div>
+          <div class="xp-sublabel" id="xp-algebra-sublabel">0 / 25 XP</div>
         </div>
         <div class="xp-bar-wrapper">
           <div class="xp-bar-label">
             <span>Geometry</span>
-            <span class="xp-bar-value" id="xp-geometry-value">0</span>
+            <span class="xp-bar-value">Lv. <span id="level-geometry">1</span></span>
           </div>
           <div class="xp-bar-track">
             <div class="xp-bar-fill geometry" id="xp-geometry-bar" style="width: 0%"></div>
           </div>
+          <div class="xp-sublabel" id="xp-geometry-sublabel">0 / 25 XP</div>
         </div>
         <div class="xp-bar-wrapper">
           <div class="xp-bar-label">
             <span>Number Theory</span>
-            <span class="xp-bar-value" id="xp-number_theory-value">0</span>
+            <span class="xp-bar-value">Lv. <span id="level-number_theory">1</span></span>
           </div>
           <div class="xp-bar-track">
             <div class="xp-bar-fill number_theory" id="xp-number_theory-bar" style="width: 0%"></div>
           </div>
+          <div class="xp-sublabel" id="xp-number_theory-sublabel">0 / 25 XP</div>
         </div>
         <div class="xp-bar-wrapper">
           <div class="xp-bar-label">
             <span>Counting</span>
-            <span class="xp-bar-value" id="xp-counting-value">0</span>
+            <span class="xp-bar-value">Lv. <span id="level-counting">1</span></span>
           </div>
           <div class="xp-bar-track">
             <div class="xp-bar-fill counting" id="xp-counting-bar" style="width: 0%"></div>
           </div>
+          <div class="xp-sublabel" id="xp-counting-sublabel">0 / 25 XP</div>
         </div>
-        <div class="xp-bar-wrapper" style="grid-column: 1 / -1;">
+        <div class="xp-bar-wrapper general-bar">
           <div class="xp-bar-label">
-            <span>🌟 General XP</span>
-            <span class="xp-bar-value" id="xp-general-value">0</span>
+            <span>🌟 Overall</span>
+            <span class="xp-bar-value">Lv. <span id="level-general">1</span></span>
           </div>
           <div class="xp-bar-track">
             <div class="xp-bar-fill general" id="xp-general-bar" style="width: 0%"></div>
           </div>
+          <div class="xp-sublabel" id="xp-general-sublabel">0 / 25 XP</div>
         </div>
       </div>
     </div>
@@ -1001,12 +1115,24 @@
 
     // Update XP display
     function updateXpDisplay() {
-      const maxXp = 10000; // For bar display purposes
-      
       ['algebra', 'geometry', 'number_theory', 'counting', 'general'].forEach(type => {
-        const value = userXp[type];
-        document.getElementById(`xp-${type}-value`).textContent = value;
-        document.getElementById(`xp-${type}-bar`).style.width = Math.min(value / maxXp * 100, 100) + '%';
+        const totalXp = userXp[type];
+        const isGeneral = type === 'general';
+        const levelInfo = getLevelFromXp(totalXp, isGeneral);
+        
+        // Update level number
+        document.getElementById(`level-${type}`).textContent = levelInfo.level;
+        
+        // Update progress bar (progress to next level)
+        document.getElementById(`xp-${type}-bar`).style.width = levelInfo.progress + '%';
+        
+        // Update sublabel
+        const sublabel = document.getElementById(`xp-${type}-sublabel`);
+        if (levelInfo.level >= MAX_LEVEL) {
+          sublabel.textContent = `MAX LEVEL (${totalXp.toLocaleString()} XP)`;
+        } else {
+          sublabel.textContent = `${levelInfo.currentXp.toLocaleString()} / ${levelInfo.xpForNext.toLocaleString()} XP`;
+        }
       });
     }
 
@@ -1159,10 +1285,20 @@
       const baseXp = getXpForDifficulty(difficulty);
       const xpChange = isCorrect ? baseXp : -Math.round(baseXp / 5);
       
-      // Update XP
+      // Track levels before XP change
       const problemType = currentProblem.type;
+      const oldTypeLevel = getLevelFromXp(userXp[problemType], false).level;
+      const oldGeneralLevel = getLevelFromXp(userXp.general, true).level;
+      
+      // Update XP
       userXp[problemType] = Math.max(0, userXp[problemType] + xpChange);
       userXp.general = Math.max(0, userXp.general + xpChange);
+      
+      // Check for level-ups
+      const newTypeLevel = getLevelFromXp(userXp[problemType], false).level;
+      const newGeneralLevel = getLevelFromXp(userXp.general, true).level;
+      const typeLevelUp = newTypeLevel > oldTypeLevel;
+      const generalLevelUp = newGeneralLevel > oldGeneralLevel;
       
       // Update session stats
       sessionStats.solved++;
@@ -1176,6 +1312,20 @@
       updateXpDisplay();
       updateSessionStats();
       
+      // Build level-up message
+      let levelUpHtml = '';
+      if (typeLevelUp || generalLevelUp) {
+        levelUpHtml = '<div class="level-up-notification">';
+        if (typeLevelUp) {
+          const typeNames = { algebra: 'Algebra', geometry: 'Geometry', number_theory: 'Number Theory', counting: 'Counting' };
+          levelUpHtml += `<div class="level-up-item">🎉 ${typeNames[problemType]} leveled up to <strong>${newTypeLevel}</strong>!</div>`;
+        }
+        if (generalLevelUp) {
+          levelUpHtml += `<div class="level-up-item">⭐ Overall leveled up to <strong>${newGeneralLevel}</strong>!</div>`;
+        }
+        levelUpHtml += '</div>';
+      }
+      
       // Show result
       const resultDisplay = document.getElementById('resultDisplay');
       resultDisplay.className = 'result-display show ' + (isCorrect ? 'correct' : 'incorrect');
@@ -1188,6 +1338,7 @@
         <div class="xp-change ${xpChange >= 0 ? 'positive' : 'negative'}">
           ${xpChange >= 0 ? '+' : ''}${xpChange} XP
         </div>
+        ${levelUpHtml}
       `;
       
       // Disable input
