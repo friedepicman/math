@@ -245,6 +245,7 @@
       cursor: pointer;
       transition: all 0.2s;
       border: 2px solid transparent;
+      user-select: none;
     }
 
     .type-checkbox:hover {
@@ -256,8 +257,108 @@
       color: white;
     }
 
-    .type-checkbox input {
-      display: none;
+    /* Dual range slider */
+    .range-slider-container {
+      width: 100%;
+      max-width: 400px;
+      padding: 20px 10px;
+    }
+
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .range-values {
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent-primary);
+      margin-bottom: 12px;
+    }
+
+    .dual-range {
+      position: relative;
+      height: 8px;
+    }
+
+    .dual-range input[type="range"] {
+      position: absolute;
+      width: 100%;
+      height: 8px;
+      background: none;
+      pointer-events: none;
+      -webkit-appearance: none;
+      appearance: none;
+      top: 0;
+      left: 0;
+    }
+
+    .dual-range input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      background: var(--primary-blue);
+      border-radius: 50%;
+      cursor: pointer;
+      pointer-events: auto;
+      border: 3px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      margin-top: -8px;
+    }
+
+    .dual-range input[type="range"]::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      background: var(--primary-blue);
+      border-radius: 50%;
+      cursor: pointer;
+      pointer-events: auto;
+      border: 3px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .dual-range input[type="range"]::-webkit-slider-runnable-track {
+      height: 8px;
+      border-radius: 4px;
+    }
+
+    .dual-range input[type="range"]::-moz-range-track {
+      height: 8px;
+      border-radius: 4px;
+    }
+
+    .slider-track {
+      position: absolute;
+      width: 100%;
+      height: 8px;
+      background: var(--border-color);
+      border-radius: 4px;
+      top: 0;
+    }
+
+    .slider-range {
+      position: absolute;
+      height: 8px;
+      background: var(--primary-blue);
+      border-radius: 4px;
+      top: 0;
+    }
+
+    .range-ticks {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      padding: 0 4px;
+    }
+
+    .range-ticks span {
+      font-size: 11px;
+      color: var(--text-tertiary);
     }
 
     select {
@@ -657,51 +758,37 @@
       <div style="margin-bottom: 16px;">
         <label style="font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 8px;">Problem Types:</label>
         <div class="type-checkboxes">
-          <label class="type-checkbox selected" data-type="algebra">
-            <input type="checkbox" checked> Algebra
-          </label>
-          <label class="type-checkbox selected" data-type="geometry">
-            <input type="checkbox" checked> Geometry
-          </label>
-          <label class="type-checkbox selected" data-type="number_theory">
-            <input type="checkbox" checked> Number Theory
-          </label>
-          <label class="type-checkbox selected" data-type="counting">
-            <input type="checkbox" checked> Counting
-          </label>
+          <div class="type-checkbox selected" data-type="algebra">Algebra</div>
+          <div class="type-checkbox selected" data-type="geometry">Geometry</div>
+          <div class="type-checkbox selected" data-type="number_theory">Number Theory</div>
+          <div class="type-checkbox selected" data-type="counting">Counting</div>
         </div>
       </div>
 
-      <div class="filter-row">
-        <div class="filter-group">
-          <label>Min Difficulty:</label>
-          <select id="minDifficulty">
-            <option value="1">1</option>
-            <option value="1.5">1.5</option>
-            <option value="2">2</option>
-            <option value="2.5">2.5</option>
-            <option value="3" selected>3</option>
-            <option value="3.5">3.5</option>
-            <option value="4">4</option>
-            <option value="4.5">4.5</option>
-            <option value="5">5</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>Max Difficulty:</label>
-          <select id="maxDifficulty">
-            <option value="5">5</option>
-            <option value="5.5">5.5</option>
-            <option value="6">6</option>
-            <option value="6.5">6.5</option>
-            <option value="7" selected>7</option>
-            <option value="7.5">7.5</option>
-            <option value="8">8</option>
-            <option value="8.5">8.5</option>
-            <option value="9">9</option>
-            <option value="9.5">9.5</option>
-            <option value="10">10</option>
-          </select>
+      <div style="margin-bottom: 16px;">
+        <label style="font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 8px;">Difficulty Range:</label>
+        <div class="range-slider-container">
+          <div class="range-values">
+            <span id="minValue">3</span> — <span id="maxValue">7</span>
+          </div>
+          <div class="dual-range">
+            <div class="slider-track"></div>
+            <div class="slider-range" id="sliderRange"></div>
+            <input type="range" id="minDifficulty" min="1" max="10" step="0.5" value="3">
+            <input type="range" id="maxDifficulty" min="1" max="10" step="0.5" value="7">
+          </div>
+          <div class="range-ticks">
+            <span>1</span>
+            <span>2</span>
+            <span>3</span>
+            <span>4</span>
+            <span>5</span>
+            <span>6</span>
+            <span>7</span>
+            <span>8</span>
+            <span>9</span>
+            <span>10</span>
+          </div>
         </div>
       </div>
 
@@ -795,23 +882,62 @@
 
     // Type checkbox handlers
     document.querySelectorAll('.type-checkbox').forEach(el => {
-      el.addEventListener('click', () => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
         const type = el.dataset.type;
-        const input = el.querySelector('input');
         
         if (selectedTypes.has(type)) {
           if (selectedTypes.size > 1) { // Keep at least one selected
             selectedTypes.delete(type);
             el.classList.remove('selected');
-            input.checked = false;
           }
         } else {
           selectedTypes.add(type);
           el.classList.add('selected');
-          input.checked = true;
         }
       });
     });
+
+    // Dual range slider
+    const minSlider = document.getElementById('minDifficulty');
+    const maxSlider = document.getElementById('maxDifficulty');
+    const minValueDisplay = document.getElementById('minValue');
+    const maxValueDisplay = document.getElementById('maxValue');
+    const sliderRange = document.getElementById('sliderRange');
+
+    function updateSlider() {
+      let minVal = parseFloat(minSlider.value);
+      let maxVal = parseFloat(maxSlider.value);
+      
+      // Prevent crossover
+      if (minVal > maxVal) {
+        if (this === minSlider) {
+          minSlider.value = maxVal;
+          minVal = maxVal;
+        } else {
+          maxSlider.value = minVal;
+          maxVal = minVal;
+        }
+      }
+      
+      // Update display
+      minValueDisplay.textContent = minVal;
+      maxValueDisplay.textContent = maxVal;
+      
+      // Update range highlight
+      const minPercent = ((minVal - 1) / 9) * 100;
+      const maxPercent = ((maxVal - 1) / 9) * 100;
+      sliderRange.style.left = minPercent + '%';
+      sliderRange.style.width = (maxPercent - minPercent) + '%';
+    }
+
+    minSlider.addEventListener('input', updateSlider);
+    maxSlider.addEventListener('input', updateSlider);
+    
+    // Initialize slider
+    updateSlider();
 
     // Auth
     async function updateAuthUI() {
