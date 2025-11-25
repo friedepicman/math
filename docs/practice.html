@@ -98,6 +98,24 @@
       return XP_TABLE[d] || XP_TABLE[Math.floor(d)] || 5;
     }
 
+    function calculatePenalty(level, problemDifficulty) {
+      // Expected difficulty based on level (level 100 = diff 10, level 50 = diff 6, etc.)
+      const expectedDiff = Math.min(10, 1 + level / 10);
+      const expectedDiffRounded = Math.round(expectedDiff * 2) / 2; // Round to nearest 0.5
+      
+      // Base penalty is 1/5 of XP you'd get for a problem at your expected level
+      const expectedXp = XP_TABLE[expectedDiffRounded] || XP_TABLE[10];
+      const basePenalty = expectedXp / 5;
+      
+      // Gap: how far below your level the problem is
+      const gap = Math.max(0, expectedDiff - problemDifficulty);
+      
+      // Final penalty scales with gap
+      const penalty = Math.round(basePenalty * (1 + gap));
+      
+      return -penalty;
+    }
+
     function escapeHtml(text) {
       if (!text) return text;
       const div = document.createElement('div');
@@ -1283,12 +1301,15 @@
       const isCorrect = userAnswer === correctAnswer;
       const difficulty = parseFloat(currentProblem.difficulty);
       const baseXp = getXpForDifficulty(difficulty);
-      const xpChange = isCorrect ? baseXp : -Math.round(baseXp / 5);
       
       // Track levels before XP change
       const problemType = currentProblem.type;
-      const oldTypeLevel = getLevelFromXp(userXp[problemType], false).level;
+      const currentTypeLevel = getLevelFromXp(userXp[problemType], false).level;
+      const oldTypeLevel = currentTypeLevel;
       const oldGeneralLevel = getLevelFromXp(userXp.general, true).level;
+      
+      // Calculate XP change (penalty scales with level for wrong answers)
+      const xpChange = isCorrect ? baseXp : calculatePenalty(currentTypeLevel, difficulty);
       
       // Update XP
       userXp[problemType] = Math.max(0, userXp[problemType] + xpChange);
