@@ -1446,9 +1446,37 @@
     </div>
 
     <div class="filter-section">
-      <button id="settingsToggle" onclick="toggleSettings()" style="margin-bottom: 10px;">⚙️ Settings</button>
-      <div id="filterOptions" style="display: none;">
-        <h3>Filter Options</h3>
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <h3>Difficulty Selection</h3>
+          <label for="difficulty" style="font-weight: 500; color: var(--text-secondary); font-size: 15px;">Select Difficulty Level:</label>
+          <select id="difficulty">
+            <option value="1">1 - Easiest</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5" selected>5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10 - Hardest</option>
+          </select>
+          <div style="margin-top: 20px;">
+            <button id="generateBtn" onclick="generateMock()">Generate Mock</button>
+            <button id="checkBtn" onclick="checkAnswers()">Check Answers</button>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 10px;">
+          <button id="settingsToggle" onclick="toggleSettings()" style="background: #6c757d; padding: 8px 16px; font-size: 14px;">⚙️ Settings</button>
+          <div style="font-size: 14px; color: var(--text-secondary);">
+            <strong>Total Problems Available:</strong>
+            <span id="totalProblemsAvailable">0</span>
+          </div>
+        </div>
+      </div>
+      <div id="filterOptions" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+        <h3 style="margin-top: 0;">Filter Options</h3>
         <div class="mode-toggle">
           <div class="filter-option">
             <label>
@@ -1483,33 +1511,6 @@
         filterOptions.style.display = filterOptions.style.display === 'none' ? 'block' : 'none';
       }
     </script>
-
-    <div class="filter-section" style="display: flex; justify-content: space-between; align-items: flex-start;">
-      <div>
-        <h3>Difficulty Selection</h3>
-        <label for="difficulty" style="font-weight: 500; color: var(--text-secondary); font-size: 15px;">Select Difficulty Level:</label>
-        <select id="difficulty">
-          <option value="1">1 - Easiest</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5" selected>5</option>
-          <option value="6">6</option>
-          <option value="7">7</option>
-          <option value="8">8</option>
-          <option value="9">9</option>
-          <option value="10">10 - Hardest</option>
-        </select>
-        <div style="margin-top: 20px;">
-          <button id="generateBtn" onclick="generateMock()">Generate Mock</button>
-          <button id="checkBtn" onclick="checkAnswers()">Check Answers</button>
-        </div>
-      </div>
-      <div style="margin-left: 20px; font-size: 14px; color: var(--text-secondary);">
-        <strong>Total Problems Available:</strong>
-        <span id="totalProblemsAvailable">0</span>
-      </div>
-    </div>
 
     <script>
       // Update the total problems available dynamically
