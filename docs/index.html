@@ -1428,7 +1428,6 @@
       </a>
       <div style="display: flex; gap: 0; align-items: center;">
         <a href="search.html">Search</a>
-        <a href="admin.html">Admin</a>
         <a href="practice.html">Practice</a>
         <a href="login.html" class="auth-button">Login</a>
         <div class="user-info"></div>
@@ -1447,55 +1446,75 @@
     </div>
 
     <div class="filter-section">
-      <h3>Filter Options</h3>
-      <div class="mode-toggle">
-        <div class="filter-option">
-          <label>
-            <input type="checkbox" id="useFinalizedOnly" />
-            Use Finalized Problems Only
-          </label>
-        </div>
-        <div class="filter-option">
-          <label>
-            <input type="checkbox" id="useExpandedDb" />
-            Use Expanded Database
-          </label>
-        </div>
-        <div class="quality-selector" id="qualitySelector">
-          <span class="quality-label">Minimum Quality:</span>
-          <div class="stars" id="qualityStars">
-            <span class="star" data-rating="1">★</span>
-            <span class="star" data-rating="2">★</span>
-            <span class="star" data-rating="3">★</span>
-            <span class="star" data-rating="4">★</span>
-            <span class="star" data-rating="5">★</span>
+      <button id="settingsToggle" onclick="toggleSettings()" style="margin-bottom: 10px;">⚙️ Settings</button>
+      <div id="filterOptions" style="display: none;">
+        <h3>Filter Options</h3>
+        <div class="mode-toggle">
+          <div class="filter-option">
+            <label>
+              <input type="checkbox" id="useFinalizedOnly" />
+              Use Finalized Problems Only
+            </label>
           </div>
-          <span class="quality-rating-text" id="qualityRatingText">(3/5)</span>
+          <div class="filter-option">
+            <label>
+              <input type="checkbox" id="useExpandedDb" />
+              Use Expanded Database
+            </label>
+          </div>
+          <div class="quality-selector" id="qualitySelector">
+            <span class="quality-label">Minimum Quality:</span>
+            <div class="stars" id="qualityStars">
+              <span class="star" data-rating="1">★</span>
+              <span class="star" data-rating="2">★</span>
+              <span class="star" data-rating="3">★</span>
+              <span class="star" data-rating="4">★</span>
+              <span class="star" data-rating="5">★</span>
+            </div>
+            <span class="quality-rating-text" id="qualityRatingText">(3/5)</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="filter-section">
-      <h3>Difficulty Selection</h3>
-      <label for="difficulty" style="font-weight: 500; color: var(--text-secondary); font-size: 15px;">Select Difficulty Level:</label>
-      <select id="difficulty">
-        <option value="1">1 - Easiest</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5" selected>5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-        <option value="9">9</option>
-        <option value="10">10 - Hardest</option>
-      </select>
+    <script>
+      function toggleSettings() {
+        const filterOptions = document.getElementById('filterOptions');
+        filterOptions.style.display = filterOptions.style.display === 'none' ? 'block' : 'none';
+      }
+    </script>
 
-      <div style="margin-top: 20px;">
-        <button id="generateBtn" onclick="generateMock()">Generate Mock</button>
-        <button id="checkBtn" onclick="checkAnswers()">Check Answers</button>
+    <div class="filter-section" style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <h3>Difficulty Selection</h3>
+        <label for="difficulty" style="font-weight: 500; color: var(--text-secondary); font-size: 15px;">Select Difficulty Level:</label>
+        <select id="difficulty">
+          <option value="1">1 - Easiest</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5" selected>5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10 - Hardest</option>
+        </select>
+        <div style="margin-top: 20px;">
+          <button id="generateBtn" onclick="generateMock()">Generate Mock</button>
+          <button id="checkBtn" onclick="checkAnswers()">Check Answers</button>
+        </div>
+      </div>
+      <div style="margin-left: 20px; font-size: 14px; color: var(--text-secondary);">
+        <strong>Total Problems Available:</strong>
+        <span id="totalProblemsAvailable">0</span>
       </div>
     </div>
+
+    <script>
+      // Update the total problems available dynamically
+      document.getElementById('totalProblemsAvailable').textContent = allProblems.length;
+    </script>
 
     <div id="instructions"></div>
     <div class="stats" id="stats"></div>
@@ -2155,7 +2174,7 @@
         
         problemDiv.innerHTML = `
           ${getQualityBadgeHtml(newProblem.quality)}
-          <a href="" target="_blank" class="aops-link-top" id="aops-link-${index}">View Discussion</a>
+          <a href="" target="_blank" class="aops-link-top" id="aops-link-${index}">${escapeHtml(newProblem.source || 'Unknown Source')}</a>
           <strong>Problem ${index + 1}:</strong>
           <span class="difficulty-indicator">Difficulty: ${parseFloat(newProblem.difficulty).toFixed(1)}</span>
           <p class="problem-text" id="problem-text-${index}"></p>
@@ -2520,7 +2539,7 @@
 
           div.innerHTML = `
             ${getQualityBadgeHtml(p.quality)}
-            <a href="" target="_blank" class="aops-link-top" id="aops-link-${i}">View Discussion</a>
+            <a href="" target="_blank" class="aops-link-top" id="aops-link-${i}">${escapeHtml(p.source || 'Unknown Source')}</a>
             <strong>Problem ${i + 1}:</strong>
             <span class="difficulty-indicator">Difficulty: ${parseFloat(p.difficulty).toFixed(1)}</span>
             <p class="problem-text" id="problem-text-${i}"></p>
