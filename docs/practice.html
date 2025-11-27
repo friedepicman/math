@@ -1216,7 +1216,17 @@
       padding: 40px;
     }
 
-    .spinner {
+    .loading-indicator {
+      text-align: center;
+      padding: 20px;
+      background: var(--bg-card);
+      border-radius: 12px;
+      margin: 20px 0;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .loading-spinner, .spinner {
+      display: inline-block;
       width: 40px;
       height: 40px;
       border: 4px solid var(--border-color);
@@ -1292,6 +1302,292 @@
     .empty-state-icon {
       font-size: 48px;
       margin-bottom: 16px;
+    }
+
+    /* Report button */
+    .report-button {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      background: #ffe69c;
+      color: #000;
+    }
+
+    .report-button:hover {
+      background: #ffd43b;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+    }
+    
+    .modal-content {
+      background-color: var(--bg-card);
+      margin: 5% auto;
+      padding: 32px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 700px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    
+    @keyframes modalSlideIn {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    .modal-header {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: var(--primary-blue);
+    }
+    
+    .modal-close {
+      float: right;
+      font-size: 28px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text-tertiary);
+      transition: color 0.2s;
+    }
+    
+    .modal-close:hover {
+      color: var(--text-secondary);
+    }
+    
+    .modal-label {
+      display: block;
+      margin: 16px 0 8px 0;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    
+    .modal-select, .modal-textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid var(--border-strong);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 15px;
+      transition: border-color 0.2s;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      box-sizing: border-box;
+    }
+    
+    .modal-select:focus, .modal-textarea:focus {
+      outline: none;
+      border-color: #0056b3;
+      box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+    }
+    
+    .modal-textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    
+    .modal-submit {
+      margin-top: 24px;
+      padding: 12px 24px;
+      background: #0056b3;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      width: 100%;
+      transition: all 0.2s;
+    }
+    
+    .modal-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,68,136,0.3);
+    }
+    
+    .modal-submit:disabled {
+      background: var(--text-tertiary);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .modal-preview {
+      background: var(--bg-secondary);
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      min-height: 60px;
+    }
+
+    .report-section {
+      margin: 20px 0;
+      padding: 15px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      border-left: 4px solid var(--primary-blue);
+      display: none;
+    }
+
+    .section-divider {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary-blue);
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .quality-help-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      background: var(--border-strong);
+      color: white;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .quality-help-btn:hover {
+      background: var(--primary-blue);
+    }
+
+    .quality-help-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .quality-help-item {
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .quality-help-item:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .difficulty-btn {
+      padding: 10px 5px;
+      background: var(--bg-card);
+      border: 2px solid var(--border-strong);
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-primary);
+      transition: all 0.2s;
+    }
+
+    .difficulty-btn:hover {
+      border-color: var(--primary-blue);
+      background: var(--bg-secondary);
+    }
+
+    .difficulty-btn.selected {
+      background: var(--primary-blue);
+      color: white;
+      border-color: var(--primary-blue);
+    }
+
+    .toggle-raw-btn {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .toggle-raw-btn:hover {
+      background: var(--border-color);
+    }
+
+    /* Source label for practice mode */
+    .source-label {
+      display: inline-block;
+      background: var(--bg-secondary);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-top: 12px;
+    }
+
+    .source-link {
+      color: var(--primary-blue);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .source-link:hover {
+      text-decoration: underline;
+    }
+
+    /* More Settings toggle */
+    .more-settings-toggle {
+      background: #6c757d;
+      padding: 8px 16px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    .more-settings-toggle:hover {
+      background: #5a6268;
+    }
+
+    .more-settings-content {
+      display: none;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .more-settings-content.show {
+      display: block;
     }
 
     /* Login prompt */
@@ -1495,31 +1791,35 @@
         </div>
       </div>
 
-      <div style="margin-bottom: 16px;">
-        <label style="font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 8px;">Database Options:</label>
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 400;">
-            <input type="checkbox" id="useFinalizedOnly" onchange="updateProblemCount()">
-            Use Finalized Problems Only
-          </label>
-          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 400;">
-            <input type="checkbox" id="useExpandedDb" onchange="updateProblemCount()">
-            Use Expanded Database
-          </label>
-        </div>
-      </div>
+      <button class="btn-secondary more-settings-toggle" onclick="toggleMoreSettings()">⚙️ More Settings</button>
 
-      <div style="margin-bottom: 16px;">
-        <label style="font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 8px;">Minimum Quality:</label>
-        <div class="quality-selector">
-          <div class="stars" id="qualityStars">
-            <span class="star filled" data-rating="1">★</span>
-            <span class="star filled" data-rating="2">★</span>
-            <span class="star filled" data-rating="3">★</span>
-            <span class="star" data-rating="4">★</span>
-            <span class="star" data-rating="5">★</span>
+      <div id="moreSettingsContent" class="more-settings-content">
+        <div style="margin-bottom: 16px;">
+          <label style="font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 8px;">Database Options:</label>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 400;">
+              <input type="checkbox" id="useFinalizedOnly" onchange="updateProblemCount()">
+              Use Finalized Problems Only
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 400;">
+              <input type="checkbox" id="useExpandedDb" onchange="updateProblemCount()">
+              Use Expanded Database
+            </label>
           </div>
-          <span class="quality-text" id="qualityText">(3/5)</span>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <label style="font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 8px;">Minimum Quality:</label>
+          <div class="quality-selector">
+            <div class="stars" id="qualityStars">
+              <span class="star filled" data-rating="1">★</span>
+              <span class="star filled" data-rating="2">★</span>
+              <span class="star filled" data-rating="3">★</span>
+              <span class="star" data-rating="4">★</span>
+              <span class="star" data-rating="5">★</span>
+            </div>
+            <span class="quality-text" id="qualityText">(3/5)</span>
+          </div>
         </div>
       </div>
 
@@ -1546,6 +1846,11 @@
           <input type="text" class="answer-input" id="answerInput" maxlength="3" placeholder="000" />
           <button class="btn-primary" id="submitBtn" onclick="submitAnswer()">Submit</button>
           <button class="btn-skip" onclick="skipProblem()">Skip</button>
+          <button class="report-button" id="reportBtn" onclick="openReportModal()">Report Issue</button>
+        </div>
+
+        <div id="sourceDisplay" style="display: none; margin-top: 16px;">
+          <span class="source-label">Source: <a href="#" target="_blank" class="source-link" id="sourceLink">Unknown</a></span>
         </div>
 
         <div class="result-display" id="resultDisplay">
@@ -1569,6 +1874,155 @@
       <div class="empty-state">
         <div class="empty-state-icon">😕</div>
         <p>No problems found matching your filters.<br>Try selecting more types or adjusting difficulty range.</p>
+      </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" onclick="closeReportModal()">&times;</span>
+        <div class="modal-header">Report Problem Issue</div>
+        
+        <label class="modal-label">Select Issues to Report:</label>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="reportQuality" onchange="toggleReportSection('quality')">
+            <span>Quality Rating</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="reportDifficulty" onchange="toggleReportSection('difficulty')">
+            <span>Difficulty Rating</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="reportAnswer" onchange="toggleReportSection('answer')">
+            <span>Wrong Answer</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="reportProblem" onchange="toggleReportSection('problem')">
+            <span>Problem Statement</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="reportSource" onchange="toggleReportSection('source')">
+            <span>Source</span>
+          </label>
+        </div>
+
+        <!-- Quality Section -->
+        <div id="qualitySection" class="report-section">
+          <div class="section-divider">
+            Quality Rating
+            <span class="quality-help-btn" onclick="toggleQualityHelp()">?</span>
+          </div>
+          <div id="qualityHelpBox" class="quality-help-box" style="display: none;">
+            <div class="quality-help-item"><strong>1 Star:</strong> Poor quality. Unclear problem statement, errors, or unsuitable for AIME practice.</div>
+            <div class="quality-help-item"><strong>2 Stars:</strong> Below average. Has issues but usable with effort.</div>
+            <div class="quality-help-item"><strong>3 Stars:</strong> Average quality. Acceptable for practice but not exceptional.</div>
+            <div class="quality-help-item"><strong>4 Stars:</strong> High quality. Comparable to typical AIME problems. Good for practice and skill development.</div>
+            <div class="quality-help-item"><strong>5 Stars:</strong> Exceptional quality. On par with the best AIME problems. Elegant, instructive, and excellent for learning.</div>
+          </div>
+          <div class="quality-rating" style="justify-content: center; display: flex; align-items: center; gap: 10px; margin: 15px 0;">
+            <div class="stars" id="reportQualityStars">
+              <span class="star" data-rating="1">★</span>
+              <span class="star" data-rating="2">★</span>
+              <span class="star" data-rating="3">★</span>
+              <span class="star" data-rating="4">★</span>
+              <span class="star" data-rating="5">★</span>
+            </div>
+            <span id="reportQualityText" style="margin-left: 10px; color: var(--text-tertiary);">(0/5)</span>
+          </div>
+          <label class="modal-label">Additional Details (Optional):</label>
+          <textarea id="qualityDetails" class="modal-textarea" placeholder="Explain your quality rating..."></textarea>
+        </div>
+
+        <!-- Difficulty Section -->
+        <div id="difficultySection" class="report-section">
+          <div class="section-divider">
+            Difficulty Rating
+            <span class="quality-help-btn" onclick="toggleDifficultyHelp()">?</span>
+          </div>
+          <div id="difficultyHelpBox" class="quality-help-box" style="display: none;">
+            For guidance on difficulty ratings, see the <a href="https://artofproblemsolving.com/wiki/index.php/AoPS_Wiki:Competition_ratings" target="_blank" style="color: var(--primary-blue); font-weight: 600;">AoPS Competition Ratings</a> page.
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(9, 1fr); gap: 8px; margin-bottom: 15px;">
+            <button type="button" class="difficulty-btn" data-diff="1.0">1.0</button>
+            <button type="button" class="difficulty-btn" data-diff="1.5">1.5</button>
+            <button type="button" class="difficulty-btn" data-diff="2.0">2.0</button>
+            <button type="button" class="difficulty-btn" data-diff="2.5">2.5</button>
+            <button type="button" class="difficulty-btn" data-diff="3.0">3.0</button>
+            <button type="button" class="difficulty-btn" data-diff="3.5">3.5</button>
+            <button type="button" class="difficulty-btn" data-diff="4.0">4.0</button>
+            <button type="button" class="difficulty-btn" data-diff="4.5">4.5</button>
+            <button type="button" class="difficulty-btn" data-diff="5.0">5.0</button>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(9, 1fr); gap: 8px; margin-bottom: 15px;">
+            <button type="button" class="difficulty-btn" data-diff="5.5">5.5</button>
+            <button type="button" class="difficulty-btn" data-diff="6.0">6.0</button>
+            <button type="button" class="difficulty-btn" data-diff="6.5">6.5</button>
+            <button type="button" class="difficulty-btn" data-diff="7.0">7.0</button>
+            <button type="button" class="difficulty-btn" data-diff="7.5">7.5</button>
+            <button type="button" class="difficulty-btn" data-diff="8.0">8.0</button>
+            <button type="button" class="difficulty-btn" data-diff="8.5">8.5</button>
+            <button type="button" class="difficulty-btn" data-diff="9.0">9.0</button>
+            <button type="button" class="difficulty-btn" data-diff="9.5">9.5</button>
+          </div>
+          <div style="text-align: center; margin-bottom: 15px;">
+            <strong>Selected Difficulty: <span id="selectedDifficulty">None</span></strong>
+          </div>
+          <label class="modal-label">Additional Details (Optional):</label>
+          <textarea id="difficultyDetails" class="modal-textarea" placeholder="Explain your difficulty rating..."></textarea>
+        </div>
+
+        <!-- Answer Section -->
+        <div id="answerSection" class="report-section">
+          <div class="section-divider">Correct Answer</div>
+          <label class="modal-label">
+            Current Answer: <strong id="currentAnswer">-</strong>
+            <button type="button" class="toggle-raw-btn" style="margin-left: 10px;" onclick="toggleCurrentAnswer()">Show Answer</button>
+          </label>
+          <div id="currentAnswerReveal" style="display: none; margin: 10px 0; padding: 10px; background: #e3f2fd; border-radius: 4px; font-weight: bold; font-size: 18px;"></div>
+          
+          <label class="modal-label">Your Proposed Answer:</label>
+          <input type="text" id="proposedAnswer" maxlength="3" placeholder="000" style="width: 100px; padding: 8px; border: 2px solid var(--border-strong); border-radius: 6px; text-align: center; font-size: 18px; font-weight: bold; background: var(--bg-card); color: var(--text-primary);">
+          <label class="modal-label" style="margin-top: 15px;">Link to Answer Key:</label>
+          <input type="text" id="answerKeyLink" placeholder="https://..." style="width: 100%; padding: 10px; border: 2px solid var(--border-strong); border-radius: 6px; box-sizing: border-box; background: var(--bg-card); color: var(--text-primary);">
+          <label class="modal-label" style="margin-top: 15px;">Additional Details (Optional):</label>
+          <textarea id="answerDetails" class="modal-textarea" placeholder="Explain why this is the correct answer..."></textarea>
+        </div>
+
+        <!-- Problem Statement Section -->
+        <div id="problemSection" class="report-section">
+          <div class="section-divider">Problem Statement</div>
+          
+          <label class="modal-label">
+            Current Answer for Reference: 
+            <button type="button" class="toggle-raw-btn" style="margin-left: 10px;" onclick="toggleProblemCurrentAnswer()">Show Answer</button>
+          </label>
+          <div id="problemCurrentAnswerReveal" style="display: none; margin: 10px 0; padding: 10px; background: #e3f2fd; border-radius: 4px; font-weight: bold; font-size: 18px;"></div>
+          
+          <label class="modal-label">Edit Problem Statement (LaTeX):</label>
+          <textarea id="problemTextEdit" class="modal-textarea" style="min-height: 150px; font-family: 'Courier New', monospace;" oninput="updateProblemPreview()"></textarea>
+          
+          <label class="modal-label">Preview:</label>
+          <div id="problemPreview" class="modal-preview"></div>
+          
+          <label class="modal-label">Answer for Modified Problem:</label>
+          <input type="text" id="problemAnswer" maxlength="3" placeholder="000" style="width: 100px; padding: 8px; border: 2px solid var(--border-strong); border-radius: 6px; text-align: center; font-size: 18px; font-weight: bold; background: var(--bg-card); color: var(--text-primary);">
+          
+          <label class="modal-label" style="margin-top: 15px;">Additional Details (Optional):</label>
+          <textarea id="problemDetails" class="modal-textarea" placeholder="Explain your changes..."></textarea>
+        </div>
+
+        <!-- Source Section -->
+        <div id="sourceSection" class="report-section">
+          <div class="section-divider">Source</div>
+          <label class="modal-label">Current Source: <strong id="currentSource">-</strong></label>
+          <label class="modal-label">Corrected Source:</label>
+          <input type="text" id="proposedSource" placeholder="e.g., AMC 12A 2020/15" style="width: 100%; padding: 10px; border: 2px solid var(--border-strong); border-radius: 6px; box-sizing: border-box; background: var(--bg-card); color: var(--text-primary);">
+          <label class="modal-label" style="margin-top: 15px;">Additional Details (Optional):</label>
+          <textarea id="sourceDetails" class="modal-textarea" placeholder="Provide source information or link..."></textarea>
+        </div>
+        
+        <button class="modal-submit" id="submitReport">Submit Report</button>
       </div>
     </div>
   </div>
@@ -1616,6 +2070,16 @@
     if (savedTheme === 'dark') {
       document.querySelector('.dark-mode-toggle').textContent = '☀️ Light';
     }
+
+    // More Settings toggle
+    function toggleMoreSettings() {
+      const content = document.getElementById('moreSettingsContent');
+      content.classList.toggle('show');
+    }
+
+    // Report Modal State
+    let reportQualityRating = 0;
+    let reportDifficultyRating = null;
 
     // Type checkbox handlers
     document.querySelectorAll('.type-checkbox').forEach(el => {
@@ -1911,6 +2375,9 @@
       document.getElementById('submitBtn').disabled = false;
       document.getElementById('resultDisplay').classList.remove('show', 'correct', 'incorrect');
       
+      // Hide source display for new problem
+      document.getElementById('sourceDisplay').style.display = 'none';
+      
       setTimeout(() => document.getElementById('answerInput').focus(), 100);
     }
 
@@ -2048,6 +2515,17 @@
           </div>
         `}
       `;
+
+      // Show source after submitting
+      const sourceDisplay = document.getElementById('sourceDisplay');
+      const sourceLink = document.getElementById('sourceLink');
+      if (currentProblem) {
+        const sourceName = currentProblem.source || 'Unknown Source';
+        const sourceUrl = currentProblem.link || '#';
+        sourceLink.textContent = sourceName;
+        sourceLink.href = sourceUrl;
+        sourceDisplay.style.display = 'block';
+      }
     }
 
     function skipProblem() {
@@ -2070,6 +2548,259 @@
         if (!document.getElementById('submitBtn').disabled) {
           submitAnswer();
         }
+      }
+    });
+
+    // Report Modal Functions
+    function openReportModal() {
+      if (!currentProblem) return;
+      
+      // Reset all checkboxes and sections
+      document.getElementById('reportQuality').checked = false;
+      document.getElementById('reportDifficulty').checked = false;
+      document.getElementById('reportAnswer').checked = false;
+      document.getElementById('reportProblem').checked = false;
+      document.getElementById('reportSource').checked = false;
+      
+      document.querySelectorAll('.report-section').forEach(section => {
+        section.style.display = 'none';
+      });
+      
+      // Reset ratings
+      reportQualityRating = 0;
+      reportDifficultyRating = null;
+      document.querySelectorAll('#reportQualityStars .star').forEach(star => star.classList.remove('filled'));
+      document.getElementById('reportQualityText').textContent = '(0/5)';
+      document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('selected'));
+      document.getElementById('selectedDifficulty').textContent = 'None';
+      
+      // Clear text fields
+      document.getElementById('qualityDetails').value = '';
+      document.getElementById('difficultyDetails').value = '';
+      document.getElementById('proposedAnswer').value = '';
+      document.getElementById('answerKeyLink').value = '';
+      document.getElementById('answerDetails').value = '';
+      document.getElementById('problemTextEdit').value = '';
+      document.getElementById('problemAnswer').value = '';
+      document.getElementById('problemDetails').value = '';
+      document.getElementById('proposedSource').value = '';
+      document.getElementById('sourceDetails').value = '';
+      
+      // Populate current values
+      const currentAns = currentProblem.aime_answer ? 
+        String(currentProblem.aime_answer % 1000) : 
+        String(currentProblem.answer || '-');
+      document.getElementById('currentAnswer').textContent = currentAns;
+      document.getElementById('currentSource').textContent = currentProblem.source || 'Unknown';
+      document.getElementById('problemTextEdit').value = currentProblem.rewritten_problem || currentProblem.text || '';
+      
+      // Hide answer reveals
+      document.getElementById('currentAnswerReveal').style.display = 'none';
+      document.getElementById('problemCurrentAnswerReveal').style.display = 'none';
+      
+      document.getElementById('reportModal').style.display = 'block';
+    }
+
+    function closeReportModal() {
+      document.getElementById('reportModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+      const modal = document.getElementById('reportModal');
+      if (event.target === modal) {
+        closeReportModal();
+      }
+    });
+
+    function toggleReportSection(section) {
+      const checkbox = document.getElementById(`report${section.charAt(0).toUpperCase() + section.slice(1)}`);
+      const sectionDiv = document.getElementById(`${section}Section`);
+      
+      if (checkbox.checked) {
+        sectionDiv.style.display = 'block';
+      } else {
+        sectionDiv.style.display = 'none';
+      }
+    }
+
+    function toggleQualityHelp() {
+      const helpBox = document.getElementById('qualityHelpBox');
+      helpBox.style.display = helpBox.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleDifficultyHelp() {
+      const helpBox = document.getElementById('difficultyHelpBox');
+      helpBox.style.display = helpBox.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleCurrentAnswer() {
+      const revealDiv = document.getElementById('currentAnswerReveal');
+      const btn = event.target;
+      
+      if (revealDiv.style.display === 'none') {
+        if (currentProblem) {
+          const answer = currentProblem.aime_answer 
+            ? String(currentProblem.aime_answer % 1000) 
+            : String(currentProblem.answer || 'Not available');
+          revealDiv.textContent = `Answer: ${answer}`;
+        }
+        revealDiv.style.display = 'block';
+        btn.textContent = 'Hide Answer';
+      } else {
+        revealDiv.style.display = 'none';
+        btn.textContent = 'Show Answer';
+      }
+    }
+
+    function toggleProblemCurrentAnswer() {
+      const revealDiv = document.getElementById('problemCurrentAnswerReveal');
+      const btn = event.target;
+      
+      if (revealDiv.style.display === 'none') {
+        if (currentProblem) {
+          const answer = currentProblem.aime_answer 
+            ? String(currentProblem.aime_answer % 1000) 
+            : String(currentProblem.answer || 'Not available');
+          revealDiv.textContent = `Answer: ${answer}`;
+        }
+        revealDiv.style.display = 'block';
+        btn.textContent = 'Hide Answer';
+      } else {
+        revealDiv.style.display = 'none';
+        btn.textContent = 'Show Answer';
+      }
+    }
+
+    function updateProblemPreview() {
+      const text = document.getElementById('problemTextEdit').value;
+      const preview = document.getElementById('problemPreview');
+      setMathContent(preview, text);
+    }
+
+    function updateReportQualityStars() {
+      const stars = document.querySelectorAll('#reportQualityStars .star');
+      stars.forEach((star, index) => {
+        if (index < reportQualityRating) {
+          star.classList.add('filled');
+        } else {
+          star.classList.remove('filled');
+        }
+      });
+      document.getElementById('reportQualityText').textContent = `(${reportQualityRating}/5)`;
+    }
+
+    // Quality star handlers for report modal
+    document.addEventListener('click', function(e) {
+      if (e.target.classList.contains('star') && e.target.closest('#reportQualityStars')) {
+        reportQualityRating = parseInt(e.target.getAttribute('data-rating'));
+        updateReportQualityStars();
+      }
+      
+      if (e.target.classList.contains('difficulty-btn')) {
+        document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('selected'));
+        e.target.classList.add('selected');
+        reportDifficultyRating = parseFloat(e.target.getAttribute('data-diff'));
+        document.getElementById('selectedDifficulty').textContent = reportDifficultyRating.toFixed(1);
+      }
+    });
+
+    document.addEventListener('mouseenter', function(e) {
+      if (e.target.classList.contains('star') && e.target.closest('#reportQualityStars')) {
+        const rating = parseInt(e.target.getAttribute('data-rating'));
+        const stars = document.querySelectorAll('#reportQualityStars .star');
+        stars.forEach((star, index) => {
+          star.classList.remove('hover');
+          if (index < rating) {
+            star.classList.add('hover');
+          }
+        });
+      }
+    }, true);
+
+    document.addEventListener('mouseleave', function(e) {
+      if (e.target.classList.contains('star') && e.target.closest('#reportQualityStars')) {
+        const stars = document.querySelectorAll('#reportQualityStars .star');
+        stars.forEach(star => star.classList.remove('hover'));
+      }
+    }, true);
+
+    // Submit report handler
+    document.getElementById('submitReport').addEventListener('click', async () => {
+      if (!currentProblem) return;
+
+      const submitButton = document.getElementById('submitReport');
+      submitButton.disabled = true;
+      submitButton.textContent = 'Submitting...';
+
+      const reportData = {
+        problem_id: currentProblem.id,
+        report_types: []
+      };
+
+      if (document.getElementById('reportQuality').checked) {
+        reportData.report_types.push('quality');
+        reportData.quality_rating = reportQualityRating;
+        reportData.quality_details = document.getElementById('qualityDetails').value.trim() || null;
+      }
+
+      if (document.getElementById('reportDifficulty').checked) {
+        reportData.report_types.push('difficulty');
+        reportData.difficulty_rating = reportDifficultyRating;
+        reportData.difficulty_details = document.getElementById('difficultyDetails').value.trim() || null;
+      }
+
+      if (document.getElementById('reportAnswer').checked) {
+        reportData.report_types.push('wrong_answer');
+        reportData.proposed_answer = document.getElementById('proposedAnswer').value.trim() || null;
+        reportData.answer_key_link = document.getElementById('answerKeyLink').value.trim() || null;
+        reportData.answer_details = document.getElementById('answerDetails').value.trim() || null;
+      }
+
+      if (document.getElementById('reportProblem').checked) {
+        reportData.report_types.push('problem_statement');
+        reportData.proposed_problem = document.getElementById('problemTextEdit').value.trim() || null;
+        reportData.proposed_problem_answer = document.getElementById('problemAnswer').value.trim() || null;
+        reportData.problem_details = document.getElementById('problemDetails').value.trim() || null;
+      }
+
+      if (document.getElementById('reportSource').checked) {
+        reportData.report_types.push('source');
+        reportData.proposed_source = document.getElementById('proposedSource').value.trim() || null;
+        reportData.source_details = document.getElementById('sourceDetails').value.trim() || null;
+      }
+
+      if (reportData.report_types.length === 0) {
+        alert('Please select at least one issue to report.');
+        submitButton.disabled = false;
+        submitButton.textContent = 'Submit Report';
+        return;
+      }
+
+      try {
+        const { error } = await supabaseClient
+          .from('problem_reports')
+          .insert([
+            {
+              problem_id: currentProblem.id,
+              report_type: reportData.report_types.join(','),
+              details: JSON.stringify(reportData)
+            }
+          ]);
+
+        if (error) {
+          console.error('Error submitting report:', error);
+          alert('Failed to submit report. Please try again.');
+        } else {
+          alert('Thank you! Your report has been submitted.');
+          closeReportModal();
+        }
+      } catch (err) {
+        console.error('Error:', err);
+        alert('Failed to submit report. Please try again.');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Submit Report';
       }
     });
 
