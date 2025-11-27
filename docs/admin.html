@@ -8,13 +8,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Problem Admin - Mock AIME</title>
-  <script>
-    // Simple password check - prevents accidents only
-    const adminPassword = prompt("Enter admin password:");
-    if (adminPassword !== "mockaime2025") {
-      window.location.href = "index.html";
-    }
-  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.4/dist/umd/supabase.min.js"></script>
   
   <style>
@@ -391,7 +384,6 @@
   <div class="nav-links">
     <a href="index.html">Mock AIME</a>
     <a href="search.html">Problem Search</a>
-    <a href="admin_ai_review.html" class="ai-review-link">🤖 AI Review Mode</a>
     <a href="admin_reports.html">View Reports</a>
     <a href="login.html" class="auth-button">Login</a>
   </div>
@@ -454,7 +446,14 @@
     const SUPABASE_URL = 'https://ftdbplxkyaocyrjpmjyb.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0ZGJwbHhreWFvY3lyanBtanliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMDgxMDUsImV4cCI6MjA2NzY4NDEwNX0.hE0V09JxdLYNbZqPVH3HZxNpLPP2rXIaBsNGUHO3upc';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+    // Admin auth check - redirects non-admins immediately
+    const ADMIN_UUID = '6af62d68-67e7-42f6-b91f-58cac9d81cba';
+    (async () => {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session || session.user.id !== ADMIN_UUID) {
+        window.location.href = 'index.html';
+      }
+    })();
     let allProblems = [];
     let currentPage = 1;
     let totalPages = 1;

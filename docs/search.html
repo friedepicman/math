@@ -278,7 +278,14 @@
     const SUPABASE_URL = 'https://ftdbplxkyaocyrjpmjyb.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0ZGJwbHhreWFvY3lyanBtanliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMDgxMDUsImV4cCI6MjA2NzY4NDEwNX0.hE0V09JxdLYNbZqPVH3HZxNpLPP2rXIaBsNGUHO3upc';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+    // Admin auth check - redirects non-admins immediately
+    const ADMIN_UUID = '6af62d68-67e7-42f6-b91f-58cac9d81cba';
+    (async () => {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session || session.user.id !== ADMIN_UUID) {
+        window.location.href = 'index.html';
+      }
+    })();
     let allProblems = [];
     let filteredProblems = [];
     let currentPage = 1;
