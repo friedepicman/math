@@ -98,6 +98,7 @@
       
       const authButton = document.querySelector('.auth-button');
       const userInfo = document.querySelector('.user-info');
+      const loginPrompt = document.getElementById('loginPrompt');
       
       if (currentUser) {
         if (authButton) {
@@ -112,6 +113,8 @@
             <button onclick="signOut()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Sign Out</button>
           `;
         }
+        
+        if (loginPrompt) loginPrompt.style.display = 'none';
       } else {
         if (authButton) {
           authButton.textContent = 'Login';
@@ -120,6 +123,8 @@
         if (userInfo) {
           userInfo.innerHTML = '';
         }
+        
+        if (loginPrompt) loginPrompt.style.display = 'block';
       }
     }
 
@@ -1054,6 +1059,25 @@
     .filter-option:last-child {
       margin-bottom: 0;
     }
+
+    /* Login prompt */
+    .login-prompt {
+      background: linear-gradient(135deg, #e7f3ff, #cce5ff);
+      border: 2px solid var(--primary-blue);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    [data-theme="dark"] .login-prompt {
+      background: linear-gradient(135deg, #1a3a52, #0d47a1);
+    }
+
+    .login-prompt a {
+      color: var(--primary-blue);
+      font-weight: 600;
+    }
     
     #instructions {
       margin: 20px 0;
@@ -1309,6 +1333,50 @@
       margin-bottom: 15px;
       padding-bottom: 10px;
       border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .quality-help-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      background: var(--border-strong);
+      color: white;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .quality-help-btn:hover {
+      background: var(--primary-blue);
+    }
+
+    .quality-help-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .quality-help-item {
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .quality-help-item:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
     }
 
     .difficulty-btn {
@@ -1444,6 +1512,10 @@
       <p style="margin-top: 16px; font-weight: 500;">Loading problems...</p>
     </div>
 
+    <div id="loginPrompt" class="login-prompt" style="display: none;">
+      <a href="login.html">Log in</a> to save your mock test results!
+    </div>
+
     <div class="filter-section">
       <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div>
@@ -1560,7 +1632,17 @@
 
         <!-- Quality Section -->
         <div id="qualitySection" class="report-section">
-          <div class="section-divider">Quality Rating</div>
+          <div class="section-divider">
+            Quality Rating
+            <span class="quality-help-btn" onclick="toggleQualityHelp()">?</span>
+          </div>
+          <div id="qualityHelpBox" class="quality-help-box" style="display: none;">
+            <div class="quality-help-item"><strong>1 Star:</strong> Unsolvable or fundamentally flawed. Problem is incomplete, contains contradictions, or has multiple unrelated parts combined.</div>
+            <div class="quality-help-item"><strong>2 Stars:</strong> Solvable but poor quality. May be overly tedious, poorly written, or not representative of competition-style problems.</div>
+            <div class="quality-help-item"><strong>3 Stars:</strong> Acceptable quality. The problem works but falls short of AIME standards. May require excessive computation or obscure techniques.</div>
+            <div class="quality-help-item"><strong>4 Stars:</strong> High quality. Comparable to typical AIME problems. Good for practice and skill development.</div>
+            <div class="quality-help-item"><strong>5 Stars:</strong> Exceptional quality. On par with the best AIME problems. Elegant, instructive, and excellent for learning.</div>
+          </div>
           <div class="quality-rating" style="justify-content: center;">
             <div class="stars" id="reportQualityStars">
               <span class="star" data-rating="1">★</span>
@@ -1577,7 +1659,13 @@
 
         <!-- Difficulty Section -->
         <div id="difficultySection" class="report-section">
-          <div class="section-divider">Difficulty Rating</div>
+          <div class="section-divider">
+            Difficulty Rating
+            <span class="quality-help-btn" onclick="toggleDifficultyHelp()">?</span>
+          </div>
+          <div id="difficultyHelpBox" class="quality-help-box" style="display: none;">
+            For guidance on difficulty ratings, see the <a href="https://artofproblemsolving.com/wiki/index.php/AoPS_Wiki:Competition_ratings" target="_blank" style="color: var(--primary-blue); font-weight: 600;">AoPS Competition Ratings</a> page.
+          </div>
           <div style="display: grid; grid-template-columns: repeat(9, 1fr); gap: 8px; margin-bottom: 15px;">
             <button type="button" class="difficulty-btn" data-diff="1.0">1.0</button>
             <button type="button" class="difficulty-btn" data-diff="1.5">1.5</button>
@@ -1598,6 +1686,7 @@
             <button type="button" class="difficulty-btn" data-diff="8.0">8.0</button>
             <button type="button" class="difficulty-btn" data-diff="8.5">8.5</button>
             <button type="button" class="difficulty-btn" data-diff="9.0">9.0</button>
+            <button type="button" class="difficulty-btn" data-diff="9.5">9.5</button>
           </div>
           <div style="text-align: center; margin-bottom: 15px;">
             <strong>Selected Difficulty: <span id="selectedDifficulty">None</span></strong>
@@ -1617,6 +1706,8 @@
           
           <label class="modal-label">Your Proposed Answer:</label>
           <input type="text" id="proposedAnswer" maxlength="3" placeholder="000" style="width: 100px; padding: 8px; border: 2px solid var(--border-strong); border-radius: 6px; text-align: center; font-size: 18px; font-weight: bold;">
+          <label class="modal-label" style="margin-top: 15px;">Link to Answer Key:</label>
+          <input type="text" id="answerKeyLink" placeholder="https://..." style="width: 100%; padding: 10px; border: 2px solid var(--border-strong); border-radius: 6px; box-sizing: border-box;">
           <label class="modal-label" style="margin-top: 15px;">Additional Details (Optional):</label>
           <textarea id="answerDetails" class="modal-textarea" placeholder="Explain why this is the correct answer..."></textarea>
         </div>
@@ -1917,6 +2008,7 @@
         document.getElementById('qualityDetails').value = '';
         document.getElementById('difficultyDetails').value = '';
         document.getElementById('proposedAnswer').value = '';
+        document.getElementById('answerKeyLink').value = '';
         document.getElementById('answerDetails').value = '';
         document.getElementById('problemText').value = '';
         document.getElementById('problemAnswer').value = '';
@@ -2004,6 +2096,24 @@
         }
       }
 
+      function toggleQualityHelp() {
+        const helpBox = document.getElementById('qualityHelpBox');
+        if (helpBox.style.display === 'none') {
+          helpBox.style.display = 'block';
+        } else {
+          helpBox.style.display = 'none';
+        }
+      }
+
+      function toggleDifficultyHelp() {
+        const helpBox = document.getElementById('difficultyHelpBox');
+        if (helpBox.style.display === 'none') {
+          helpBox.style.display = 'block';
+        } else {
+          helpBox.style.display = 'none';
+        }
+      }
+
       // Quality star handlers for report modal
       document.addEventListener('click', function(e) {
         if (e.target.classList.contains('star') && e.target.closest('#reportQualityStars')) {
@@ -2085,6 +2195,7 @@
         if (document.getElementById('reportAnswer').checked) {
           reportData.report_types.push('wrong_answer');
           reportData.proposed_answer = document.getElementById('proposedAnswer').value.trim() || null;
+          reportData.answer_key_link = document.getElementById('answerKeyLink').value.trim() || null;
           reportData.answer_details = document.getElementById('answerDetails').value.trim() || null;
         }
 
