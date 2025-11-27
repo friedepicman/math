@@ -1469,10 +1469,6 @@
         </div>
         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 10px;">
           <button id="settingsToggle" onclick="toggleSettings()" style="background: #6c757d; padding: 8px 16px; font-size: 14px;">⚙️ Settings</button>
-          <div style="font-size: 14px; color: var(--text-secondary);">
-            <strong>Total Problems Available:</strong>
-            <span id="totalProblemsAvailable">0</span>
-          </div>
         </div>
       </div>
       <div id="filterOptions" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
@@ -2459,25 +2455,25 @@
           
           if (available < countNeeded) {
             rowClass = 'stats-row-insufficient';
-            statusIcon = '✗';
+            statusIcon = '';
             statusText = 'Insufficient';
             progressPercent = countNeeded > 0 ? (available / countNeeded) * 100 : 0;
             progressClass = 'progress-bar-insufficient';
           } else if (available < countNeeded * 2) {
             rowClass = 'stats-row-barely';
-            statusIcon = '⚠';
+            statusIcon = '';
             statusText = 'Barely enough';
             progressPercent = 100;
             progressClass = 'progress-bar-barely';
           } else if (available < countNeeded * 10) {
             rowClass = 'stats-row-good';
-            statusIcon = '✓';
+            statusIcon = '';
             statusText = 'Ready';
             progressPercent = 100;
             progressClass = 'progress-bar-good';
           } else {
             rowClass = 'stats-row-plenty';
-            statusIcon = '✓';
+            statusIcon = '';
             statusText = 'Plenty';
             progressPercent = 100;
             progressClass = 'progress-bar-plenty';
@@ -2504,7 +2500,7 @@
         summaryHTML += `<div class="stats-summary-item">Total problems available: <strong>${totalAvailable}</strong></div>`;
         
         if (canGenerate) {
-          summaryHTML += '<div class="stats-summary-item" style="color: #28a745;">Can generate mock for this difficulty level</div>';
+          summaryHTML += '<div class="stats-summary-item" style="color: #28a745;">Can generate mock</div>';
         } else {
           summaryHTML += `<div class="stats-summary-item" style="color: #dc3545;">Cannot generate: Insufficient problems at difficulties ${insufficientDifficulties.join(', ')}</div>`;
         }
@@ -2514,7 +2510,7 @@
           <div class="stats-container">
             ${summaryHTML}
             <details class="stats-details">
-              <summary>View detailed breakdown by difficulty</summary>
+              <summary>View problems available</summary>
               ${tableHTML}
             </details>
           </div>
