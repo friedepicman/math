@@ -38,8 +38,9 @@
     nav {
       background: var(--primary-blue);
       padding: 0;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0, 86, 179, 0.3);
       margin-bottom: 40px;
+      border-bottom: 3px solid #00aa66;
     }
 
     nav a {
@@ -1002,8 +1003,8 @@
           <div class="stat-label">Mock Tests Completed</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number" id="averageScore">0%</div>
-          <div class="stat-label">Avg Score (Last 5)</div>
+          <div class="stat-number" id="hardestProblem">-</div>
+          <div class="stat-label">Hardest Problem Solved</div>
         </div>
         <div class="stat-card">
           <div class="stat-number" id="bestScore">0</div>
@@ -1011,7 +1012,7 @@
         </div>
         <div class="stat-card">
           <div class="stat-number" id="avgProblems">0</div>
-          <div class="stat-label">Avg Correct (Last 20)</div>
+          <div class="stat-label">Avg Correct (Last 5)</div>
         </div>
       </div>
 
@@ -1244,7 +1245,7 @@
 
       const { data: attempts } = await supabaseClient
         .from('mock_attempts')
-        .select('score, total_problems')
+        .select('score, total_problems, problems_data, overrides')
         .eq('user_id', currentUser.id)
         .order('completed_at', { ascending: false });
 
@@ -1254,22 +1255,37 @@
 
       const totalAttempts = attempts.length;
       
-      // Average score from last 5 mocks
-      const last5 = attempts.slice(0, 5).filter(a => a.total_problems > 0);
-      const averageScore = last5.length > 0 
-        ? Math.round((last5.reduce((sum, a) => sum + (a.score / a.total_problems), 0) / last5.length) * 100)
-        : 0;
+      // Find hardest problem solved correctly
+      let hardestSolved = 0;
+      attempts.forEach(attempt => {
+        const problems = attempt.problems_data || [];
+        const overrides = attempt.overrides || {};
+        
+        problems.forEach((problem, index) => {
+          const userAnswer = problem.user_answer || null;
+          const correctAnswer = problem.aime_answer ? String(problem.aime_answer % 1000) : String(problem.answer || '');
+          const wasOverridden = problem.manually_corrected || overrides[index];
+          const isCorrect = (userAnswer === correctAnswer) || wasOverridden;
+          
+          if (isCorrect && problem.difficulty) {
+            const diff = parseFloat(problem.difficulty);
+            if (diff > hardestSolved) {
+              hardestSolved = diff;
+            }
+          }
+        });
+      });
       
-      // Average problems correct from last 20 mocks
-      const last20 = attempts.slice(0, 20);
-      const avgProblems = last20.length > 0 
-        ? (last20.reduce((sum, a) => sum + (a.score || 0), 0) / last20.length).toFixed(1)
+      // Average problems correct from last 5 mocks
+      const last5ForAvg = attempts.slice(0, 5);
+      const avgProblems = last5ForAvg.length > 0 
+        ? (last5ForAvg.reduce((sum, a) => sum + (a.score || 0), 0) / last5ForAvg.length).toFixed(1)
         : '0';
       
       const bestScore = Math.max(...attempts.map(a => a.score || 0));
 
       document.getElementById('totalAttempts').textContent = totalAttempts;
-      document.getElementById('averageScore').textContent = averageScore + '%';
+      document.getElementById('hardestProblem').textContent = hardestSolved > 0 ? hardestSolved.toFixed(1) : '-';
       document.getElementById('bestScore').textContent = bestScore;
       document.getElementById('avgProblems').textContent = avgProblems;
     }
