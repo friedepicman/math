@@ -1590,11 +1590,6 @@
       }
     </script>
 
-    <script>
-      // Update the total problems available dynamically
-      document.getElementById('totalProblemsAvailable').textContent = allProblems.length;
-    </script>
-
     <div id="instructions"></div>
     <div class="stats" id="stats"></div>
     
@@ -1615,7 +1610,7 @@
     <div id="reportModal" class="modal">
       <div class="modal-content">
         <span class="modal-close" onclick="closeReportModal()">&times;</span>
-        <div class="modal-header">Report Problem Issue</div>
+        <div class="modal-header">Report Issue</div>
         
         <label class="modal-label">Select Issues to Report:</label>
         <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
