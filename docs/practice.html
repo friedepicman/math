@@ -1545,26 +1545,34 @@
       background: var(--border-color);
     }
 
-    /* Source label for practice mode */
-    .source-label {
-      display: inline-block;
+    /* Source label for practice mode - top right */
+    .source-label-top {
+      position: absolute;
+      top: 16px;
+      right: 16px;
       background: var(--bg-secondary);
       padding: 6px 12px;
       border-radius: 6px;
       font-size: 14px;
       font-weight: 500;
       color: var(--text-secondary);
-      margin-top: 12px;
     }
 
-    .source-link {
+    .source-label-top a {
       color: var(--primary-blue);
       text-decoration: none;
       font-weight: 500;
     }
 
-    .source-link:hover {
+    .source-label-top a:hover {
       text-decoration: underline;
+    }
+
+    /* Report button - bottom right */
+    .problem-card .report-button {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
     }
 
     /* More Settings toggle */
@@ -1607,23 +1615,6 @@
     .login-prompt a {
       color: var(--primary-blue);
       font-weight: 600;
-    }
-
-    .aops-link {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      color: var(--primary-blue);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
-      padding: 6px 12px;
-      border-radius: 6px;
-      transition: all 0.2s;
-    }
-
-    .aops-link:hover {
-      background: var(--bg-secondary);
     }
 
     @media (max-width: 768px) {
@@ -1833,7 +1824,7 @@
     <!-- Problem Area -->
     <div id="problemArea" style="display: none;">
       <div class="card problem-card">
-        <a href="#" target="_blank" class="aops-link" id="aopsLink">View Discussion</a>
+        <span class="source-label-top" id="sourceLabel">Unknown Source</span>
         <div class="problem-meta">
           <span class="problem-badge badge-type" id="problemType">Algebra</span>
           <span class="problem-badge badge-difficulty" id="problemDifficulty">Difficulty: 5.0</span>
@@ -1846,12 +1837,9 @@
           <input type="text" class="answer-input" id="answerInput" maxlength="3" placeholder="000" />
           <button class="btn-primary" id="submitBtn" onclick="submitAnswer()">Submit</button>
           <button class="btn-skip" onclick="skipProblem()">Skip</button>
-          <button class="report-button" id="reportBtn" onclick="openReportModal()">Report Issue</button>
         </div>
 
-        <div id="sourceDisplay" style="display: none; margin-top: 16px;">
-          <span class="source-label">Source: <a href="#" target="_blank" class="source-link" id="sourceLink">Unknown</a></span>
-        </div>
+        <button class="report-button" id="reportBtn" onclick="openReportModal()">Report Issue</button>
 
         <div class="result-display" id="resultDisplay">
           <div class="result-header" id="resultHeader"></div>
@@ -2368,15 +2356,14 @@
       const problemText = problem.rewritten_problem || problem.text || '';
       setMathContent(document.getElementById('problemText'), problemText);
       
-      document.getElementById('aopsLink').href = problem.link || '#';
+      // Show source without link initially
+      const sourceLabel = document.getElementById('sourceLabel');
+      sourceLabel.textContent = problem.source || 'Unknown Source';
       
       document.getElementById('answerInput').value = '';
       document.getElementById('answerInput').disabled = false;
       document.getElementById('submitBtn').disabled = false;
       document.getElementById('resultDisplay').classList.remove('show', 'correct', 'incorrect');
-      
-      // Hide source display for new problem
-      document.getElementById('sourceDisplay').style.display = 'none';
       
       setTimeout(() => document.getElementById('answerInput').focus(), 100);
     }
@@ -2487,10 +2474,10 @@
         levelUpHtml = '<div class="level-up-notification">';
         if (typeLevelUp) {
           const typeNames = { algebra: 'Algebra', geometry: 'Geometry', number_theory: 'Number Theory', counting: 'Counting' };
-          levelUpHtml += `<div class="level-up-item">${typeNames[problemType]} leveled up to <strong>${newTypeLevel}</strong>!</div>`;
+          levelUpHtml += `<div class="level-up-item">🎉 ${typeNames[problemType]} leveled up to <strong>${newTypeLevel}</strong>!</div>`;
         }
         if (generalLevelUp) {
-          levelUpHtml += `<div class="level-up-item">Overall leveled up to <strong>${newGeneralLevel}</strong>!</div>`;
+          levelUpHtml += `<div class="level-up-item">⭐ Overall leveled up to <strong>${newGeneralLevel}</strong>!</div>`;
         }
         levelUpHtml += '</div>';
       }
@@ -2499,7 +2486,7 @@
       const resultDisplay = document.getElementById('resultDisplay');
       resultDisplay.className = 'result-display show ' + (isCorrect ? 'correct' : 'incorrect');
       
-      document.getElementById('resultHeader').textContent = isCorrect ? '✓ Correct!' : '✗ Incorrect';
+      document.getElementById('resultHeader').textContent = isCorrect ? 'Correct!' : 'Incorrect';
       document.getElementById('resultDetails').innerHTML = `
         <div style="margin-bottom: 8px;">
           ${isCorrect ? '' : `Correct answer: <strong>${escapeHtml(correctAnswer)}</strong><br>`}
@@ -2516,15 +2503,16 @@
         `}
       `;
 
-      // Show source after submitting
-      const sourceDisplay = document.getElementById('sourceDisplay');
-      const sourceLink = document.getElementById('sourceLink');
+      // Show source with link after submitting
+      const sourceLabel = document.getElementById('sourceLabel');
       if (currentProblem) {
         const sourceName = currentProblem.source || 'Unknown Source';
         const sourceUrl = currentProblem.link || '#';
-        sourceLink.textContent = sourceName;
-        sourceLink.href = sourceUrl;
-        sourceDisplay.style.display = 'block';
+        if (sourceUrl && sourceUrl !== '#') {
+          sourceLabel.innerHTML = `<a href="${escapeHtml(sourceUrl)}" target="_blank">${escapeHtml(sourceName)}</a>`;
+        } else {
+          sourceLabel.textContent = sourceName;
+        }
       }
     }
 
