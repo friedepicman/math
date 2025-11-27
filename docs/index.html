@@ -2191,7 +2191,7 @@
         
         setMathContent(problemTextEl, newProblem.rewritten_problem || newProblem.text || '');
         aopsLinkEl.href = escapeHtml(newProblem.link || '');
-        aopsLinkEl.textContent = 'View Discussion';
+        aopsLinkEl.textContent = p.source || 'View Discussion';
         
         updateProblemNav();
       }
@@ -2558,7 +2558,7 @@
           
           setMathContent(problemTextEl, p.rewritten_problem || p.text || '');
           aopsLinkEl.href = escapeHtml(p.link || '');
-          aopsLinkEl.textContent = 'View Discussion';
+          aopsLinkEl.textContent = p.source || 'View Discussion';
         });
         
         updateProblemNav();
