@@ -2487,10 +2487,10 @@
         levelUpHtml = '<div class="level-up-notification">';
         if (typeLevelUp) {
           const typeNames = { algebra: 'Algebra', geometry: 'Geometry', number_theory: 'Number Theory', counting: 'Counting' };
-          levelUpHtml += `<div class="level-up-item">🎉 ${typeNames[problemType]} leveled up to <strong>${newTypeLevel}</strong>!</div>`;
+          levelUpHtml += `<div class="level-up-item">${typeNames[problemType]} leveled up to <strong>${newTypeLevel}</strong>!</div>`;
         }
         if (generalLevelUp) {
-          levelUpHtml += `<div class="level-up-item">⭐ Overall leveled up to <strong>${newGeneralLevel}</strong>!</div>`;
+          levelUpHtml += `<div class="level-up-item">Overall leveled up to <strong>${newGeneralLevel}</strong>!</div>`;
         }
         levelUpHtml += '</div>';
       }
