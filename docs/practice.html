@@ -1568,19 +1568,12 @@
       text-decoration: underline;
     }
 
-    /* Report button - bottom right */
-    .problem-card .report-button {
-      position: absolute;
-      bottom: 16px;
-      right: 16px;
-    }
-
     /* More Settings toggle */
     .more-settings-toggle {
       background: #6c757d;
       padding: 8px 16px;
       font-size: 14px;
-      margin-bottom: 16px;
+      margin: 0;
     }
 
     .more-settings-toggle:hover {
@@ -1743,7 +1736,10 @@
 
     <!-- Filters -->
     <div class="card">
-      <div class="card-header">Settings</div>
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>Settings</span>
+        <button class="btn-secondary more-settings-toggle" onclick="toggleMoreSettings()">⚙️ More Settings</button>
+      </div>
       
       <div style="margin-bottom: 16px;">
         <label style="font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 8px;">Problem Types:</label>
@@ -1781,8 +1777,6 @@
           </div>
         </div>
       </div>
-
-      <button class="btn-secondary more-settings-toggle" onclick="toggleMoreSettings()">⚙️ More Settings</button>
 
       <div id="moreSettingsContent" class="more-settings-content">
         <div style="margin-bottom: 16px;">
@@ -1839,12 +1833,13 @@
           <button class="btn-skip" onclick="skipProblem()">Skip</button>
         </div>
 
-        <button class="report-button" id="reportBtn" onclick="openReportModal()">Report Issue</button>
-
         <div class="result-display" id="resultDisplay">
           <div class="result-header" id="resultHeader"></div>
           <div id="resultDetails"></div>
-          <button class="btn-primary" style="margin-top: 16px;" onclick="nextProblem()">Next Problem</button>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+            <button class="btn-primary" onclick="nextProblem()">Next Problem</button>
+            <button class="report-button" id="reportBtn" onclick="openReportModal()">Report Issue</button>
+          </div>
         </div>
       </div>
     </div>
