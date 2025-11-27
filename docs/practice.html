@@ -18,7 +18,7 @@
     const XP_TABLE = {
       1: 5, 1.5: 10, 2: 15, 2.5: 20, 3: 25, 3.5: 30, 4: 40, 4.5: 50,
       5: 60, 5.5: 70, 6: 80, 6.5: 90, 7: 100, 7.5: 120, 8: 140,
-      8.5: 160, 9: 180, 9.5: 210, 10: 220
+      8.5: 160, 9: 180, 9.5: 210, 10: 240
     };
 
     // Level thresholds: [startLevel, xpPerLevel]
@@ -1752,26 +1752,6 @@
       }
     }
 
-    // Save user XP to database
-    async function saveUserXp() {
-      if (!currentUser) return;
-      
-      const { error } = await supabaseClient
-        .from('user_profiles')
-        .update({
-          xp_algebra: userXp.algebra,
-          xp_geometry: userXp.geometry,
-          xp_number_theory: userXp.number_theory,
-          xp_counting: userXp.counting,
-          xp_general: userXp.general
-        })
-        .eq('id', currentUser.id);
-      
-      if (error) {
-        console.error('Error saving XP:', error);
-      }
-    }
-
     // Update XP display
     function updateXpDisplay() {
       ['algebra', 'geometry', 'number_theory', 'counting', 'general'].forEach(type => {
@@ -1958,43 +1938,86 @@
       const userAnswer = document.getElementById('answerInput').value.trim();
       if (!userAnswer) return;
       
-      let correctAnswer;
-      if (currentProblem.aime_answer !== null && currentProblem.aime_answer !== undefined) {
-        correctAnswer = String(currentProblem.aime_answer % 1000);
-      } else {
-        correctAnswer = String(currentProblem.answer);
-      }
+      // Disable inputs while processing
+      document.getElementById('answerInput').disabled = true;
+      document.getElementById('submitBtn').disabled = true;
       
-      const isCorrect = userAnswer === correctAnswer;
       const difficulty = parseFloat(currentProblem.difficulty);
-      const baseXp = getXpForDifficulty(difficulty);
-      
       const problemType = currentProblem.type;
-      const currentTypeLevel = getLevelFromXp(userXp[problemType], false).level;
-      const oldTypeLevel = currentTypeLevel;
+      
+      // Get old levels for comparison
+      const oldTypeLevel = getLevelFromXp(userXp[problemType], false).level;
       const oldGeneralLevel = getLevelFromXp(userXp.general, true).level;
       
-      const xpChange = isCorrect ? baseXp : calculatePenalty(currentTypeLevel, difficulty);
+      let isCorrect = false;
+      let xpChange = 0;
+      let correctAnswer = '';
       
-      userXp[problemType] = Math.max(0, userXp[problemType] + xpChange);
-      userXp.general = Math.max(0, userXp.general + xpChange);
+      // If user is logged in, use secure server function
+      if (currentUser) {
+        try {
+          const { data, error } = await supabaseClient.rpc('award_practice_xp', {
+            p_problem_id: currentProblem.id,
+            p_user_answer: userAnswer,
+            p_problem_type: problemType,
+            p_problem_difficulty: difficulty
+          });
+          
+          if (error) {
+            console.error('Error calling award_practice_xp:', error);
+            alert('Error submitting answer. Please try again.');
+            document.getElementById('answerInput').disabled = false;
+            document.getElementById('submitBtn').disabled = false;
+            return;
+          }
+          
+          isCorrect = data.correct;
+          xpChange = data.xp_change;
+          correctAnswer = String(data.correct_answer);
+          
+          // Update local XP state from the change
+          userXp[problemType] = Math.max(0, userXp[problemType] + xpChange);
+          userXp.general = Math.max(0, userXp.general + xpChange);
+          
+        } catch (err) {
+          console.error('Error:', err);
+          alert('Error submitting answer. Please try again.');
+          document.getElementById('answerInput').disabled = false;
+          document.getElementById('submitBtn').disabled = false;
+          return;
+        }
+      } else {
+        // Not logged in - just check answer locally (no XP saved)
+        if (currentProblem.aime_answer !== null && currentProblem.aime_answer !== undefined) {
+          correctAnswer = String(currentProblem.aime_answer % 1000);
+        } else {
+          correctAnswer = String(currentProblem.answer);
+        }
+        isCorrect = userAnswer === correctAnswer;
+        
+        // Calculate what XP would be (for display only)
+        const baseXp = getXpForDifficulty(difficulty);
+        xpChange = isCorrect ? baseXp : -(baseXp / 5);
+      }
       
+      // Calculate level changes
       const newTypeLevel = getLevelFromXp(userXp[problemType], false).level;
       const newGeneralLevel = getLevelFromXp(userXp.general, true).level;
       const typeLevelUp = newTypeLevel > oldTypeLevel;
       const generalLevelUp = newGeneralLevel > oldGeneralLevel;
       
+      // Update session stats
       sessionStats.solved++;
       if (isCorrect) sessionStats.correct++;
       sessionStats.xpEarned += xpChange;
       
-      await saveUserXp();
-      
+      // Update displays
       updateXpDisplay();
       updateSessionStats();
       
+      // Build level up notification
       let levelUpHtml = '';
-      if (typeLevelUp || generalLevelUp) {
+      if (currentUser && (typeLevelUp || generalLevelUp)) {
         levelUpHtml = '<div class="level-up-notification">';
         if (typeLevelUp) {
           const typeNames = { algebra: 'Algebra', geometry: 'Geometry', number_theory: 'Number Theory', counting: 'Counting' };
@@ -2006,6 +2029,7 @@
         levelUpHtml += '</div>';
       }
       
+      // Show result
       const resultDisplay = document.getElementById('resultDisplay');
       resultDisplay.className = 'result-display show ' + (isCorrect ? 'correct' : 'incorrect');
       
@@ -2014,14 +2038,17 @@
         <div style="margin-bottom: 8px;">
           ${isCorrect ? '' : `Correct answer: <strong>${escapeHtml(correctAnswer)}</strong><br>`}
         </div>
-        <div class="xp-change ${xpChange >= 0 ? 'positive' : 'negative'}">
-          ${xpChange >= 0 ? '+' : ''}${xpChange} XP
-        </div>
-        ${levelUpHtml}
+        ${currentUser ? `
+          <div class="xp-change ${xpChange >= 0 ? 'positive' : 'negative'}">
+            ${xpChange >= 0 ? '+' : ''}${Math.round(xpChange)} XP
+          </div>
+          ${levelUpHtml}
+        ` : `
+          <div style="color: var(--text-tertiary); font-size: 14px;">
+            <a href="login.html">Log in</a> to save XP progress
+          </div>
+        `}
       `;
-      
-      document.getElementById('answerInput').disabled = true;
-      document.getElementById('submitBtn').disabled = true;
     }
 
     function skipProblem() {
