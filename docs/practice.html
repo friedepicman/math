@@ -117,6 +117,7 @@
       
       let containerClasses = 'level-shield-container';
       if (tier.layered) containerClasses += ' shield-container-layered';
+      else containerClasses += ' shield-container-simple'; // Add simple class for bronze/silver/gold
       if (tier.design === 'B' || tier.design === 'C') containerClasses += ' shield-container-designB';
       if (tier.ripple) containerClasses += ` shield-container-ripple shield-container-${tier.name}`;
       
@@ -129,14 +130,20 @@
       
       // Design B & C: 4 outward triangles (corners only, no left/right)
       if (tier.design === 'B' || tier.design === 'C') {
+        html += `<div class="shield-tri-outline-topleft shield-${tier.name}-tri-outline"></div>`;
+        html += `<div class="shield-tri-outline-topright shield-${tier.name}-tri-outline"></div>`;
+        html += `<div class="shield-tri-outline-bottomright shield-${tier.name}-tri-outline"></div>`;
+        html += `<div class="shield-tri-outline-bottomleft shield-${tier.name}-tri-outline"></div>`;
         html += `<div class="shield-tri-topleft shield-${tier.name}-tri"></div>`;
         html += `<div class="shield-tri-topright shield-${tier.name}-tri"></div>`;
         html += `<div class="shield-tri-bottomright shield-${tier.name}-tri"></div>`;
         html += `<div class="shield-tri-bottomleft shield-${tier.name}-tri"></div>`;
       }
       
-      // Design A, B, C: Side trapezoids
+      // Design A, B, C: Side trapezoids with outlines
       if (tier.design === 'A' || tier.design === 'B' || tier.design === 'C') {
+        html += `<div class="shield-horn-outline-left shield-${tier.name}-horn-outline"></div>`;
+        html += `<div class="shield-horn-outline-right shield-${tier.name}-horn-outline"></div>`;
         html += `<div class="shield-horn-left shield-${tier.name}-horn"></div>`;
         html += `<div class="shield-horn-right shield-${tier.name}-horn"></div>`;
       }
@@ -145,6 +152,11 @@
       if (tier.layered) {
         html += `<div class="shield-outer shield-${tier.name}-outer"></div>`;
         html += `<div class="shield-middle shield-${tier.name}-middle"></div>`;
+      }
+      
+      // Outline for simple shields (bronze/silver/gold)
+      if (!tier.layered) {
+        html += `<div class="shield-outline shield-${tier.name}-outline"></div>`;
       }
       
       // Inner shield (always)
@@ -401,15 +413,34 @@
       z-index: 2;
     }
 
-    /* === TIERS 1-30: Simple hexagon === */
+    /* === TIERS 1-30: Simple hexagon with outlines === */
+    /* Outline layer for simple shields (bronze/silver/gold) */
+    .shield-container-simple .shield-outline {
+      position: absolute;
+      width: 39px;
+      height: 45px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      z-index: 1;
+    }
+
+    .shield-container-simple .level-shield {
+      z-index: 2;
+    }
+
     /* Bronze: 1-10 */
     .shield-bronze {
       background: linear-gradient(135deg, #cd7f32, #8b4513);
+    }
+    .shield-bronze-outline {
+      background: rgba(92, 51, 16, 0.5);
     }
 
     /* Silver: 11-20 */
     .shield-silver {
       background: linear-gradient(135deg, #c0c0c0, #808080);
+    }
+    .shield-silver-outline {
+      background: rgba(74, 74, 74, 0.5);
     }
 
     /* Gold: 21-30 */
@@ -417,6 +448,9 @@
       background: linear-gradient(135deg, #ffd700, #b8860b);
       color: #333;
       text-shadow: 0 1px 1px rgba(255,255,255,0.3);
+    }
+    .shield-gold-outline {
+      background: rgba(139, 105, 20, 0.5);
     }
 
     /* === TIERS 31-50: Triple layer + rainbow animation === */
@@ -464,20 +498,38 @@
       50% { filter: hue-rotate(30deg) brightness(1.1); }
     }
 
-    /* === TIERS 51-80: Design A - Side trapezoids === */
-    /* Trapezoid: top perpendicular to hex side, far side parallel, bottom slopes toward hex */
+    /* === TIERS 51-80: Design A - Side trapezoids with outlines === */
+    /* Horn outline (larger, behind the horn) */
+    .shield-horn-outline-left, .shield-horn-outline-right {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 12px;
+      height: 20px;
+      z-index: 0;
+    }
+
+    .shield-horn-outline-left {
+      left: 0px;
+      clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 75%);
+    }
+
+    .shield-horn-outline-right {
+      right: 0px;
+      clip-path: polygon(0% 0%, 100% 0%, 100% 75%, 0% 100%);
+    }
+
     .shield-horn-left, .shield-horn-right {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
       width: 10px;
       height: 18px;
-      z-index: 0;
+      z-index: 1;
     }
 
     .shield-horn-left {
       left: 1px;
-      /* Top: straight, Far side: parallel (vertical), Bottom: slopes up toward hex */
       clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 75%);
     }
 
@@ -486,62 +538,81 @@
       clip-path: polygon(0% 0%, 100% 0%, 100% 75%, 0% 100%);
     }
 
-    /* === TIERS 81-100: Design B - Stretched trapezoids + equilateral triangles === */
-    /* 4 triangles only (no left/right), smaller size, touching hex */
+    /* === TIERS 81-100: Design B - Stretched trapezoids + equilateral triangles with outlines === */
+    .shield-container-designB .shield-horn-outline-left,
+    .shield-container-designB .shield-horn-outline-right {
+      width: 16px;
+    }
+
     .shield-container-designB .shield-horn-left,
     .shield-container-designB .shield-horn-right {
       width: 14px;
     }
 
-    /* Equilateral triangle: ~13px side (30% smaller than 18px) */
-    /* Position at midpoint of each angled hex edge */
-    
-    /* Top-left edge - points up-left (~-30° from vertical) */
-    .shield-tri-topleft {
+    /* Triangle outlines (larger, behind the triangles) */
+    .shield-tri-outline-topleft, .shield-tri-outline-topright, 
+    .shield-tri-outline-bottomleft, .shield-tri-outline-bottomright {
       position: absolute;
-      top: 6px;
-      left: 11px;
-      width: 13px;
-      height: 11px;
+      width: 15px;
+      height: 13px;
       z-index: 0;
+      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    }
+
+    .shield-tri-outline-topleft {
+      top: 5px;
+      left: 10px;
       transform: rotate(-30deg);
+    }
+
+    .shield-tri-outline-topright {
+      top: 5px;
+      right: 10px;
+      transform: rotate(30deg);
+    }
+
+    .shield-tri-outline-bottomright {
+      bottom: 5px;
+      right: 10px;
+      transform: rotate(150deg);
+    }
+
+    .shield-tri-outline-bottomleft {
+      bottom: 5px;
+      left: 10px;
+      transform: rotate(-150deg);
+    }
+
+    .shield-tri-topleft, .shield-tri-topright, .shield-tri-bottomleft, .shield-tri-bottomright {
+      position: absolute;
+      width: 13px;
+      height: 11px;
+      z-index: 1;
       clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
     }
 
-    /* Top-right edge - points up-right (~30° from vertical) */
+    .shield-tri-topleft {
+      top: 6px;
+      left: 11px;
+      transform: rotate(-30deg);
+    }
+
     .shield-tri-topright {
-      position: absolute;
       top: 6px;
       right: 11px;
-      width: 13px;
-      height: 11px;
-      z-index: 0;
       transform: rotate(30deg);
-      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
     }
 
-    /* Bottom-right edge - points down-right (~150°) */
     .shield-tri-bottomright {
-      position: absolute;
       bottom: 6px;
       right: 11px;
-      width: 13px;
-      height: 11px;
-      z-index: 0;
       transform: rotate(150deg);
-      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
     }
 
-    /* Bottom-left edge - points down-left (~-150° or 210°) */
     .shield-tri-bottomleft {
-      position: absolute;
       bottom: 6px;
       left: 11px;
-      width: 13px;
-      height: 11px;
-      z-index: 0;
       transform: rotate(-150deg);
-      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
     }
 
     /* === TIER 101-105: Design C - Add big shield background === */
@@ -570,6 +641,9 @@
     .shield-horn-right.shield-amethyst-horn {
       background: linear-gradient(to right, #3d1f5c, #9966cc);
     }
+    .shield-amethyst-horn-outline {
+      background: rgba(31, 15, 46, 0.5);
+    }
 
     /* Ruby: 61-70 */
     .shield-ruby-outer { background: linear-gradient(135deg, #5c0a1f, #2e050f); }
@@ -583,6 +657,9 @@
     }
     .shield-horn-right.shield-ruby-horn {
       background: linear-gradient(to right, #5c0a1f, #e0115f);
+    }
+    .shield-ruby-horn-outline {
+      background: rgba(46, 5, 15, 0.5);
     }
 
     /* Diamond: 71-80 */
@@ -599,6 +676,9 @@
     }
     .shield-horn-right.shield-diamond-horn {
       background: linear-gradient(to right, #006064, #4dd0e1);
+    }
+    .shield-diamond-horn-outline {
+      background: rgba(0, 48, 51, 0.5);
     }
 
     /* === TIERS 81-100: Triple layer + horns + ripple animation === */
@@ -640,8 +720,14 @@
     .shield-horn-right.shield-obsidian-horn {
       background: linear-gradient(to right, #1a1a1a, #555);
     }
+    .shield-obsidian-horn-outline {
+      background: rgba(0, 0, 0, 0.4);
+    }
     .shield-obsidian-tri {
       background: linear-gradient(135deg, #333, #555);
+    }
+    .shield-obsidian-tri-outline {
+      background: rgba(0, 0, 0, 0.4);
     }
     .shield-container-obsidian::before,
     .shield-container-obsidian::after {
@@ -668,8 +754,14 @@
     .shield-horn-right.shield-legendary-horn {
       background: linear-gradient(to right, #8b0000, #ff4500);
     }
+    .shield-legendary-horn-outline {
+      background: rgba(61, 0, 0, 0.5);
+    }
     .shield-legendary-tri {
       background: linear-gradient(135deg, #ff4500, #ffd700);
+    }
+    .shield-legendary-tri-outline {
+      background: rgba(139, 37, 0, 0.5);
     }
     .shield-container-legendary::before,
     .shield-container-legendary::after {
@@ -711,8 +803,14 @@
     .shield-horn-right.shield-master-horn {
       background: linear-gradient(to right, #8b6914, #ffd700);
     }
+    .shield-master-horn-outline {
+      background: rgba(61, 42, 4, 0.5);
+    }
     .shield-master-tri {
       background: linear-gradient(135deg, #daa520, #ffd700);
+    }
+    .shield-master-tri-outline {
+      background: rgba(107, 76, 10, 0.5);
     }
     .shield-master-back {
       background: linear-gradient(to bottom, #8b6914, #4a3508);
@@ -1479,12 +1577,12 @@
   <script>
     // State
     let allProblems = [];
-    let allRawProblems = []; // Store all raw problems before filtering
+    let allRawProblems = [];
     let filteredProblems = [];
     let currentProblem = null;
     let currentUser = null;
     let usedProblemIds = new Set();
-    let selectedQuality = 3; // Minimum quality filter
+    let selectedQuality = 3;
     
     // XP State
     let userXp = {
@@ -1529,7 +1627,7 @@
         const type = el.dataset.type;
         
         if (selectedTypes.has(type)) {
-          if (selectedTypes.size > 1) { // Keep at least one selected
+          if (selectedTypes.size > 1) {
             selectedTypes.delete(type);
             el.classList.remove('selected');
           }
@@ -1553,7 +1651,6 @@
       let minVal = parseFloat(minSlider.value);
       let maxVal = parseFloat(maxSlider.value);
       
-      // Prevent crossover
       if (minVal > maxVal) {
         if (this === minSlider) {
           minSlider.value = maxVal;
@@ -1564,11 +1661,9 @@
         }
       }
       
-      // Update display
       minValueDisplay.textContent = minVal;
       maxValueDisplay.textContent = maxVal;
       
-      // Update range highlight
       const minPercent = ((minVal - 1) / 9) * 100;
       const maxPercent = ((maxVal - 1) / 9) * 100;
       sliderRange.style.left = minPercent + '%';
@@ -1580,7 +1675,6 @@
     minSlider.addEventListener('change', updateProblemCount);
     maxSlider.addEventListener('change', updateProblemCount);
     
-    // Initialize slider
     updateSlider();
 
     // Quality star handlers
@@ -1685,14 +1779,11 @@
         const isGeneral = type === 'general';
         const levelInfo = getLevelFromXp(totalXp, isGeneral);
         
-        // Update shield
         const wrapper = document.getElementById(`shield-wrapper-${type}`);
         wrapper.innerHTML = buildShieldHtml(levelInfo.level);
         
-        // Update progress bar (progress to next level)
         document.getElementById(`xp-${type}-bar`).style.width = levelInfo.progress + '%';
         
-        // Update sublabel
         const sublabel = document.getElementById(`xp-${type}-sublabel`);
         if (levelInfo.level >= MAX_LEVEL) {
           sublabel.textContent = `MAX LEVEL (${totalXp.toLocaleString()} XP)`;
@@ -1736,38 +1827,31 @@
         from += chunkSize;
       }
       
-      // Store all raw problems (with type and manually reviewed)
       allRawProblems = allData.filter(p => 
         p.type && 
         p.manually_reviewed
       );
       
-      // Apply database filters
       applyDatabaseFilters();
       
       document.getElementById('loadingState').style.display = 'none';
       console.log('Loaded', allRawProblems.length, 'raw problems,', allProblems.length, 'after database filter');
       
-      // Update problem count display
       updateProblemCount();
     }
 
-    // Apply finalized/expanded database filters
     function applyDatabaseFilters() {
       const useFinalizedOnly = document.getElementById('useFinalizedOnly')?.checked || false;
       const useExpanded = document.getElementById('useExpandedDb')?.checked || false;
 
       allProblems = allRawProblems.filter(p => {
-        // Quality filter
         if (!p.quality || p.quality < selectedQuality) return false;
 
-        // Database filter logic (matching index.html)
         if (useFinalizedOnly) {
           return p.finalized === true;
         } else if (useExpanded) {
           return p.finalized || (p.aime_answer !== null && p.aime_answer !== undefined);
         } else {
-          // Default: finalized OR (aime_answer matches answer)
           if (p.finalized) return true;
           if (p.aime_answer !== null && p.aime_answer !== undefined && 
               p.answer !== null && p.answer !== undefined && p.answer !== '') {
@@ -1782,7 +1866,6 @@
       });
     }
 
-    // Update the problem count display
     function updateProblemCount() {
       applyDatabaseFilters();
       filterProblems();
@@ -1794,7 +1877,6 @@
       }
     }
 
-    // Filter problems based on settings
     function filterProblems() {
       const minDiff = parseFloat(document.getElementById('minDifficulty').value);
       const maxDiff = parseFloat(document.getElementById('maxDifficulty').value);
@@ -1808,7 +1890,6 @@
       });
     }
 
-    // Get next problem
     function getNextProblem() {
       filterProblems();
       
@@ -1820,7 +1901,6 @@
       return filteredProblems[idx];
     }
 
-    // Display problem
     function displayProblem(problem) {
       currentProblem = problem;
       usedProblemIds.add(problem.id);
@@ -1828,7 +1908,6 @@
       document.getElementById('problemArea').style.display = 'block';
       document.getElementById('emptyState').style.display = 'none';
       
-      // Set type badge
       const typeNames = {
         algebra: 'Algebra',
         geometry: 'Geometry', 
@@ -1837,37 +1916,29 @@
       };
       document.getElementById('problemType').textContent = typeNames[problem.type] || problem.type;
       
-      // Set difficulty
       const diff = parseFloat(problem.difficulty).toFixed(1);
       document.getElementById('problemDifficulty').textContent = `Difficulty: ${diff}`;
       
-      // Set XP
       const xp = getXpForDifficulty(parseFloat(problem.difficulty));
       document.getElementById('problemXp').textContent = `+${xp} XP`;
       
-      // Set problem text
       const problemText = problem.rewritten_problem || problem.text || '';
       setMathContent(document.getElementById('problemText'), problemText);
       
-      // Set AoPS link
       document.getElementById('aopsLink').href = problem.link || '#';
       
-      // Reset answer input and result
       document.getElementById('answerInput').value = '';
       document.getElementById('answerInput').disabled = false;
       document.getElementById('submitBtn').disabled = false;
       document.getElementById('resultDisplay').classList.remove('show', 'correct', 'incorrect');
       
-      // Focus answer input
       setTimeout(() => document.getElementById('answerInput').focus(), 100);
     }
 
-    // Start practice
     async function startPractice() {
       if (allRawProblems.length === 0) {
         await loadProblems();
       } else {
-        // Re-apply database filters in case settings changed
         applyDatabaseFilters();
       }
       
@@ -1881,14 +1952,12 @@
       }
     }
 
-    // Submit answer
     async function submitAnswer() {
       if (!currentProblem) return;
       
       const userAnswer = document.getElementById('answerInput').value.trim();
       if (!userAnswer) return;
       
-      // Get correct answer
       let correctAnswer;
       if (currentProblem.aime_answer !== null && currentProblem.aime_answer !== undefined) {
         correctAnswer = String(currentProblem.aime_answer % 1000);
@@ -1900,38 +1969,30 @@
       const difficulty = parseFloat(currentProblem.difficulty);
       const baseXp = getXpForDifficulty(difficulty);
       
-      // Track levels before XP change
       const problemType = currentProblem.type;
       const currentTypeLevel = getLevelFromXp(userXp[problemType], false).level;
       const oldTypeLevel = currentTypeLevel;
       const oldGeneralLevel = getLevelFromXp(userXp.general, true).level;
       
-      // Calculate XP change (penalty scales with level for wrong answers)
       const xpChange = isCorrect ? baseXp : calculatePenalty(currentTypeLevel, difficulty);
       
-      // Update XP
       userXp[problemType] = Math.max(0, userXp[problemType] + xpChange);
       userXp.general = Math.max(0, userXp.general + xpChange);
       
-      // Check for level-ups
       const newTypeLevel = getLevelFromXp(userXp[problemType], false).level;
       const newGeneralLevel = getLevelFromXp(userXp.general, true).level;
       const typeLevelUp = newTypeLevel > oldTypeLevel;
       const generalLevelUp = newGeneralLevel > oldGeneralLevel;
       
-      // Update session stats
       sessionStats.solved++;
       if (isCorrect) sessionStats.correct++;
       sessionStats.xpEarned += xpChange;
       
-      // Save to database
       await saveUserXp();
       
-      // Update displays
       updateXpDisplay();
       updateSessionStats();
       
-      // Build level-up message
       let levelUpHtml = '';
       if (typeLevelUp || generalLevelUp) {
         levelUpHtml = '<div class="level-up-notification">';
@@ -1945,7 +2006,6 @@
         levelUpHtml += '</div>';
       }
       
-      // Show result
       const resultDisplay = document.getElementById('resultDisplay');
       resultDisplay.className = 'result-display show ' + (isCorrect ? 'correct' : 'incorrect');
       
@@ -1960,17 +2020,14 @@
         ${levelUpHtml}
       `;
       
-      // Disable input
       document.getElementById('answerInput').disabled = true;
       document.getElementById('submitBtn').disabled = true;
     }
 
-    // Skip problem
     function skipProblem() {
       nextProblem();
     }
 
-    // Next problem
     function nextProblem() {
       const problem = getNextProblem();
       
@@ -1982,7 +2039,6 @@
       }
     }
 
-    // Enter key to submit
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && e.target.id === 'answerInput') {
         if (!document.getElementById('submitBtn').disabled) {

@@ -491,10 +491,26 @@
       z-index: 2;
     }
 
+    /* === TIERS 1-30: Simple hexagon with outlines === */
+    .shield-container-simple .shield-outline {
+      position: absolute;
+      width: 39px;
+      height: 45px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      z-index: 1;
+    }
+
+    .shield-container-simple .level-shield {
+      z-index: 2;
+    }
+
     /* Simple hexagons: 1-30 */
     .shield-bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); }
+    .shield-bronze-outline { background: rgba(92, 51, 16, 0.5); }
     .shield-silver { background: linear-gradient(135deg, #c0c0c0, #808080); }
+    .shield-silver-outline { background: rgba(74, 74, 74, 0.5); }
     .shield-gold { background: linear-gradient(135deg, #ffd700, #b8860b); color: #333; text-shadow: 0 1px 1px rgba(255,255,255,0.3); }
+    .shield-gold-outline { background: rgba(139, 105, 20, 0.5); }
 
     /* Triple layer hexagons: 31+ */
     .shield-container-layered .shield-outer {
@@ -535,6 +551,27 @@
       50% { filter: hue-rotate(30deg) brightness(1.1); }
     }
 
+    /* === TIERS 51-80: Design A - Side trapezoids with outlines === */
+    /* Horn outline (larger, behind the horn) */
+    .shield-horn-outline-left, .shield-horn-outline-right {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 12px;
+      height: 20px;
+      z-index: 0;
+    }
+
+    .shield-horn-outline-left {
+      left: 0px;
+      clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 75%);
+    }
+
+    .shield-horn-outline-right {
+      right: 0px;
+      clip-path: polygon(0% 0%, 100% 0%, 100% 75%, 0% 100%);
+    }
+
     /* Design A: 51-80 - Side trapezoids */
     .shield-horn-left, .shield-horn-right {
       position: absolute;
@@ -542,12 +579,66 @@
       transform: translateY(-50%);
       width: 10px;
       height: 18px;
-      z-index: 0;
+      z-index: 1;
     }
     .shield-horn-left { left: 1px; clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 75%); }
     .shield-horn-right { right: 1px; clip-path: polygon(0% 0%, 100% 0%, 100% 75%, 0% 100%); }
+
+    /* === TIERS 81-100: Design B - Stretched trapezoids + triangles with outlines === */
+    .shield-container-designB .shield-horn-outline-left,
+    .shield-container-designB .shield-horn-outline-right {
+      width: 16px;
+    }
+
     .shield-container-designB .shield-horn-left,
     .shield-container-designB .shield-horn-right { width: 14px; }
+
+    /* Triangle outlines (larger, behind the triangles) */
+    .shield-tri-outline-topleft, .shield-tri-outline-topright, 
+    .shield-tri-outline-bottomleft, .shield-tri-outline-bottomright {
+      position: absolute;
+      width: 15px;
+      height: 13px;
+      z-index: 0;
+      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    }
+
+    .shield-tri-outline-topleft {
+      top: 5px;
+      left: 10px;
+      transform: rotate(-30deg);
+    }
+
+    .shield-tri-outline-topright {
+      top: 5px;
+      right: 10px;
+      transform: rotate(30deg);
+    }
+
+    .shield-tri-outline-bottomright {
+      bottom: 5px;
+      right: 10px;
+      transform: rotate(150deg);
+    }
+
+    .shield-tri-outline-bottomleft {
+      bottom: 5px;
+      left: 10px;
+      transform: rotate(-150deg);
+    }
+
+    /* Design B: 81-100 - Triangles */
+    .shield-tri-topleft, .shield-tri-topright, .shield-tri-bottomleft, .shield-tri-bottomright {
+      position: absolute;
+      width: 13px;
+      height: 11px;
+      z-index: 1;
+      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    }
+    .shield-tri-topleft { top: 6px; left: 11px; transform: rotate(-30deg); }
+    .shield-tri-topright { top: 6px; right: 11px; transform: rotate(30deg); }
+    .shield-tri-bottomright { bottom: 6px; right: 11px; transform: rotate(150deg); }
+    .shield-tri-bottomleft { bottom: 6px; left: 11px; transform: rotate(-150deg); }
 
     /* Amethyst: 51-60 */
     .shield-amethyst-outer { background: linear-gradient(135deg, #3d1f5c, #1f0f2e); }
@@ -555,6 +646,7 @@
     .shield-amethyst { background: linear-gradient(135deg, #9966cc, #5c2d8a); animation: rainbowShift 3s ease infinite; }
     .shield-amethyst-horn { background: linear-gradient(to left, #3d1f5c, #9966cc); }
     .shield-horn-right.shield-amethyst-horn { background: linear-gradient(to right, #3d1f5c, #9966cc); }
+    .shield-amethyst-horn-outline { background: rgba(31, 15, 46, 0.5); }
 
     /* Ruby: 61-70 */
     .shield-ruby-outer { background: linear-gradient(135deg, #5c0a1f, #2e050f); }
@@ -562,6 +654,7 @@
     .shield-ruby { background: linear-gradient(135deg, #e0115f, #8a1530); animation: rainbowShift 3s ease infinite; }
     .shield-ruby-horn { background: linear-gradient(to left, #5c0a1f, #e0115f); }
     .shield-horn-right.shield-ruby-horn { background: linear-gradient(to right, #5c0a1f, #e0115f); }
+    .shield-ruby-horn-outline { background: rgba(46, 5, 15, 0.5); }
 
     /* Diamond: 71-80 */
     .shield-diamond-outer { background: linear-gradient(135deg, #006064, #003033); }
@@ -569,19 +662,7 @@
     .shield-diamond { background: linear-gradient(135deg, #b9f2ff, #4dd0e1, #00acc1); color: #003033; text-shadow: 0 1px 1px rgba(255,255,255,0.5); animation: rainbowShift 3s ease infinite; }
     .shield-diamond-horn { background: linear-gradient(to left, #006064, #4dd0e1); }
     .shield-horn-right.shield-diamond-horn { background: linear-gradient(to right, #006064, #4dd0e1); }
-
-    /* Design B: 81-100 - Triangles */
-    .shield-tri-topleft, .shield-tri-topright, .shield-tri-bottomleft, .shield-tri-bottomright {
-      position: absolute;
-      width: 13px;
-      height: 11px;
-      z-index: 0;
-      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-    }
-    .shield-tri-topleft { top: 6px; left: 11px; transform: rotate(-30deg); }
-    .shield-tri-topright { top: 6px; right: 11px; transform: rotate(30deg); }
-    .shield-tri-bottomright { bottom: 6px; right: 11px; transform: rotate(150deg); }
-    .shield-tri-bottomleft { bottom: 6px; left: 11px; transform: rotate(-150deg); }
+    .shield-diamond-horn-outline { background: rgba(0, 48, 51, 0.5); }
 
     /* Ripple effect for 81+ */
     .shield-container-ripple::before,
@@ -606,7 +687,9 @@
     .shield-obsidian { background: linear-gradient(135deg, #4a4a4a, #2a2a2a, #1a1a1a); }
     .shield-obsidian-horn { background: linear-gradient(to left, #1a1a1a, #555); }
     .shield-horn-right.shield-obsidian-horn { background: linear-gradient(to right, #1a1a1a, #555); }
+    .shield-obsidian-horn-outline { background: rgba(0, 0, 0, 0.4); }
     .shield-obsidian-tri { background: linear-gradient(135deg, #333, #555); }
+    .shield-obsidian-tri-outline { background: rgba(0, 0, 0, 0.4); }
     .shield-container-obsidian::before, .shield-container-obsidian::after { background: rgba(100, 100, 100, 0.6); }
 
     /* Legendary: 91-100 */
@@ -615,7 +698,9 @@
     .shield-legendary { background: linear-gradient(135deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff); background-size: 300% 300%; animation: legendaryInner 3s ease infinite; }
     .shield-legendary-horn { background: linear-gradient(to left, #8b0000, #ff4500); }
     .shield-horn-right.shield-legendary-horn { background: linear-gradient(to right, #8b0000, #ff4500); }
+    .shield-legendary-horn-outline { background: rgba(61, 0, 0, 0.5); }
     .shield-legendary-tri { background: linear-gradient(135deg, #ff4500, #ffd700); }
+    .shield-legendary-tri-outline { background: rgba(139, 37, 0, 0.5); }
     .shield-container-legendary::before, .shield-container-legendary::after { background: linear-gradient(135deg, #ff4500, #ffd700, #ff4500); }
 
     @keyframes legendaryOuter { 0%, 100% { filter: hue-rotate(0deg); } 50% { filter: hue-rotate(60deg); } }
@@ -641,7 +726,9 @@
     .shield-master { background: linear-gradient(135deg, #ffd700, #ffec8b, #ffd700, #daa520); background-size: 200% 200%; color: #4a3508; text-shadow: 0 0 4px rgba(255,215,0,0.8); animation: masterInner 2s ease infinite; }
     .shield-master-horn { background: linear-gradient(to left, #8b6914, #ffd700); }
     .shield-horn-right.shield-master-horn { background: linear-gradient(to right, #8b6914, #ffd700); }
+    .shield-master-horn-outline { background: rgba(61, 42, 4, 0.5); }
     .shield-master-tri { background: linear-gradient(135deg, #daa520, #ffd700); }
+    .shield-master-tri-outline { background: rgba(107, 76, 10, 0.5); }
     .shield-master-back { background: linear-gradient(to bottom, #8b6914, #4a3508); box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
     .shield-container-master::before, .shield-container-master::after { background: linear-gradient(135deg, #ffd700, #ffec8b, #ffd700); }
 
@@ -649,7 +736,7 @@
     @keyframes masterMiddle { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.2); } }
     @keyframes masterInner { 0%, 100% { background-position: 0% 50%; filter: brightness(1); } 50% { background-position: 100% 50%; filter: brightness(1.3); } }
 
-    /* Level Shields */
+    /* Level Shields (duplicate section from original) */
     .levels-section {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -1052,6 +1139,7 @@
       
       let containerClasses = 'level-shield-container';
       if (tier.layered) containerClasses += ' shield-container-layered';
+      else containerClasses += ' shield-container-simple';
       if (tier.design === 'B' || tier.design === 'C') containerClasses += ' shield-container-designB';
       if (tier.ripple) containerClasses += ` shield-container-ripple shield-container-${tier.name}`;
       
@@ -1062,6 +1150,10 @@
       }
       
       if (tier.design === 'B' || tier.design === 'C') {
+        html += `<div class="shield-tri-outline-topleft shield-${tier.name}-tri-outline"></div>`;
+        html += `<div class="shield-tri-outline-topright shield-${tier.name}-tri-outline"></div>`;
+        html += `<div class="shield-tri-outline-bottomright shield-${tier.name}-tri-outline"></div>`;
+        html += `<div class="shield-tri-outline-bottomleft shield-${tier.name}-tri-outline"></div>`;
         html += `<div class="shield-tri-topleft shield-${tier.name}-tri"></div>`;
         html += `<div class="shield-tri-topright shield-${tier.name}-tri"></div>`;
         html += `<div class="shield-tri-bottomright shield-${tier.name}-tri"></div>`;
@@ -1069,6 +1161,8 @@
       }
       
       if (tier.design === 'A' || tier.design === 'B' || tier.design === 'C') {
+        html += `<div class="shield-horn-outline-left shield-${tier.name}-horn-outline"></div>`;
+        html += `<div class="shield-horn-outline-right shield-${tier.name}-horn-outline"></div>`;
         html += `<div class="shield-horn-left shield-${tier.name}-horn"></div>`;
         html += `<div class="shield-horn-right shield-${tier.name}-horn"></div>`;
       }
@@ -1076,6 +1170,10 @@
       if (tier.layered) {
         html += `<div class="shield-outer shield-${tier.name}-outer"></div>`;
         html += `<div class="shield-middle shield-${tier.name}-middle"></div>`;
+      }
+      
+      if (!tier.layered) {
+        html += `<div class="shield-outline shield-${tier.name}-outline"></div>`;
       }
       
       html += `<div class="level-shield shield-${tier.name}">${level}</div>`;
