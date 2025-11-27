@@ -451,7 +451,7 @@
     (async () => {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session || session.user.id !== ADMIN_UUID) {
-        window.location.href = 'index.html';
+        window.location.href = '404.html';
       }
     })();
     let allProblems = [];
