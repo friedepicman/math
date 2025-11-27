@@ -2175,9 +2175,9 @@
         
         problemDiv.innerHTML = `
           ${getQualityBadgeHtml(newProblem.quality)}
-          <a href="" target="_blank" class="aops-link-top" id="aops-link-${index}">${escapeHtml(newProblem.source || 'Unknown Source')}</a>
+          <a href="" target="_blank" class="aops-link-top" id="aops-link-${index}" style="display: none;"></a>
           <strong>Problem ${index + 1}:</strong>
-          <span class="difficulty-indicator">Difficulty: ${parseFloat(newProblem.difficulty).toFixed(1)}</span>
+          <span class="difficulty-indicator" id="difficulty-${index}" style="display: none;">Difficulty: ${parseFloat(newProblem.difficulty).toFixed(1)}</span>
           <p class="problem-text" id="problem-text-${index}"></p>
           <div class="answer"><span class="answer-label">Answer:</span> <input type="text" maxlength="3" data-index="${index}" placeholder="000" /></div>
           <div style="margin-top: 12px;">
@@ -2324,6 +2324,18 @@
           const answerInput = document.querySelector(`input[data-index="${i}"]`);
           const problemDiv = document.querySelector(`.problem[data-problem-index="${i}"]`);
           const overrideBtn = document.getElementById(`override-${i}`);
+          
+          // Reveal aops link and difficulty
+          const aopsLink = document.getElementById(`aops-link-${i}`);
+          const difficultyEl = document.getElementById(`difficulty-${i}`);
+          if (aopsLink) {
+            aopsLink.href = escapeHtml(p.link || '');
+            aopsLink.textContent = p.source || 'View Discussion';
+            aopsLink.style.display = '';
+          }
+          if (difficultyEl) {
+            difficultyEl.style.display = '';
+          }
           
           const existingIcon = problemDiv?.querySelector('.status-icon');
           if (existingIcon) existingIcon.remove();
@@ -2489,12 +2501,12 @@
         tableHTML += '</tbody></table>';
 
         let summaryHTML = '<div class="stats-summary">';
-        summaryHTML += `<div class="stats-summary-item">📊 Total problems available: <strong>${totalAvailable}</strong></div>`;
+        summaryHTML += `<div class="stats-summary-item">Total problems available: <strong>${totalAvailable}</strong></div>`;
         
         if (canGenerate) {
-          summaryHTML += '<div class="stats-summary-item" style="color: #28a745;">✓ Can generate mock for this difficulty level</div>';
+          summaryHTML += '<div class="stats-summary-item" style="color: #28a745;">Can generate mock for this difficulty level</div>';
         } else {
-          summaryHTML += `<div class="stats-summary-item" style="color: #dc3545;">✗ Cannot generate: Insufficient problems at difficulties ${insufficientDifficulties.join(', ')}</div>`;
+          summaryHTML += `<div class="stats-summary-item" style="color: #dc3545;">Cannot generate: Insufficient problems at difficulties ${insufficientDifficulties.join(', ')}</div>`;
         }
         summaryHTML += '</div>';
 
@@ -2540,9 +2552,9 @@
 
           div.innerHTML = `
             ${getQualityBadgeHtml(p.quality)}
-            <a href="" target="_blank" class="aops-link-top" id="aops-link-${i}">${escapeHtml(p.source || 'Unknown Source')}</a>
+            <a href="" target="_blank" class="aops-link-top" id="aops-link-${i}" style="display: none;"></a>
             <strong>Problem ${i + 1}:</strong>
-            <span class="difficulty-indicator">Difficulty: ${parseFloat(p.difficulty).toFixed(1)}</span>
+            <span class="difficulty-indicator" id="difficulty-${i}" style="display: none;">Difficulty: ${parseFloat(p.difficulty).toFixed(1)}</span>
             <p class="problem-text" id="problem-text-${i}"></p>
             <div class="answer"><span class="answer-label">Answer:</span> <input type="text" maxlength="3" data-index="${i}" placeholder="000" /></div>
             <div style="margin-top: 12px;">
