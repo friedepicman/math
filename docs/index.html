@@ -799,7 +799,7 @@
     .status-icon {
       position: absolute;
       top: 16px;
-      right: 16px;
+      left: 16px;
       font-size: 32px;
       font-weight: 700;
       opacity: 0;
@@ -895,6 +895,18 @@
     .aops-link-top:hover {
       background: var(--bg-secondary);
       color: var(--primary-blue-light);
+    }
+
+    .source-label {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: var(--bg-secondary);
     }
     
     .modal {
@@ -2281,6 +2293,7 @@
         
         problemDiv.innerHTML = `
           ${getQualityBadgeHtml(newProblem.quality)}
+          <span class="source-label" id="source-label-${index}"></span>
           <a href="" target="_blank" class="aops-link-top" id="aops-link-${index}" style="display: none;"></a>
           <strong>Problem ${index + 1}:</strong>
           <span class="difficulty-indicator" id="difficulty-${index}" style="display: none;">Difficulty: ${parseFloat(newProblem.difficulty).toFixed(1)}</span>
@@ -2295,10 +2308,12 @@
         
         const problemTextEl = document.getElementById(`problem-text-${index}`);
         const aopsLinkEl = document.getElementById(`aops-link-${index}`);
+        const sourceLabelEl = document.getElementById(`source-label-${index}`);
         
         setMathContent(problemTextEl, newProblem.rewritten_problem || newProblem.text || '');
         aopsLinkEl.href = escapeHtml(newProblem.link || '');
-        aopsLinkEl.textContent = p.source || 'View Discussion';
+        aopsLinkEl.textContent = newProblem.source || 'View Discussion';
+        sourceLabelEl.textContent = newProblem.source || 'Unknown Source';
         
         updateProblemNav();
       }
@@ -2431,9 +2446,13 @@
           const problemDiv = document.querySelector(`.problem[data-problem-index="${i}"]`);
           const overrideBtn = document.getElementById(`override-${i}`);
           
-          // Reveal aops link and difficulty
+          // Reveal aops link and difficulty, hide source label
           const aopsLink = document.getElementById(`aops-link-${i}`);
           const difficultyEl = document.getElementById(`difficulty-${i}`);
+          const sourceLabel = document.getElementById(`source-label-${i}`);
+          if (sourceLabel) {
+            sourceLabel.style.display = 'none';
+          }
           if (aopsLink) {
             aopsLink.href = escapeHtml(p.link || '');
             aopsLink.textContent = p.source || 'View Discussion';
@@ -2658,6 +2677,7 @@
 
           div.innerHTML = `
             ${getQualityBadgeHtml(p.quality)}
+            <span class="source-label" id="source-label-${i}"></span>
             <a href="" target="_blank" class="aops-link-top" id="aops-link-${i}" style="display: none;"></a>
             <strong>Problem ${i + 1}:</strong>
             <span class="difficulty-indicator" id="difficulty-${i}" style="display: none;">Difficulty: ${parseFloat(p.difficulty).toFixed(1)}</span>
@@ -2674,10 +2694,12 @@
           
           const problemTextEl = document.getElementById(`problem-text-${i}`);
           const aopsLinkEl = document.getElementById(`aops-link-${i}`);
+          const sourceLabelEl = document.getElementById(`source-label-${i}`);
           
           setMathContent(problemTextEl, p.rewritten_problem || p.text || '');
           aopsLinkEl.href = escapeHtml(p.link || '');
           aopsLinkEl.textContent = p.source || 'View Discussion';
+          sourceLabelEl.textContent = p.source || 'Unknown Source';
         });
         
         updateProblemNav();
