@@ -2392,6 +2392,7 @@
         const { data, error } = await supabaseClient
           .from('problems')
           .select('*')
+          .order('id')
           .range(from, from + chunkSize - 1);
         
         if (error || data.length === 0) break;
