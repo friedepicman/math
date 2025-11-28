@@ -1579,6 +1579,32 @@
             </div>
             <span class="quality-rating-text" id="qualityRatingText">(3/5)</span>
           </div>
+          <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+            <span class="quality-label" style="display: block; margin-bottom: 10px;">Include Competitions:</span>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px;">
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 14px;">
+                <input type="checkbox" id="compAIME" checked /> AIME
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 14px;">
+                <input type="checkbox" id="compBMT" checked /> BMT
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 14px;">
+                <input type="checkbox" id="compPUMAC" checked /> PUMaC
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 14px;">
+                <input type="checkbox" id="compHMMT" checked /> HMMT
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 14px;">
+                <input type="checkbox" id="compCMIMC" checked /> CMIMC
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 14px;">
+                <input type="checkbox" id="compSMT" checked /> SMT
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 14px;">
+                <input type="checkbox" id="compPurpleComet" checked /> Purple Comet
+              </label>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1860,12 +1886,44 @@
         const useFinalizedOnly = document.getElementById('useFinalizedOnly').checked;
         const useExpanded = document.getElementById('useExpandedDb').checked;
 
+        // Get competition filter settings
+        const includeAIME = document.getElementById('compAIME').checked;
+        const includeBMT = document.getElementById('compBMT').checked;
+        const includePUMAC = document.getElementById('compPUMAC').checked;
+        const includeHMMT = document.getElementById('compHMMT').checked;
+        const includeCMIMC = document.getElementById('compCMIMC').checked;
+        const includeSMT = document.getElementById('compSMT').checked;
+        const includePurpleComet = document.getElementById('compPurpleComet').checked;
+
         for (const p of allProblems) {
           let d = parseFloat(p.difficulty);
           if (isNaN(d)) continue;
           
           if (!p.manually_reviewed || !p.quality || p.quality === 0) continue;
           if (p.quality < selectedQuality) continue;
+
+          // Exclude AMC problems entirely
+          const source = (p.source || '').toUpperCase();
+          if (source.includes('AMC 8') || source.includes('AMC 10') || source.includes('AMC 12') || source.includes('AMC8') || source.includes('AMC10') || source.includes('AMC12')) {
+            continue;
+          }
+
+          // Filter by competition
+          let competitionAllowed = false;
+          if (includeAIME && source.includes('AIME')) competitionAllowed = true;
+          if (includeBMT && source.includes('BMT')) competitionAllowed = true;
+          if (includePUMAC && source.includes('PUMAC')) competitionAllowed = true;
+          if (includeHMMT && source.includes('HMMT')) competitionAllowed = true;
+          if (includeCMIMC && source.includes('CMIMC')) competitionAllowed = true;
+          if (includeSMT && source.includes('SMT')) competitionAllowed = true;
+          if (includePurpleComet && source.includes('PURPLE COMET')) competitionAllowed = true;
+          
+          // If none of the known competitions match but source exists, include it (catch-all for other comps)
+          if (!competitionAllowed && source && !source.includes('AIME') && !source.includes('BMT') && !source.includes('PUMAC') && !source.includes('HMMT') && !source.includes('CMIMC') && !source.includes('SMT') && !source.includes('PURPLE COMET')) {
+            competitionAllowed = true;
+          }
+
+          if (!competitionAllowed) continue;
 
           let includeProb = false;
 
