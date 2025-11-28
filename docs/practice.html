@@ -2088,6 +2088,42 @@
       general: 0
     };
 
+    // Local storage helpers for guest XP
+    const LOCAL_XP_KEY = 'mockAIME_guestXp';
+    
+    function getLocalXp() {
+      try {
+        const stored = localStorage.getItem(LOCAL_XP_KEY);
+        if (stored) {
+          return JSON.parse(stored);
+        }
+      } catch (e) {
+        console.error('Error reading local XP:', e);
+      }
+      return { algebra: 0, geometry: 0, number_theory: 0, counting: 0, general: 0 };
+    }
+    
+    function saveLocalXp(xpData) {
+      try {
+        localStorage.setItem(LOCAL_XP_KEY, JSON.stringify(xpData));
+      } catch (e) {
+        console.error('Error saving local XP:', e);
+      }
+    }
+    
+    function clearLocalXp() {
+      try {
+        localStorage.removeItem(LOCAL_XP_KEY);
+      } catch (e) {
+        console.error('Error clearing local XP:', e);
+      }
+    }
+    
+    function hasLocalXp() {
+      const localXp = getLocalXp();
+      return Object.values(localXp).some(xp => xp > 0);
+    }
+
     // Session stats
     let sessionStats = {
       solved: 0,
@@ -2231,9 +2267,75 @@
           authButton.href = 'profile.html';
         }
         loginPrompt.style.display = 'none';
+        
+        // Check for local XP to sync
+        if (hasLocalXp()) {
+          await syncLocalXpToAccount();
+        }
+        
         await loadUserXp();
       } else {
+        // Load any existing local XP for guests
+        const localXp = getLocalXp();
+        userXp = { ...localXp };
+        updateXpDisplay();
+        
+        // Update login prompt based on whether they have unsaved XP
+        if (hasLocalXp()) {
+          loginPrompt.innerHTML = '⚠️ You have unsaved XP! <a href="login.html">Log in</a> to save your progress!';
+        }
         loginPrompt.style.display = 'block';
+      }
+    }
+    
+    // Sync local XP to user's account when they log in
+    async function syncLocalXpToAccount() {
+      const localXp = getLocalXp();
+      
+      // Only sync if there's actually XP to sync
+      if (!Object.values(localXp).some(xp => xp > 0)) {
+        return;
+      }
+      
+      try {
+        // Get current user XP from database
+        const { data: currentData, error: fetchError } = await supabaseClient
+          .from('user_profiles')
+          .select('xp_algebra, xp_geometry, xp_number_theory, xp_counting, xp_general')
+          .eq('id', currentUser.id)
+          .single();
+        
+        if (fetchError) {
+          console.error('Error fetching user XP for sync:', fetchError);
+          return;
+        }
+        
+        // Add local XP to existing XP
+        const newXp = {
+          xp_algebra: (currentData?.xp_algebra || 0) + localXp.algebra,
+          xp_geometry: (currentData?.xp_geometry || 0) + localXp.geometry,
+          xp_number_theory: (currentData?.xp_number_theory || 0) + localXp.number_theory,
+          xp_counting: (currentData?.xp_counting || 0) + localXp.counting,
+          xp_general: (currentData?.xp_general || 0) + localXp.general
+        };
+        
+        // Update database
+        const { error: updateError } = await supabaseClient
+          .from('user_profiles')
+          .update(newXp)
+          .eq('id', currentUser.id);
+        
+        if (updateError) {
+          console.error('Error syncing local XP:', updateError);
+          return;
+        }
+        
+        // Clear local XP after successful sync
+        clearLocalXp();
+        console.log('Successfully synced local XP to account:', localXp);
+        
+      } catch (err) {
+        console.error('Error during XP sync:', err);
       }
     }
 
@@ -2543,13 +2645,24 @@
           return;
         }
       } else {
-        // Not logged in - just check answer locally (no XP saved)
+        // Not logged in - check answer locally and save XP to localStorage
         correctAnswer = getCorrectAnswer(currentProblem);
         isCorrect = userAnswer === correctAnswer;
         
-        // Calculate what XP would be (for display only)
+        // Calculate XP change
         const baseXp = getXpForDifficulty(difficulty);
-        xpChange = isCorrect ? baseXp : -(baseXp / 5);
+        xpChange = isCorrect ? baseXp : -Math.round(baseXp / 5);
+        
+        // Update local XP state
+        userXp[problemType] = Math.max(0, userXp[problemType] + xpChange);
+        userXp.general = Math.max(0, userXp.general + xpChange);
+        
+        // Save to localStorage
+        saveLocalXp(userXp);
+        
+        // Update login prompt to show they have unsaved progress
+        const loginPrompt = document.getElementById('loginPrompt');
+        loginPrompt.innerHTML = '⚠️ You have unsaved XP! <a href="login.html">Log in</a> to save your progress!';
       }
       
       // Calculate level changes
@@ -2590,14 +2703,12 @@
         <div style="margin-bottom: 8px;">
           ${isCorrect ? '' : `Correct answer: <strong>${escapeHtml(correctAnswer)}</strong><br>`}
         </div>
-        ${currentUser ? `
-          <div class="xp-change ${xpChange >= 0 ? 'positive' : 'negative'}">
-            ${xpChange >= 0 ? '+' : ''}${Math.round(xpChange)} XP
-          </div>
-          ${levelUpHtml}
-        ` : `
-          <div style="color: var(--text-tertiary); font-size: 14px;">
-            <a href="login.html">Log in</a> to save XP progress
+        <div class="xp-change ${xpChange >= 0 ? 'positive' : 'negative'}">
+          ${xpChange >= 0 ? '+' : ''}${Math.round(xpChange)} XP
+        </div>
+        ${currentUser ? levelUpHtml : `
+          <div style="color: var(--text-tertiary); font-size: 14px; margin-top: 8px;">
+            <a href="login.html">Log in</a> to save your progress!
           </div>
         `}
       `;
