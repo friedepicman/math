@@ -31,6 +31,93 @@
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // ============================================
+    // ANALYTICS TRACKING
+    // ============================================
+    const MOD_USER_ID = '6af62d68-67e7-42f6-b91f-58cac9d81cba';
+
+    function getSessionId() {
+      let sessionId = localStorage.getItem('mockAIME_sessionId');
+      if (!sessionId) {
+        sessionId = 'sess_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
+        localStorage.setItem('mockAIME_sessionId', sessionId);
+      }
+      return sessionId;
+    }
+
+    function getUserType(userId) {
+      if (!userId) return 'guest';
+      if (userId === MOD_USER_ID) return 'mod';
+      return 'user';
+    }
+
+    async function logActivity(eventType, data = {}) {
+      try {
+        const userId = currentUser?.id || null;
+        await supabaseClient.from('activity_log').insert({
+          user_id: userId,
+          session_id: getSessionId(),
+          user_type: getUserType(userId),
+          event_type: eventType,
+          page: 'index',
+          problem_id: data.problemId || null,
+          problem_source: data.source || null,
+          difficulty: data.difficulty || null,
+          is_correct: data.isCorrect ?? null,
+          user_answer: data.userAnswer || null,
+          metadata: data.metadata || null
+        });
+      } catch (e) {
+        console.error('Activity log error:', e);
+      }
+    }
+
+    async function logEvent(eventType, data = {}) {
+      try {
+        const userId = currentUser?.id || null;
+        await supabaseClient.from('activity_all').insert({
+          user_id: userId,
+          session_id: getSessionId(),
+          user_type: getUserType(userId),
+          event_type: eventType,
+          page: 'index',
+          element_id: data.elementId || null,
+          element_text: data.elementText ? String(data.elementText).substring(0, 100) : null,
+          element_type: data.elementType || null,
+          url: window.location.href,
+          referrer: document.referrer || null,
+          metadata: data.metadata || null
+        });
+      } catch (e) {
+        console.error('Event log error:', e);
+      }
+    }
+
+    function initAnalytics() {
+      // Track page view
+      logActivity('page_view', {
+        metadata: { referrer: document.referrer }
+      });
+      logEvent('page_view', {
+        metadata: { referrer: document.referrer, userAgent: navigator.userAgent }
+      });
+
+      // Track all clicks
+      document.addEventListener('click', (e) => {
+        const target = e.target.closest('button, a, .btn, .type-checkbox, input[type="checkbox"], input[type="radio"], .star, .problem-nav-item');
+        if (target) {
+          logEvent('click', {
+            elementId: target.id || target.className?.split(' ')[0] || null,
+            elementText: target.textContent?.trim() || target.value || '',
+            elementType: target.tagName.toLowerCase(),
+            metadata: { classList: Array.from(target.classList || []) }
+          });
+        }
+      });
+    }
+
+    setTimeout(initAnalytics, 500);
+
     // SECURITY FIX: HTML escaping function
     function escapeHtml(text) {
       if (!text) return text;
@@ -2586,6 +2673,31 @@
         } else {
           console.log('User not logged in, not saving attempt');
         }
+
+        // Track mock test completion
+        logActivity('mock_test_complete', {
+          metadata: {
+            score: correctCount,
+            total: chosenProblems.length,
+            level: document.getElementById("difficulty").value,
+            results: results.map(r => r.status)
+          }
+        });
+
+        // Track each problem submission
+        chosenProblems.forEach((p, i) => {
+          const input = document.querySelector(`input[data-index="${i}"]`);
+          const userAnswer = input?.value?.trim() || '';
+          const result = results.find(r => r.index === i);
+          
+          logActivity('mock_problem_submit', {
+            problemId: p.id,
+            source: p.source,
+            difficulty: p.difficulty,
+            isCorrect: result?.status === 'correct',
+            userAnswer: userAnswer
+          });
+        });
       }
 
       async function generateMock() {
@@ -2755,6 +2867,24 @@
         });
         
         updateProblemNav();
+
+        // Track mock test generation
+        logActivity('mock_test_start', {
+          metadata: {
+            level: level,
+            problemCount: chosenProblems.length,
+            useExpanded: useExpanded,
+            competitions: {
+              aime: document.getElementById('compAIME').checked,
+              bmt: document.getElementById('compBMT').checked,
+              pumac: document.getElementById('compPUMAC').checked,
+              hmmt: document.getElementById('compHMMT').checked,
+              cmimc: document.getElementById('compCMIMC').checked,
+              smt: document.getElementById('compSMT').checked,
+              purpleComet: document.getElementById('compPurpleComet').checked
+            }
+          }
+        });
       }
     </script>
   </div>

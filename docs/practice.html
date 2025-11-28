@@ -14,6 +14,93 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0ZGJwbHhreWFvY3lyanBtanliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMDgxMDUsImV4cCI6MjA2NzY4NDEwNX0.hE0V09JxdLYNbZqPVH3HZxNpLPP2rXIaBsNGUHO3upc';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // ============================================
+    // ANALYTICS TRACKING
+    // ============================================
+    const MOD_USER_ID = '6af62d68-67e7-42f6-b91f-58cac9d81cba';
+
+    function getSessionId() {
+      let sessionId = localStorage.getItem('mockAIME_sessionId');
+      if (!sessionId) {
+        sessionId = 'sess_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
+        localStorage.setItem('mockAIME_sessionId', sessionId);
+      }
+      return sessionId;
+    }
+
+    function getUserType(userId) {
+      if (!userId) return 'guest';
+      if (userId === MOD_USER_ID) return 'mod';
+      return 'user';
+    }
+
+    async function logActivity(eventType, data = {}) {
+      try {
+        const userId = currentUser?.id || null;
+        await supabaseClient.from('activity_log').insert({
+          user_id: userId,
+          session_id: getSessionId(),
+          user_type: getUserType(userId),
+          event_type: eventType,
+          page: 'practice',
+          problem_id: data.problemId || null,
+          problem_source: data.source || null,
+          difficulty: data.difficulty || null,
+          is_correct: data.isCorrect ?? null,
+          user_answer: data.userAnswer || null,
+          metadata: data.metadata || null
+        });
+      } catch (e) {
+        console.error('Activity log error:', e);
+      }
+    }
+
+    async function logEvent(eventType, data = {}) {
+      try {
+        const userId = currentUser?.id || null;
+        await supabaseClient.from('activity_all').insert({
+          user_id: userId,
+          session_id: getSessionId(),
+          user_type: getUserType(userId),
+          event_type: eventType,
+          page: 'practice',
+          element_id: data.elementId || null,
+          element_text: data.elementText ? String(data.elementText).substring(0, 100) : null,
+          element_type: data.elementType || null,
+          url: window.location.href,
+          referrer: document.referrer || null,
+          metadata: data.metadata || null
+        });
+      } catch (e) {
+        console.error('Event log error:', e);
+      }
+    }
+
+    function initAnalytics() {
+      // Track page view
+      logActivity('page_view', {
+        metadata: { referrer: document.referrer }
+      });
+      logEvent('page_view', {
+        metadata: { referrer: document.referrer, userAgent: navigator.userAgent }
+      });
+
+      // Track all clicks
+      document.addEventListener('click', (e) => {
+        const target = e.target.closest('button, a, .btn, .type-checkbox, input[type="checkbox"], input[type="radio"], .star');
+        if (target) {
+          logEvent('click', {
+            elementId: target.id || target.className?.split(' ')[0] || null,
+            elementText: target.textContent?.trim() || target.value || '',
+            elementType: target.tagName.toLowerCase(),
+            metadata: { classList: Array.from(target.classList || []) }
+          });
+        }
+      });
+    }
+
+    setTimeout(initAnalytics, 500);
+
     // XP table by difficulty
     const XP_TABLE = {
       1: 5, 1.5: 10, 2: 15, 2.5: 20, 3: 25, 3.5: 30, 4: 40, 4.5: 50,
@@ -2088,42 +2175,6 @@
       general: 0
     };
 
-    // Local storage helpers for guest XP
-    const LOCAL_XP_KEY = 'mockAIME_guestXp';
-    
-    function getLocalXp() {
-      try {
-        const stored = localStorage.getItem(LOCAL_XP_KEY);
-        if (stored) {
-          return JSON.parse(stored);
-        }
-      } catch (e) {
-        console.error('Error reading local XP:', e);
-      }
-      return { algebra: 0, geometry: 0, number_theory: 0, counting: 0, general: 0 };
-    }
-    
-    function saveLocalXp(xpData) {
-      try {
-        localStorage.setItem(LOCAL_XP_KEY, JSON.stringify(xpData));
-      } catch (e) {
-        console.error('Error saving local XP:', e);
-      }
-    }
-    
-    function clearLocalXp() {
-      try {
-        localStorage.removeItem(LOCAL_XP_KEY);
-      } catch (e) {
-        console.error('Error clearing local XP:', e);
-      }
-    }
-    
-    function hasLocalXp() {
-      const localXp = getLocalXp();
-      return Object.values(localXp).some(xp => xp > 0);
-    }
-
     // Session stats
     let sessionStats = {
       solved: 0,
@@ -2267,75 +2318,9 @@
           authButton.href = 'profile.html';
         }
         loginPrompt.style.display = 'none';
-        
-        // Check for local XP to sync
-        if (hasLocalXp()) {
-          await syncLocalXpToAccount();
-        }
-        
         await loadUserXp();
       } else {
-        // Load any existing local XP for guests
-        const localXp = getLocalXp();
-        userXp = { ...localXp };
-        updateXpDisplay();
-        
-        // Update login prompt based on whether they have unsaved XP
-        if (hasLocalXp()) {
-          loginPrompt.innerHTML = '⚠️ You have unsaved XP! <a href="login.html">Log in</a> to save your progress!';
-        }
         loginPrompt.style.display = 'block';
-      }
-    }
-    
-    // Sync local XP to user's account when they log in
-    async function syncLocalXpToAccount() {
-      const localXp = getLocalXp();
-      
-      // Only sync if there's actually XP to sync
-      if (!Object.values(localXp).some(xp => xp > 0)) {
-        return;
-      }
-      
-      try {
-        // Get current user XP from database
-        const { data: currentData, error: fetchError } = await supabaseClient
-          .from('user_profiles')
-          .select('xp_algebra, xp_geometry, xp_number_theory, xp_counting, xp_general')
-          .eq('id', currentUser.id)
-          .single();
-        
-        if (fetchError) {
-          console.error('Error fetching user XP for sync:', fetchError);
-          return;
-        }
-        
-        // Add local XP to existing XP
-        const newXp = {
-          xp_algebra: (currentData?.xp_algebra || 0) + localXp.algebra,
-          xp_geometry: (currentData?.xp_geometry || 0) + localXp.geometry,
-          xp_number_theory: (currentData?.xp_number_theory || 0) + localXp.number_theory,
-          xp_counting: (currentData?.xp_counting || 0) + localXp.counting,
-          xp_general: (currentData?.xp_general || 0) + localXp.general
-        };
-        
-        // Update database
-        const { error: updateError } = await supabaseClient
-          .from('user_profiles')
-          .update(newXp)
-          .eq('id', currentUser.id);
-        
-        if (updateError) {
-          console.error('Error syncing local XP:', updateError);
-          return;
-        }
-        
-        // Clear local XP after successful sync
-        clearLocalXp();
-        console.log('Successfully synced local XP to account:', localXp);
-        
-      } catch (err) {
-        console.error('Error during XP sync:', err);
       }
     }
 
@@ -2580,6 +2565,17 @@
         applyDatabaseFilters();
       }
       
+      // Track practice start with current filter settings
+      logActivity('practice_start', {
+        metadata: {
+          types: Array.from(selectedTypes),
+          minDiff: document.getElementById('minDifficulty').value,
+          maxDiff: document.getElementById('maxDifficulty').value,
+          quality: selectedQuality,
+          problemCount: filteredProblems.length
+        }
+      });
+      
       const problem = getNextProblem();
       
       if (problem) {
@@ -2645,24 +2641,13 @@
           return;
         }
       } else {
-        // Not logged in - check answer locally and save XP to localStorage
+        // Not logged in - just check answer locally (no XP saved)
         correctAnswer = getCorrectAnswer(currentProblem);
         isCorrect = userAnswer === correctAnswer;
         
-        // Calculate XP change
+        // Calculate what XP would be (for display only)
         const baseXp = getXpForDifficulty(difficulty);
-        xpChange = isCorrect ? baseXp : -Math.round(baseXp / 5);
-        
-        // Update local XP state
-        userXp[problemType] = Math.max(0, userXp[problemType] + xpChange);
-        userXp.general = Math.max(0, userXp.general + xpChange);
-        
-        // Save to localStorage
-        saveLocalXp(userXp);
-        
-        // Update login prompt to show they have unsaved progress
-        const loginPrompt = document.getElementById('loginPrompt');
-        loginPrompt.innerHTML = '⚠️ You have unsaved XP! <a href="login.html">Log in</a> to save your progress!';
+        xpChange = isCorrect ? baseXp : -(baseXp / 5);
       }
       
       // Calculate level changes
@@ -2703,12 +2688,14 @@
         <div style="margin-bottom: 8px;">
           ${isCorrect ? '' : `Correct answer: <strong>${escapeHtml(correctAnswer)}</strong><br>`}
         </div>
-        <div class="xp-change ${xpChange >= 0 ? 'positive' : 'negative'}">
-          ${xpChange >= 0 ? '+' : ''}${Math.round(xpChange)} XP
-        </div>
-        ${currentUser ? levelUpHtml : `
-          <div style="color: var(--text-tertiary); font-size: 14px; margin-top: 8px;">
-            <a href="login.html">Log in</a> to save your progress!
+        ${currentUser ? `
+          <div class="xp-change ${xpChange >= 0 ? 'positive' : 'negative'}">
+            ${xpChange >= 0 ? '+' : ''}${Math.round(xpChange)} XP
+          </div>
+          ${levelUpHtml}
+        ` : `
+          <div style="color: var(--text-tertiary); font-size: 14px;">
+            <a href="login.html">Log in</a> to save XP progress
           </div>
         `}
       `;
@@ -2724,9 +2711,27 @@
           sourceLabel.textContent = sourceName;
         }
       }
+
+      // Track practice submission
+      logActivity('practice_submit', {
+        problemId: currentProblem.id,
+        source: currentProblem.source,
+        difficulty: difficulty,
+        isCorrect: isCorrect,
+        userAnswer: userAnswer,
+        metadata: { xpChange: xpChange, problemType: problemType }
+      });
     }
 
     function skipProblem() {
+      // Track skip
+      if (currentProblem) {
+        logActivity('practice_skip', {
+          problemId: currentProblem.id,
+          source: currentProblem.source,
+          difficulty: currentProblem.difficulty
+        });
+      }
       nextProblem();
     }
 
