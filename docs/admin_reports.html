@@ -129,6 +129,7 @@
     .type-badge.wrong_answer { background: #ffebee; color: #c62828; }
     .type-badge.problem_statement { background: #f3e5f5; color: #7b1fa2; }
     .type-badge.source { background: #e8f5e9; color: #388e3c; }
+    .type-badge.wrong_type { background: #fce4ec; color: #c2185b; }
 
     .report-date-small {
       color: #999;
@@ -793,6 +794,18 @@
                 </div>
                 
                 <div class="field-group">
+                  <label>Type:</label>
+                  <select id="type-${problem.id}" onchange="saveProblem(${problem.id})" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-width: 130px;">
+                    <option value="" ${!problem.type ? 'selected' : ''}>None</option>
+                    <option value="algebra" ${problem.type === 'algebra' ? 'selected' : ''}>Algebra</option>
+                    <option value="geometry" ${problem.type === 'geometry' ? 'selected' : ''}>Geometry</option>
+                    <option value="number_theory" ${problem.type === 'number_theory' ? 'selected' : ''}>Number Theory</option>
+                    <option value="counting" ${problem.type === 'counting' ? 'selected' : ''}>Counting</option>
+                    <option value="other" ${problem.type === 'other' ? 'selected' : ''}>Other</option>
+                  </select>
+                </div>
+                
+                <div class="field-group">
                   <label>Source:</label>
                   <input type="text" id="source-${problem.id}" value="${escapeHtml(problem.source || '')}" onblur="saveProblem(${problem.id})" style="width: 250px;" />
                 </div>
@@ -927,6 +940,29 @@
               <div class="change-detail"><strong>Current:</strong> ${problem.source || 'Not set'}</div>
               <div class="change-detail"><strong>Proposed:</strong> ${escapeHtml(details.proposed_source)}</div>
               ${details.source_details ? `<div class="change-detail"><strong>Details:</strong> ${escapeHtml(details.source_details)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      // Wrong Type
+      if (types.includes('wrong_type') && details.proposed_type) {
+        const typeLabels = { algebra: 'Algebra', geometry: 'Geometry', number_theory: 'Number Theory', counting: 'Counting', other: 'Other' };
+        const currentTypeLabel = typeLabels[problem.type] || 'Not set';
+        const proposedTypeLabel = typeLabels[details.proposed_type] || details.proposed_type;
+        changesHTML += `
+          <div class="change-card">
+            <div class="change-header">
+              <div class="change-title">🏷️ Problem Type: ${proposedTypeLabel}</div>
+              <div class="change-actions">
+                <button class="btn-accept" onclick="acceptType(event, ${problem.id}, '${details.proposed_type}')">✓ Accept</button>
+                <button class="btn-reject" onclick="rejectChange(event)">✗ Reject</button>
+              </div>
+            </div>
+            <div class="change-content">
+              <div class="change-detail"><strong>Current:</strong> ${currentTypeLabel}</div>
+              <div class="change-detail"><strong>Proposed:</strong> ${proposedTypeLabel}</div>
+              ${details.type_details ? `<div class="change-detail"><strong>Reason:</strong> ${escapeHtml(details.type_details)}</div>` : ''}
             </div>
           </div>
         `;
@@ -1120,10 +1156,12 @@
       const aimeAnswer = document.getElementById(`aime-answer-${problemId}`).value;
       const difficulty = document.getElementById(`difficulty-${problemId}`).value;
       const source = document.getElementById(`source-${problemId}`).value;
+      const type = document.getElementById(`type-${problemId}`).value;
       
       const updateData = {
         answer,
         source,
+        type: type || null,
         aime_answer: aimeAnswer ? parseInt(aimeAnswer) : null,
         difficulty: difficulty ? parseFloat(difficulty) : null
       };
@@ -1242,6 +1280,13 @@
 
     async function acceptSource(event, problemId, source) {
         document.getElementById(`source-${problemId}`).value = source;
+        await saveProblem(problemId);
+        // Hide the change card
+        event.target.closest('.change-card').style.display = 'none';
+    }
+
+    async function acceptType(event, problemId, type) {
+        document.getElementById(`type-${problemId}`).value = type;
         await saveProblem(problemId);
         // Hide the change card
         event.target.closest('.change-card').style.display = 'none';

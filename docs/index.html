@@ -1665,7 +1665,7 @@
               <span class="star" data-rating="4">★</span>
               <span class="star" data-rating="5">★</span>
             </div>
-            <span class="quality-rating-text" id="qualityRatingText">(3/5)</span>
+            <span class="quality-rating-text" id="qualityRatingText">(4/5)</span>
           </div>
           <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">
             <span class="quality-label" style="display: block; margin-bottom: 10px;">Include Competitions:</span>
@@ -1747,6 +1747,10 @@
           <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
             <input type="checkbox" id="reportSource" onchange="toggleReportSection('source')">
             <span>Source</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="reportType" onchange="toggleReportSection('type')">
+            <span>Wrong Type</span>
           </label>
         </div>
 
@@ -1864,6 +1868,23 @@
           <label class="modal-label" style="margin-top: 15px;">Additional Details (Optional):</label>
           <textarea id="sourceDetails" class="modal-textarea" placeholder="Provide source information or link..."></textarea>
         </div>
+
+        <!-- Type Section -->
+        <div id="typeSection" class="report-section">
+          <div class="section-divider">Wrong Type</div>
+          <label class="modal-label">Current Type: <strong id="currentType">-</strong></label>
+          <label class="modal-label">Correct Type:</label>
+          <select id="proposedType" style="width: 100%; padding: 10px; border: 2px solid var(--border-strong); border-radius: 6px; box-sizing: border-box; font-size: 16px;">
+            <option value="">Select correct type...</option>
+            <option value="algebra">Algebra</option>
+            <option value="geometry">Geometry</option>
+            <option value="number_theory">Number Theory</option>
+            <option value="counting">Counting</option>
+            <option value="other">Other</option>
+          </select>
+          <label class="modal-label" style="margin-top: 15px;">Additional Details (Optional):</label>
+          <textarea id="typeDetails" class="modal-textarea" placeholder="Explain why this type is correct..."></textarea>
+        </div>
         
         <button class="modal-submit" id="submitReport">Submit Report</button>
       </div>
@@ -1891,7 +1912,7 @@
       }
 
       // Quality selector logic
-      let selectedQuality = 3;
+      let selectedQuality = 4;
 
       function updateQualityStars() {
         const stars = document.querySelectorAll('#qualityStars .star');
@@ -2145,6 +2166,7 @@
         document.getElementById('reportAnswer').checked = false;
         document.getElementById('reportProblem').checked = false;
         document.getElementById('reportSource').checked = false;
+        document.getElementById('reportType').checked = false;
         
         document.querySelectorAll('.report-section').forEach(section => {
           section.style.display = 'none';
@@ -2167,6 +2189,8 @@
         document.getElementById('problemDetails').value = '';
         document.getElementById('proposedSource').value = '';
         document.getElementById('sourceDetails').value = '';
+        document.getElementById('proposedType').value = '';
+        document.getElementById('typeDetails').value = '';
         
         if (currentReportProblemData) {
           const currentAns = currentReportProblemData.aime_answer ? 
@@ -2175,6 +2199,10 @@
           document.getElementById('currentAnswer').textContent = currentAns;
           document.getElementById('currentSource').textContent = currentReportProblemData.source || 'Unknown';
           document.getElementById('problemText').value = currentReportProblemData.rewritten_problem || currentReportProblemData.text || '';
+          
+          // Set current type
+          const typeLabels = { algebra: 'Algebra', geometry: 'Geometry', number_theory: 'Number Theory', counting: 'Counting', other: 'Other' };
+          document.getElementById('currentType').textContent = typeLabels[currentReportProblemData.type] || 'Not set';
         }
         document.getElementById('currentAnswerReveal').style.display = 'none';
         document.getElementById('problemCurrentAnswerReveal').style.display = 'none';
@@ -2362,6 +2390,12 @@
           reportData.report_types.push('source');
           reportData.proposed_source = document.getElementById('proposedSource').value.trim() || null;
           reportData.source_details = document.getElementById('sourceDetails').value.trim() || null;
+        }
+
+        if (document.getElementById('reportType').checked) {
+          reportData.report_types.push('wrong_type');
+          reportData.proposed_type = document.getElementById('proposedType').value || null;
+          reportData.type_details = document.getElementById('typeDetails').value.trim() || null;
         }
 
         if (reportData.report_types.length === 0) {

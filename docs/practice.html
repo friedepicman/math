@@ -1913,7 +1913,7 @@
               <span class="star" data-rating="4">★</span>
               <span class="star" data-rating="5">★</span>
             </div>
-            <span class="quality-text" id="qualityText">(3/5)</span>
+            <span class="quality-text" id="qualityText">(4/5)</span>
           </div>
         </div>
 
@@ -1977,6 +1977,7 @@
           <input type="text" class="answer-input" id="answerInput" maxlength="3" placeholder="000" />
           <button class="btn-primary" id="submitBtn" onclick="submitAnswer()">Submit</button>
           <button class="btn-skip" onclick="skipProblem()">Skip</button>
+          <button class="report-button" id="reportBtnPre" onclick="openReportModal()" style="margin-left: auto;">Report Issue</button>
         </div>
 
         <div class="result-display" id="resultDisplay">
@@ -2033,6 +2034,10 @@
           <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
             <input type="checkbox" id="reportSource" onchange="toggleReportSection('source')">
             <span>Source</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="reportType" onchange="toggleReportSection('type')">
+            <span>Wrong Type</span>
           </label>
         </div>
 
@@ -2150,6 +2155,23 @@
           <label class="modal-label" style="margin-top: 15px;">Additional Details (Optional):</label>
           <textarea id="sourceDetails" class="modal-textarea" placeholder="Provide source information or link..."></textarea>
         </div>
+
+        <!-- Type Section -->
+        <div id="typeSection" class="report-section">
+          <div class="section-divider">Wrong Type</div>
+          <label class="modal-label">Current Type: <strong id="currentType">-</strong></label>
+          <label class="modal-label">Correct Type:</label>
+          <select id="proposedType" style="width: 100%; padding: 10px; border: 2px solid var(--border-strong); border-radius: 6px; box-sizing: border-box; font-size: 16px; background: var(--bg-card); color: var(--text-primary);">
+            <option value="">Select correct type...</option>
+            <option value="algebra">Algebra</option>
+            <option value="geometry">Geometry</option>
+            <option value="number_theory">Number Theory</option>
+            <option value="counting">Counting</option>
+            <option value="other">Other</option>
+          </select>
+          <label class="modal-label" style="margin-top: 15px;">Additional Details (Optional):</label>
+          <textarea id="typeDetails" class="modal-textarea" placeholder="Explain why this type is correct..."></textarea>
+        </div>
         
         <button class="modal-submit" id="submitReport">Submit Report</button>
       </div>
@@ -2164,7 +2186,7 @@
     let currentProblem = null;
     let currentUser = null;
     let usedProblemIds = new Set();
-    let selectedQuality = 3;
+    let selectedQuality = 4;
     
     // XP State
     let userXp = {
@@ -2765,6 +2787,7 @@
       document.getElementById('reportAnswer').checked = false;
       document.getElementById('reportProblem').checked = false;
       document.getElementById('reportSource').checked = false;
+      document.getElementById('reportType').checked = false;
       
       document.querySelectorAll('.report-section').forEach(section => {
         section.style.display = 'none';
@@ -2789,12 +2812,18 @@
       document.getElementById('problemDetails').value = '';
       document.getElementById('proposedSource').value = '';
       document.getElementById('sourceDetails').value = '';
+      document.getElementById('proposedType').value = '';
+      document.getElementById('typeDetails').value = '';
       
       // Populate current values
       const currentAns = getCorrectAnswer(currentProblem) || '-';
       document.getElementById('currentAnswer').textContent = currentAns;
       document.getElementById('currentSource').textContent = currentProblem.source || 'Unknown';
       document.getElementById('problemTextEdit').value = currentProblem.rewritten_problem || currentProblem.text || '';
+      
+      // Set current type
+      const typeLabels = { algebra: 'Algebra', geometry: 'Geometry', number_theory: 'Number Theory', counting: 'Counting', other: 'Other' };
+      document.getElementById('currentType').textContent = typeLabels[currentProblem.type] || 'Not set';
       
       // Hide answer reveals
       document.getElementById('currentAnswerReveal').style.display = 'none';
@@ -2966,6 +2995,12 @@
         reportData.report_types.push('source');
         reportData.proposed_source = document.getElementById('proposedSource').value.trim() || null;
         reportData.source_details = document.getElementById('sourceDetails').value.trim() || null;
+      }
+
+      if (document.getElementById('reportType').checked) {
+        reportData.report_types.push('wrong_type');
+        reportData.proposed_type = document.getElementById('proposedType').value || null;
+        reportData.type_details = document.getElementById('typeDetails').value.trim() || null;
       }
 
       if (reportData.report_types.length === 0) {
