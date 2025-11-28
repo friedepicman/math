@@ -21,6 +21,29 @@
       8.5: 160, 9: 180, 9.5: 210, 10: 240
     };
 
+    // Helper function to detect if a problem is AMC (multiple choice)
+    function isAMCProblem(problem) {
+      if (!problem || !problem.source) return false;
+      const source = problem.source.toUpperCase();
+      return source.includes('AMC 8') || source.includes('AMC 10') || source.includes('AMC 12') ||
+             source.includes('AMC8') || source.includes('AMC10') || source.includes('AMC12');
+    }
+
+    // Get the correct answer for a problem (handles both AMC and AIME-style)
+    function getCorrectAnswer(problem) {
+      if (!problem) return null;
+      if (isAMCProblem(problem)) {
+        // AMC problems use letter answers
+        return String(problem.answer || '').toUpperCase().trim();
+      } else {
+        // AIME-style problems use numeric answers
+        if (problem.aime_answer !== null && problem.aime_answer !== undefined) {
+          return String(problem.aime_answer % 1000);
+        }
+        return String(problem.answer || '');
+      }
+    }
+
     // Level thresholds: [startLevel, xpPerLevel]
     const LEVEL_TIERS = [
       [1, 25],    // Levels 1-10: 25 XP each
@@ -1806,6 +1829,42 @@
             <span class="quality-text" id="qualityText">(3/5)</span>
           </div>
         </div>
+
+        <div style="margin-bottom: 16px;">
+          <label style="font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 10px;">Include Competitions:</label>
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px;">
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer;">
+              <input type="checkbox" id="compAIME" checked onchange="updateProblemCount()"> AIME
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer;">
+              <input type="checkbox" id="compAMC8" checked onchange="updateProblemCount()"> AMC 8
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer;">
+              <input type="checkbox" id="compAMC10" checked onchange="updateProblemCount()"> AMC 10
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer;">
+              <input type="checkbox" id="compAMC12" checked onchange="updateProblemCount()"> AMC 12
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer;">
+              <input type="checkbox" id="compBMT" checked onchange="updateProblemCount()"> BMT
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer;">
+              <input type="checkbox" id="compPUMAC" checked onchange="updateProblemCount()"> PUMaC
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer;">
+              <input type="checkbox" id="compHMMT" checked onchange="updateProblemCount()"> HMMT
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer;">
+              <input type="checkbox" id="compCMIMC" checked onchange="updateProblemCount()"> CMIMC
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer;">
+              <input type="checkbox" id="compSMT" checked onchange="updateProblemCount()"> SMT
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer;">
+              <input type="checkbox" id="compPurpleComet" checked onchange="updateProblemCount()"> Purple Comet
+            </label>
+          </div>
+        </div>
       </div>
 
       <div class="problem-count" id="problemCount">
@@ -2270,8 +2329,44 @@
       const useFinalizedOnly = document.getElementById('useFinalizedOnly')?.checked || false;
       const useExpanded = document.getElementById('useExpandedDb')?.checked || false;
 
+      // Get competition filter settings
+      const includeAIME = document.getElementById('compAIME')?.checked ?? true;
+      const includeAMC8 = document.getElementById('compAMC8')?.checked ?? true;
+      const includeAMC10 = document.getElementById('compAMC10')?.checked ?? true;
+      const includeAMC12 = document.getElementById('compAMC12')?.checked ?? true;
+      const includeBMT = document.getElementById('compBMT')?.checked ?? true;
+      const includePUMAC = document.getElementById('compPUMAC')?.checked ?? true;
+      const includeHMMT = document.getElementById('compHMMT')?.checked ?? true;
+      const includeCMIMC = document.getElementById('compCMIMC')?.checked ?? true;
+      const includeSMT = document.getElementById('compSMT')?.checked ?? true;
+      const includePurpleComet = document.getElementById('compPurpleComet')?.checked ?? true;
+
       allProblems = allRawProblems.filter(p => {
         if (!p.quality || p.quality < selectedQuality) return false;
+
+        // Filter by competition
+        const source = (p.source || '').toUpperCase();
+        let competitionAllowed = false;
+        
+        if (includeAIME && source.includes('AIME')) competitionAllowed = true;
+        else if (includeAMC8 && source.includes('AMC 8')) competitionAllowed = true;
+        else if (includeAMC10 && source.includes('AMC 10')) competitionAllowed = true;
+        else if (includeAMC12 && source.includes('AMC 12')) competitionAllowed = true;
+        else if (includeBMT && source.includes('BMT')) competitionAllowed = true;
+        else if (includePUMAC && source.includes('PUMAC')) competitionAllowed = true;
+        else if (includeHMMT && source.includes('HMMT')) competitionAllowed = true;
+        else if (includeCMIMC && source.includes('CMIMC')) competitionAllowed = true;
+        else if (includeSMT && source.includes('SMT')) competitionAllowed = true;
+        else if (includePurpleComet && source.includes('PURPLE COMET')) competitionAllowed = true;
+        // Include problems from other competitions not in our list
+        else if (!source.includes('AIME') && !source.includes('AMC 8') && !source.includes('AMC 10') && 
+                 !source.includes('AMC 12') && !source.includes('BMT') && !source.includes('PUMAC') && 
+                 !source.includes('HMMT') && !source.includes('CMIMC') && !source.includes('SMT') && 
+                 !source.includes('PURPLE COMET')) {
+          competitionAllowed = true;
+        }
+
+        if (!competitionAllowed) return false;
 
         if (useFinalizedOnly) {
           return p.finalized === true;
@@ -2357,6 +2452,19 @@
       
       document.getElementById('answerInput').value = '';
       document.getElementById('answerInput').disabled = false;
+      
+      // Update placeholder based on problem type (AMC vs AIME-style)
+      const answerInput = document.getElementById('answerInput');
+      if (isAMCProblem(problem)) {
+        answerInput.placeholder = 'A';
+        answerInput.maxLength = 1;
+        answerInput.style.textTransform = 'uppercase';
+      } else {
+        answerInput.placeholder = '000';
+        answerInput.maxLength = 3;
+        answerInput.style.textTransform = 'none';
+      }
+      
       document.getElementById('submitBtn').disabled = false;
       document.getElementById('resultDisplay').classList.remove('show', 'correct', 'incorrect');
       
@@ -2383,7 +2491,7 @@
     async function submitAnswer() {
       if (!currentProblem) return;
       
-      const userAnswer = document.getElementById('answerInput').value.trim();
+      const userAnswer = document.getElementById('answerInput').value.trim().toUpperCase();
       if (!userAnswer) return;
       
       // Disable inputs while processing
@@ -2436,11 +2544,7 @@
         }
       } else {
         // Not logged in - just check answer locally (no XP saved)
-        if (currentProblem.aime_answer !== null && currentProblem.aime_answer !== undefined) {
-          correctAnswer = String(currentProblem.aime_answer % 1000);
-        } else {
-          correctAnswer = String(currentProblem.answer);
-        }
+        correctAnswer = getCorrectAnswer(currentProblem);
         isCorrect = userAnswer === correctAnswer;
         
         // Calculate what XP would be (for display only)
@@ -2570,9 +2674,7 @@
       document.getElementById('sourceDetails').value = '';
       
       // Populate current values
-      const currentAns = currentProblem.aime_answer ? 
-        String(currentProblem.aime_answer % 1000) : 
-        String(currentProblem.answer || '-');
+      const currentAns = getCorrectAnswer(currentProblem) || '-';
       document.getElementById('currentAnswer').textContent = currentAns;
       document.getElementById('currentSource').textContent = currentProblem.source || 'Unknown';
       document.getElementById('problemTextEdit').value = currentProblem.rewritten_problem || currentProblem.text || '';
@@ -2623,9 +2725,7 @@
       
       if (revealDiv.style.display === 'none') {
         if (currentProblem) {
-          const answer = currentProblem.aime_answer 
-            ? String(currentProblem.aime_answer % 1000) 
-            : String(currentProblem.answer || 'Not available');
+          const answer = getCorrectAnswer(currentProblem) || 'Not available';
           revealDiv.textContent = `Answer: ${answer}`;
         }
         revealDiv.style.display = 'block';
@@ -2642,9 +2742,7 @@
       
       if (revealDiv.style.display === 'none') {
         if (currentProblem) {
-          const answer = currentProblem.aime_answer 
-            ? String(currentProblem.aime_answer % 1000) 
-            : String(currentProblem.answer || 'Not available');
+          const answer = getCorrectAnswer(currentProblem) || 'Not available';
           revealDiv.textContent = `Answer: ${answer}`;
         }
         revealDiv.style.display = 'block';
