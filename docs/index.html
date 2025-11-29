@@ -425,6 +425,22 @@
       cursor: not-allowed;
       opacity: 0.5;
     }
+
+    #generateBtn {
+      background: #6c757d;
+    }
+
+    #generateBtn:hover:not(:disabled) {
+      background: #5a6268;
+    }
+
+    #checkBtn {
+      background: #28a745;
+    }
+
+    #checkBtn:hover:not(:disabled) {
+      background: #218838;
+    }
     
     select {
       background: var(--bg-card);
@@ -883,34 +899,51 @@
       color: #80deea;
     }
     
-    .status-icon {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      font-size: 32px;
-      font-weight: 700;
-      opacity: 0;
-      transition: opacity 0.3s;
+    /* Problem background colors for results */
+    .problem.correct-bg {
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+      border-color: #28a745;
+      border-left-color: #28a745;
     }
 
-    .status-icon.show {
-      opacity: 0.9;
+    .problem.incorrect-bg {
+      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+      border-color: #dc3545;
+      border-left-color: #dc3545;
     }
-    
-    .status-icon.correct {
-      color: #28a745;
+
+    .problem.override-bg {
+      background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+      border-color: #17a2b8;
+      border-left-color: #17a2b8;
     }
-    
-    .status-icon.incorrect {
-      color: #dc3545;
+
+    .problem.unanswered-bg {
+      background: var(--bg-secondary);
+      border-color: var(--border-strong);
+      border-left-color: var(--border-strong);
     }
-    
-    .status-icon.override {
-      color: #17a2b8;
+
+    [data-theme="dark"] .problem.correct-bg {
+      background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
+      border-color: #40916c;
+      border-left-color: #40916c;
     }
-    
-    .status-icon.unanswered {
-      color: var(--text-tertiary);
+
+    [data-theme="dark"] .problem.incorrect-bg {
+      background: linear-gradient(135deg, #5c1a1a 0%, #7d2828 100%);
+      border-color: #dc3545;
+      border-left-color: #dc3545;
+    }
+
+    [data-theme="dark"] .problem.override-bg {
+      background: linear-gradient(135deg, #0c4a5a 0%, #0e6070 100%);
+      border-color: #17a2b8;
+      border-left-color: #17a2b8;
+    }
+
+    [data-theme="dark"] .problem.unanswered-bg {
+      background: var(--bg-secondary);
     }
     
     .replace-button, .report-button, .override-button {
@@ -2523,14 +2556,9 @@
           metadata: { problemIndex: index }
         });
         
-        // Update the status icon
-        const existingIcon = problemDiv.querySelector('.status-icon');
-        if (existingIcon) existingIcon.remove();
-        
-        const icon = document.createElement('div');
-        icon.className = 'status-icon override show';
-        icon.textContent = '✓';
-        problemDiv.appendChild(icon);
+        // Update the background color
+        problemDiv.classList.remove('correct-bg', 'incorrect-bg', 'unanswered-bg');
+        problemDiv.classList.add('override-bg');
         
         // Hide the override button
         const overrideBtn = document.getElementById(`override-${index}`);
@@ -2551,13 +2579,12 @@
         
         chosenProblems.forEach((p, i) => {
           const problemDiv = document.querySelector(`.problem[data-problem-index="${i}"]`);
-          const statusIcon = problemDiv?.querySelector('.status-icon');
           
-          if (statusIcon) {
-            if (statusIcon.classList.contains('correct') || statusIcon.classList.contains('override')) {
+          if (problemDiv) {
+            if (problemDiv.classList.contains('correct-bg') || problemDiv.classList.contains('override-bg')) {
               correctCount++;
-              results.push({ index: i, status: statusIcon.classList.contains('override') ? 'override' : 'correct' });
-            } else if (statusIcon.classList.contains('incorrect')) {
+              results.push({ index: i, status: problemDiv.classList.contains('override-bg') ? 'override' : 'correct' });
+            } else if (problemDiv.classList.contains('incorrect-bg')) {
               results.push({ index: i, status: 'incorrect' });
             } else {
               results.push({ index: i, status: 'unanswered' });
@@ -2661,17 +2688,18 @@
           const existingIcon = problemDiv?.querySelector('.status-icon');
           if (existingIcon) existingIcon.remove();
 
+          // Remove any existing background classes
+          if (problemDiv) {
+            problemDiv.classList.remove('correct-bg', 'incorrect-bg', 'override-bg', 'unanswered-bg');
+          }
+
           if (answerInput) {
             const userAnswer = answerInput.value.trim();
             
             if (userAnswer === '') {
               results.push({ index: i, status: 'unanswered' });
               if (problemDiv) {
-                const icon = document.createElement('div');
-                icon.className = 'status-icon unanswered';
-                icon.textContent = '–';
-                problemDiv.appendChild(icon);
-                setTimeout(() => icon.classList.add('show'), 50);
+                problemDiv.classList.add('unanswered-bg');
               }
               // Show override button for unanswered
               if (overrideBtn) overrideBtn.classList.add('show');
@@ -2691,11 +2719,7 @@
             results.push({ index: i, status: correct ? 'correct' : 'incorrect' });
             
             if (problemDiv) {
-              const icon = document.createElement('div');
-              icon.className = `status-icon ${correct ? 'correct' : 'incorrect'}`;
-              icon.textContent = correct ? '✓' : '✗';
-              problemDiv.appendChild(icon);
-              setTimeout(() => icon.classList.add('show'), 50);
+              problemDiv.classList.add(correct ? 'correct-bg' : 'incorrect-bg');
             }
             
             // Show override button only for incorrect answers
@@ -2704,6 +2728,9 @@
             }
           } else {
             results.push({ index: i, status: 'unanswered' });
+            if (problemDiv) {
+              problemDiv.classList.add('unanswered-bg');
+            }
             // Show override button for unanswered
             if (overrideBtn) overrideBtn.classList.add('show');
           }
@@ -2761,6 +2788,15 @@
         if (allProblems.length === 0) {
           alert("Problems are still loading, please wait a moment.");
           return;
+        }
+
+        // Check if any answers have been entered
+        const answerInputs = document.querySelectorAll('.problem input[type="text"]');
+        const hasAnswers = Array.from(answerInputs).some(input => input.value.trim() !== '');
+        
+        if (hasAnswers) {
+          const confirmed = confirm("You have answers entered. Generating a new mock will clear all your progress. Continue?");
+          if (!confirmed) return;
         }
 
         // Reset overrides when generating new mock

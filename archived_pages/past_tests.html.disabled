@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Practice with past AMC 8, AMC 10, AMC 12, and AIME tests. Access official competition problems to prepare for math olympiads." />
+  <link rel="icon" type="image/png" href="256px_transparentBG.png">
+  <title>Past Tests - Mock AIME</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.4/dist/umd/supabase.min.js"></script>
+
+  <script>
+    const SUPABASE_URL = 'https://ftdbplxkyaocyrjpmjyb.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0ZGJwbHhreWFvY3lyanBtanliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMDgxMDUsImV4cCI6MjA2NzY4NDEwNX0.hE0V09JxdLYNbZqPVH3HZxNpLPP2rXIaBsNGUHO3upc';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ============================================
+    // ANALYTICS TRACKING
+    // ============================================
+    const MOD_USER_ID = '6af62d68-67e7-42f6-b91f-58cac9d81cba';
+    let currentUser = null;
+
+    function getSessionId() {
+      let sessionId = localStorage.getItem('mockAIME_sessionId');
+      if (!sessionId) {
+        sessionId = 'sess_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
+        localStorage.setItem('mockAIME_sessionId', sessionId);
+      }
+      return sessionId;
+    }
+
+    function getUserType(userId) {
+      if (!userId) return 'guest';
+      if (userId === MOD_USER_ID) return 'mod';
+      return 'user';
+    }
+
+    async function logActivity(eventType, data = {}) {
+      try {
+        const userId = currentUser?.id || null;
+        await supabaseClient.from('activity_log').insert({
+          user_id: userId,
+          session_id: getSessionId(),
+          user_type: getUserType(userId),
+          event_type: eventType,
+          page: 'past-tests',
+          problem_id: data.problemId || null,
+          problem_source: data.source || null,
+          difficulty: data.difficulty || null,
+          is_correct: data.isCorrect ?? null,
+          user_answer: data.userAnswer || null,
+          metadata: data.metadata || null
+        });
+      } catch (e) {
+        console.error('Activity log error:', e);
+      }
+    }
+
+    async function logEvent(eventType, data = {}) {
+      try {
+        const userId = currentUser?.id || null;
+        await supabaseClient.from('activity_all').insert({
+          user_id: userId,
+          session_id: getSessionId(),
+          user_type: getUserType(userId),
+          event_type: eventType,
+          page: 'past-tests',
+          element_id: data.elementId || null,
+          element_text: data.elementText ? String(data.elementText).substring(0, 100) : null,
+          element_type: data.elementType || null,
+          url: window.location.href,
+          referrer: document.referrer || null,
+          metadata: data.metadata || null
+        });
+      } catch (e) {
+        console.error('Event log error:', e);
+      }
+    }
+
+    function initAnalytics() {
+      logActivity('page_view', {
+        metadata: { referrer: document.referrer }
+      });
+      logEvent('page_view', {
+        metadata: { referrer: document.referrer, userAgent: navigator.userAgent }
+      });
+
+      document.addEventListener('click', (e) => {
+        const target = e.target.closest('button, a, .btn, .test-card');
+        if (target) {
+          logEvent('click', {
+            elementId: target.id || target.className?.split(' ')[0] || null,
+            elementText: target.textContent?.trim() || target.value || '',
+            elementType: target.tagName.toLowerCase(),
+            metadata: { classList: Array.from(target.classList || []) }
+          });
+        }
+      });
+    }
+
+    setTimeout(initAnalytics, 500);
+  </script>
+
+  <style>
+    :root {
+      --bg-primary: #f8f9fa;
+      --bg-secondary: #e9ecef;
+      --bg-card: white;
+      --text-primary: #212529;
+      --text-secondary: #495057;
+      --text-tertiary: #6c757d;
+      --border-color: #e9ecef;
+      --border-strong: #dee2e6;
+      --primary-blue: #0056b3;
+      --primary-blue-light: #0066cc;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-card: #1f1f3a;
+      --text-primary: #e0e0e0;
+      --text-secondary: #b0b0b0;
+      --text-tertiary: #888;
+      --border-color: #2a2a4a;
+      --border-strong: #3a3a5a;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    nav {
+      background: linear-gradient(135deg, #0056b3 0%, #004494 100%);
+      padding: 0;
+      box-shadow: 0 2px 8px rgba(0, 86, 179, 0.3);
+      margin-bottom: 40px;
+      border-bottom: 3px solid #00aa66;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 20px;
+      transition: background 0.2s;
+      display: inline-block;
+    }
+
+    nav a:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .dark-mode-toggle {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+      margin-left: 10px;
+    }
+
+    .dark-mode-toggle:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary-blue);
+      margin-bottom: 16px;
+      font-size: 2.5rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--text-tertiary);
+      margin-bottom: 40px;
+      font-size: 1.1rem;
+    }
+
+    .tests-wrapper {
+      background: var(--bg-card);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .tests-header {
+      margin: 0 0 20px 0;
+      text-align: center;
+      color: var(--primary-blue);
+      font-size: 1.25rem;
+    }
+
+    .tests-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .test-card {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--text-primary);
+      display: block;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .test-card:hover {
+      border-color: var(--primary-blue);
+      background: var(--border-color);
+    }
+
+    @media (max-width: 500px) {
+      .tests-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.8rem;
+      }
+      
+      .tests-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      nav a {
+        padding: 16px 12px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
+      <a href="index.html" style="display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 600; padding: 16px 0;">
+        <img src="256px_transparentBG.png" alt="Mock AIME Logo" style="height: 40px; width: auto;">
+        Mock AIME
+      </a>
+      <div style="display: flex; gap: 0; align-items: center;">
+        <a href="index.html">Mock Test</a>
+        <a href="practice.html">Practice</a>
+        <a href="past-tests.html" style="background: rgba(255,255,255,0.15);">Past Tests</a>
+        <a href="login.html" class="auth-button">Login</a>
+        <div class="user-info"></div>
+        <button class="dark-mode-toggle" onclick="toggleDarkMode()">🌙 Dark</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1>Past Tests</h1>
+    <p class="subtitle">Practice with official tests from previous years</p>
+
+    <div class="tests-wrapper">
+      <h2 class="tests-header">MAA Tests</h2>
+      <div class="tests-grid">
+        <a href="past_aime.html" class="test-card">AIME</a>
+        <a href="past_amc8.html" class="test-card">AMC 8</a>
+        <a href="past_amc10.html" class="test-card">AMC 10</a>
+        <a href="past_amc12.html" class="test-card">AMC 12</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dark mode
+    function toggleDarkMode() {
+      const html = document.documentElement;
+      const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      document.querySelector('.dark-mode-toggle').textContent = newTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+    }
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    if (savedTheme === 'dark') {
+      document.querySelector('.dark-mode-toggle').textContent = '☀️ Light';
+    }
+
+    // Auth UI
+    async function updateAuthUI() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      currentUser = session?.user || null;
+      
+      const authButton = document.querySelector('.auth-button');
+      const userInfo = document.querySelector('.user-info');
+      
+      if (currentUser) {
+        if (authButton) {
+          authButton.textContent = 'Profile';
+          authButton.href = 'profile.html';
+        }
+        
+        if (userInfo) {
+          const displayName = currentUser.user_metadata?.display_name || currentUser.email;
+          userInfo.innerHTML = `
+            <span style="color: white; margin-right: 15px;">Welcome, ${displayName}!</span>
+            <button onclick="signOut()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Sign Out</button>
+          `;
+        }
+      }
+    }
+
+    async function signOut() {
+      await supabaseClient.auth.signOut();
+      window.location.reload();
+    }
+
+    updateAuthUI();
+  </script>
+</body>
+</html>
