@@ -103,9 +103,9 @@
 
     // XP table by difficulty
     const XP_TABLE = {
-      1: 5, 1.5: 10, 2: 15, 2.5: 20, 3: 25, 3.5: 30, 4: 40, 4.5: 50,
-      5: 60, 5.5: 70, 6: 80, 6.5: 90, 7: 100, 7.5: 120, 8: 140,
-      8.5: 160, 9: 180, 9.5: 210, 10: 240
+      1: 5, 1.5: 10, 2: 15, 2.5: 25, 3: 35, 3.5: 50, 4: 70, 4.5: 95,
+      5: 125, 5.5: 160, 6: 195, 6.5: 235, 7: 280, 7.5: 330, 8: 380,
+      8.5: 430, 9: 460, 9.5: 480, 10: 500
     };
 
     // Helper function to detect if a problem is AMC (multiple choice)
@@ -133,17 +133,17 @@
 
     // Level thresholds: [startLevel, xpPerLevel]
     const LEVEL_TIERS = [
-      [1, 25],    // Levels 1-10: 25 XP each
-      [11, 100],  // Levels 11-20: 100 XP each
-      [21, 200],  // Levels 21-30: 200 XP each
-      [31, 300],  // Levels 31-40: 300 XP each
-      [41, 500],  // Levels 41-50: 500 XP each
-      [51, 700],  // Levels 51-60: 700 XP each
-      [61, 1000], // Levels 61-70: 1000 XP each
-      [71, 1500], // Levels 71-80: 1500 XP each
-      [81, 2000], // Levels 81-90: 2000 XP each
-      [91, 3000], // Levels 91-100: 3000 XP each
-      [101, 5000] // Levels 101-105: 5000 XP each
+      [1, 50],     // Levels 1-10: 50 XP each (1 problem at 3.5)
+      [11, 100],   // Levels 11-20: 100 XP each (2 problems at 3.5)
+      [21, 150],   // Levels 21-30: 150 XP each (3 problems at 3.5)
+      [31, 200],   // Levels 31-40: 200 XP each (4 problems at 3.5)
+      [41, 250],   // Levels 41-50: 250 XP each (5 problems at 3.5)
+      [51, 350],   // Levels 51-60: 350 XP each (7 problems at 3.5)
+      [61, 450],   // Levels 61-70: 450 XP each (9 problems at 3.5)
+      [71, 550],   // Levels 71-80: 550 XP each (11 problems at 3.5)
+      [81, 700],   // Levels 81-90: 700 XP each (14 problems at 3.5)
+      [91, 900],   // Levels 91-100: 900 XP each (18 problems at 3.5)
+      [101, 2500]  // Levels 101-105: 2500 XP each (50 problems at 3.5)
     ];
 
     const MAX_LEVEL = 105;
@@ -283,21 +283,28 @@
     }
 
     function calculatePenalty(level, problemDifficulty) {
-      // Expected difficulty based on level (level 100 = diff 10, level 50 = diff 6, etc.)
-      const expectedDiff = Math.min(10, 1 + level / 10);
-      const expectedDiffRounded = Math.round(expectedDiff * 2) / 2; // Round to nearest 0.5
+      // No XP loss below level 50
+      if (level < 50) return 0;
       
-      // Base penalty is 1/5 of XP you'd get for a problem at your expected level
-      const expectedXp = XP_TABLE[expectedDiffRounded] || XP_TABLE[10];
-      const basePenalty = expectedXp / 5;
+      // Base penalty by level tier (for a 3.5 difficulty problem)
+      let basePenalty;
+      if (level <= 60) basePenalty = 10;
+      else if (level <= 70) basePenalty = 25;
+      else if (level <= 80) basePenalty = 60;
+      else if (level <= 90) basePenalty = 150;
+      else if (level <= 100) basePenalty = 300;
+      else basePenalty = 450; // 101-105
       
-      // Gap: how far below your level the problem is
-      const gap = Math.max(0, expectedDiff - problemDifficulty);
+      // Difficulty multiplier - easier problems = more penalty
+      let multiplier;
+      if (problemDifficulty <= 2) multiplier = 1.5;
+      else if (problemDifficulty <= 3.5) multiplier = 1.0;
+      else if (problemDifficulty <= 5) multiplier = 0.7;
+      else if (problemDifficulty <= 6.5) multiplier = 0.5;
+      else if (problemDifficulty <= 8) multiplier = 0.3;
+      else multiplier = 0.2; // 8.5-10
       
-      // Final penalty scales with gap
-      const penalty = Math.round(basePenalty * (1 + gap));
-      
-      return -penalty;
+      return -Math.round(basePenalty * multiplier);
     }
 
     function escapeHtml(text) {
@@ -2670,7 +2677,8 @@
         
         // Calculate what XP would be (for display only)
         const baseXp = getXpForDifficulty(difficulty);
-        xpChange = isCorrect ? baseXp : -(baseXp / 5);
+        const currentLevel = getLevelFromXp(userXp[problemType], false).level;
+        xpChange = isCorrect ? baseXp : calculatePenalty(currentLevel, difficulty);
       }
       
       // Calculate level changes
