@@ -1442,6 +1442,32 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
+    .override-button {
+      display: inline-block;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .override-button:hover {
+      background: #c3e6cb;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .override-button:disabled {
+      background: #e9ecef;
+      color: #6c757d;
+      cursor: not-allowed;
+      transform: none;
+    }
+
     /* Modal */
     .modal {
       display: none;
@@ -1992,7 +2018,7 @@
           <div id="resultDetails"></div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
             <button class="btn-primary" onclick="nextProblem()">Next Problem</button>
-            <button class="report-button" id="reportBtn" onclick="openReportModal()">Report Issue</button>
+            <button class="override-button" id="overrideBtn" onclick="markAsCorrect()" style="display: none;">I was correct</button>
           </div>
         </div>
       </div>
@@ -2715,21 +2741,44 @@
       resultDisplay.className = 'result-display show ' + (isCorrect ? 'correct' : 'incorrect');
       
       document.getElementById('resultHeader').textContent = isCorrect ? 'Correct!' : 'Incorrect';
+      
+      // Build XP display - hide if 0 XP loss (below level 50)
+      let xpDisplayHtml = '';
+      if (currentUser) {
+        if (xpChange !== 0) {
+          xpDisplayHtml = `
+            <div class="xp-change ${xpChange > 0 ? 'positive' : 'negative'}">
+              ${xpChange > 0 ? '+' : ''}${Math.round(xpChange)} XP
+            </div>
+          `;
+        }
+        xpDisplayHtml += levelUpHtml;
+      } else {
+        xpDisplayHtml = `
+          <div style="color: var(--text-tertiary); font-size: 14px;">
+            <a href="login.html">Log in</a> to save XP progress
+          </div>
+        `;
+      }
+      
       document.getElementById('resultDetails').innerHTML = `
         <div style="margin-bottom: 8px;">
           ${isCorrect ? '' : `Correct answer: <strong>${escapeHtml(correctAnswer)}</strong><br>`}
         </div>
-        ${currentUser ? `
-          <div class="xp-change ${xpChange >= 0 ? 'positive' : 'negative'}">
-            ${xpChange >= 0 ? '+' : ''}${Math.round(xpChange)} XP
-          </div>
-          ${levelUpHtml}
-        ` : `
-          <div style="color: var(--text-tertiary); font-size: 14px;">
-            <a href="login.html">Log in</a> to save XP progress
-          </div>
-        `}
+        ${xpDisplayHtml}
       `;
+      
+      // Show/hide override button - only show if incorrect and logged in
+      const overrideBtn = document.getElementById('overrideBtn');
+      if (!isCorrect && currentUser) {
+        overrideBtn.style.display = 'inline-block';
+        overrideBtn.disabled = false;
+        overrideBtn.textContent = 'I was correct';
+        overrideBtn.style.background = '#d4edda';
+        overrideBtn.style.color = '#155724';
+      } else {
+        overrideBtn.style.display = 'none';
+      }
 
       // Show source with link after submitting
       const sourceLabel = document.getElementById('sourceLabel');
@@ -2764,6 +2813,69 @@
         });
       }
       nextProblem();
+    }
+
+    async function markAsCorrect() {
+      if (!currentProblem || !currentUser) return;
+      
+      const overrideBtn = document.getElementById('overrideBtn');
+      overrideBtn.disabled = true;
+      overrideBtn.textContent = 'Updating...';
+      
+      const difficulty = parseFloat(currentProblem.difficulty);
+      const problemType = currentProblem.type;
+      const baseXp = getXpForDifficulty(difficulty);
+      
+      // Get current level to calculate what penalty was applied
+      const currentLevel = getLevelFromXp(userXp[problemType], false).level;
+      const penaltyApplied = calculatePenalty(currentLevel, difficulty);
+      
+      // XP to award = base XP + undo the penalty (penalty is negative, so subtract it)
+      const xpToAward = baseXp - penaltyApplied;
+      
+      try {
+        // Update XP in database
+        const { error } = await supabaseClient.rpc('override_practice_xp', {
+          p_problem_type: problemType,
+          p_xp_amount: xpToAward
+        });
+        
+        if (error) {
+          console.error('Error overriding XP:', error);
+          alert('Failed to update XP. Please try again.');
+          overrideBtn.disabled = false;
+          overrideBtn.textContent = 'I was correct';
+          return;
+        }
+        
+        // Update local XP state
+        userXp[problemType] = Math.max(0, userXp[problemType] + xpToAward);
+        userXp.general = Math.max(0, userXp.general + xpToAward);
+        
+        // Update displays
+        updateXpDisplay();
+        sessionStats.correct++;
+        sessionStats.xpEarned += xpToAward;
+        updateSessionStats();
+        
+        // Update button
+        overrideBtn.textContent = '✓ Marked correct';
+        overrideBtn.style.background = '#28a745';
+        overrideBtn.style.color = 'white';
+        
+        // Update the result display
+        document.getElementById('resultHeader').textContent = 'Marked Correct';
+        document.getElementById('resultDisplay').className = 'result-display show correct';
+        document.getElementById('resultDetails').innerHTML = `
+          <div class="xp-change positive">+${Math.round(xpToAward)} XP (corrected)</div>
+        `;
+        
+      } catch (err) {
+        console.error('Error:', err);
+        alert('Failed to update XP. Please try again.');
+        overrideBtn.disabled = false;
+        overrideBtn.textContent = 'I was correct';
+      }
     }
 
     function nextProblem() {
