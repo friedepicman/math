@@ -84,33 +84,6 @@
       margin: 0 auto 20px;
     }
 
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-
-    .stat-card {
-      background: var(--bg-card);
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      text-align: center;
-    }
-
-    .stat-number {
-      font-size: 32px;
-      font-weight: bold;
-      color: var(--primary-blue);
-      margin-bottom: 5px;
-    }
-
-    .stat-label {
-      color: var(--text-secondary);
-      font-size: 14px;
-    }
-
     .section {
       background: var(--bg-card);
       padding: 30px;
@@ -995,25 +968,6 @@
         <div class="profile-avatar" id="userAvatar">U</div>
         <h1 id="userName">Loading...</h1>
         <p id="userEmail"></p>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-number" id="totalAttempts">0</div>
-          <div class="stat-label">Mock Tests Completed</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="hardestProblem">-</div>
-          <div class="stat-label">Hardest Problem Solved</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="bestScore">0</div>
-          <div class="stat-label">Best Score</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="avgProblems">0</div>
-          <div class="stat-label">Avg Correct (Last 5)</div>
-        </div>
       </div>
 
       <!-- Practice Levels Section -->
