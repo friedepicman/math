@@ -1215,42 +1215,6 @@
       if (!attempts || attempts.length === 0) {
         return;
       }
-
-      const totalAttempts = attempts.length;
-      
-      // Find hardest problem solved correctly
-      let hardestSolved = 0;
-      attempts.forEach(attempt => {
-        const problems = attempt.problems_data || [];
-        const overrides = attempt.overrides || {};
-        
-        problems.forEach((problem, index) => {
-          const userAnswer = problem.user_answer || null;
-          const correctAnswer = problem.aime_answer ? String(problem.aime_answer % 1000) : String(problem.answer || '');
-          const wasOverridden = problem.manually_corrected || overrides[index];
-          const isCorrect = (userAnswer === correctAnswer) || wasOverridden;
-          
-          if (isCorrect && problem.difficulty) {
-            const diff = parseFloat(problem.difficulty);
-            if (diff > hardestSolved) {
-              hardestSolved = diff;
-            }
-          }
-        });
-      });
-      
-      // Average problems correct from last 5 mocks
-      const last5ForAvg = attempts.slice(0, 5);
-      const avgProblems = last5ForAvg.length > 0 
-        ? (last5ForAvg.reduce((sum, a) => sum + (a.score || 0), 0) / last5ForAvg.length).toFixed(1)
-        : '0';
-      
-      const bestScore = Math.max(...attempts.map(a => a.score || 0));
-
-      document.getElementById('totalAttempts').textContent = totalAttempts;
-      document.getElementById('hardestProblem').textContent = hardestSolved > 0 ? hardestSolved.toFixed(1) : '-';
-      document.getElementById('bestScore').textContent = bestScore;
-      document.getElementById('avgProblems').textContent = avgProblems;
     }
 
     async function loadLevels() {
