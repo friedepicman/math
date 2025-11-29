@@ -1923,6 +1923,20 @@
 
       <div id="moreSettingsContent" class="more-settings-content">
         <div style="margin-bottom: 16px;">
+          <label style="font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 8px;">Database Options:</label>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 400;">
+              <input type="checkbox" id="useFinalizedOnly" onchange="updateProblemCount()">
+              Use Finalized Problems Only
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 400;">
+              <input type="checkbox" id="useExpandedDb" onchange="updateProblemCount()">
+              Use Expanded Database
+            </label>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
           <label style="font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 8px;">Minimum Quality:</label>
           <div class="quality-selector">
             <div class="stars" id="qualityStars">
@@ -2455,6 +2469,9 @@
     }
 
     function applyDatabaseFilters() {
+      const useFinalizedOnly = document.getElementById('useFinalizedOnly')?.checked || false;
+      const useExpanded = document.getElementById('useExpandedDb')?.checked || false;
+
       // Get competition filter settings
       const includeAIME = document.getElementById('compAIME')?.checked ?? true;
       const includeAMC8 = document.getElementById('compAMC8')?.checked ?? true;
@@ -2494,17 +2511,22 @@
 
         if (!competitionAllowed) return false;
 
-        // Include finalized problems OR problems where aime_answer matches answer
-        if (p.finalized) return true;
-        if (p.aime_answer !== null && p.aime_answer !== undefined && 
-            p.answer !== null && p.answer !== undefined && p.answer !== '') {
-          const aimeAnswerMod = p.aime_answer % 1000;
-          const answerTrimmed = String(p.answer).trim();
-          if (/^\d+$/.test(answerTrimmed) && String(aimeAnswerMod) === answerTrimmed) {
-            return true;
+        if (useFinalizedOnly) {
+          return p.finalized === true;
+        } else if (useExpanded) {
+          return p.finalized || (p.aime_answer !== null && p.aime_answer !== undefined);
+        } else {
+          if (p.finalized) return true;
+          if (p.aime_answer !== null && p.aime_answer !== undefined && 
+              p.answer !== null && p.answer !== undefined && p.answer !== '') {
+            const aimeAnswerMod = p.aime_answer % 1000;
+            const answerTrimmed = String(p.answer).trim();
+            if (/^\d+$/.test(answerTrimmed) && String(aimeAnswerMod) === answerTrimmed) {
+              return true;
+            }
           }
+          return false;
         }
-        return false;
       });
     }
 
@@ -2847,6 +2869,15 @@
         document.getElementById('resultDetails').innerHTML = `
           <div class="xp-change positive">+${Math.round(xpToAward)} XP (corrected)</div>
         `;
+        
+        // Log the override
+        logActivity('practice_override', {
+          problemId: currentProblem.id,
+          source: currentProblem.source,
+          difficulty: difficulty,
+          isCorrect: true,
+          metadata: { xpChange: xpToAward, problemType: problemType }
+        });
         
       } catch (err) {
         console.error('Error:', err);

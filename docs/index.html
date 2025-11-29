@@ -1644,6 +1644,18 @@
       <div id="filterOptions" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
         <h3 style="margin-top: 0;">Filter Options</h3>
         <div class="mode-toggle">
+          <div class="filter-option">
+            <label>
+              <input type="checkbox" id="useFinalizedOnly" />
+              Use Finalized Problems Only
+            </label>
+          </div>
+          <div class="filter-option">
+            <label>
+              <input type="checkbox" id="useExpandedDb" />
+              Use Expanded Database
+            </label>
+          </div>
           <div class="quality-selector" id="qualitySelector">
             <span class="quality-label">Minimum Quality:</span>
             <div class="stars" id="qualityStars">
@@ -1980,6 +1992,9 @@
           buckets[d.toFixed(1)] = [];
         }
 
+        const useFinalizedOnly = document.getElementById('useFinalizedOnly').checked;
+        const useExpanded = document.getElementById('useExpandedDb').checked;
+
         // Get competition filter settings
         const includeAIME = document.getElementById('compAIME').checked;
         const includeBMT = document.getElementById('compBMT').checked;
@@ -2019,15 +2034,25 @@
 
           if (!competitionAllowed) continue;
 
-          // Include finalized problems OR problems where aime_answer matches answer
           let includeProb = false;
-          if (p.finalized) {
-            includeProb = true;
-          } else if (p.aime_answer !== null && p.aime_answer !== undefined && p.answer !== null && p.answer !== undefined && p.answer !== '') {
-            const aimeAnswerMod = p.aime_answer % 1000;
-            const answerTrimmed = String(p.answer).trim();
-            if (/^\d+$/.test(answerTrimmed) && String(aimeAnswerMod) === answerTrimmed) {
+
+          if (useFinalizedOnly) {
+            if (p.finalized) {
               includeProb = true;
+            }
+          } else if (useExpanded) {
+            if (p.finalized || (p.aime_answer !== null && p.aime_answer !== undefined)) {
+              includeProb = true;
+            }
+          } else {
+            if (p.finalized) {
+              includeProb = true;
+            } else if (p.aime_answer !== null && p.aime_answer !== undefined && p.answer !== null && p.answer !== undefined && p.answer !== '') {
+              const aimeAnswerMod = p.aime_answer % 1000;
+              const answerTrimmed = String(p.answer).trim();
+              if (/^\d+$/.test(answerTrimmed) && String(aimeAnswerMod) === answerTrimmed) {
+                includeProb = true;
+              }
             }
           }
 
@@ -2434,6 +2459,18 @@
         const newProblem = filteredProblems[Math.floor(Math.random() * filteredProblems.length)];
         chosenProblems[index] = newProblem;
         
+        // Log the replacement
+        logActivity('mock_problem_replace', {
+          problemId: currentProblem.id,
+          source: currentProblem.source,
+          difficulty: currentProblem.difficulty,
+          metadata: { 
+            problemIndex: index,
+            newProblemId: newProblem.id,
+            newSource: newProblem.source
+          }
+        });
+        
         const problemDiv = document.querySelector(`.problem[data-problem-index="${index}"]`);
         if (!problemDiv) return;
         
@@ -2473,8 +2510,18 @@
         const problemDiv = document.querySelector(`.problem[data-problem-index="${index}"]`);
         if (!problemDiv) return;
         
+        const problem = chosenProblems[index];
+        
         // Track this override
         problemOverrides[index] = true;
+        
+        // Log the override
+        logActivity('mock_problem_override', {
+          problemId: problem.id,
+          source: problem.source,
+          difficulty: problem.difficulty,
+          metadata: { problemIndex: index }
+        });
         
         // Update the status icon
         const existingIcon = problemDiv.querySelector('.status-icon');
@@ -2719,10 +2766,16 @@
         // Reset overrides when generating new mock
         problemOverrides = {};
 
+        const useExpanded = document.getElementById('useExpandedDb').checked;
         const level = document.getElementById("difficulty").value;
 
         document.getElementById("instructions").textContent = "";
         document.getElementById("summary").textContent = "";
+
+        if (useExpanded) {
+          document.getElementById("instructions").textContent =
+    `Note: Using expanded database may include some problems with answers requiring modular arithmetic (mod 1000 format). Most problems will still have standard 0-999 answers.`;
+        }
 
         const buckets = bucketizeFine();
         const plan = difficultyTemplate[level];
@@ -2877,6 +2930,7 @@
           metadata: {
             level: level,
             problemCount: chosenProblems.length,
+            useExpanded: useExpanded,
             competitions: {
               aime: document.getElementById('compAIME').checked,
               bmt: document.getElementById('compBMT').checked,
