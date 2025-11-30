@@ -352,14 +352,10 @@
     }
 
     async function saveMockAttempt(score, totalProblems, difficulty, problemsData) {
-      if (!currentUser) {
-        console.log('No user logged in, skipping save');
-        return;
-      }
-      
       try {
         const attemptData = {
-          user_id: currentUser.id,
+          user_id: currentUser?.id || null,
+          session_id: getSessionId(),
           difficulty_level: parseInt(difficulty),
           score: score,
           total_problems: totalProblems,
@@ -379,13 +375,11 @@
         
         if (error) {
           console.error('Error saving attempt:', error);
-          alert('Failed to save mock attempt: ' + error.message);
         } else {
           console.log('Mock attempt saved successfully', data);
         }
       } catch (err) {
         console.error('Error saving mock attempt:', err);
-        alert('Failed to save mock attempt: ' + err.message);
       }
     }
 
@@ -2873,13 +2867,9 @@
         `;
         summaryDiv.classList.add('show');
 
-        // Save attempt immediately after checking
-        if (currentUser) {
-          console.log('Saving mock attempt...');
-          await saveMockAttempt(correctCount, chosenProblems.length, document.getElementById("difficulty").value, problemsWithAnswers);
-        } else {
-          console.log('User not logged in, not saving attempt');
-        }
+        // Save attempt for all users (guests and logged-in)
+        console.log('Saving mock attempt...');
+        await saveMockAttempt(correctCount, chosenProblems.length, document.getElementById("difficulty").value, problemsWithAnswers);
 
         // Track mock test completion
         logActivity('mock_test_complete', {
