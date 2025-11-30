@@ -35,6 +35,10 @@
     // ANALYTICS TRACKING
     // ============================================
     const MOD_USER_ID = '6af62d68-67e7-42f6-b91f-58cac9d81cba';
+    const CURRENT_PAGE = 'index';
+    let pageLoadTime = Date.now();
+    let lastScrollDepth = 0;
+    let tabHiddenTime = null;
 
     function getSessionId() {
       let sessionId = localStorage.getItem('mockAIME_sessionId');
@@ -51,27 +55,50 @@
       return 'user';
     }
 
+    // Important events only
     async function logActivity(eventType, data = {}) {
       try {
         const userId = currentUser?.id || null;
-        await supabaseClient.from('activity_log').insert({
+        const payload = {
           user_id: userId,
           session_id: getSessionId(),
           user_type: getUserType(userId),
           event_type: eventType,
-          page: 'index',
+          page: CURRENT_PAGE,
           problem_id: data.problemId || null,
           problem_source: data.source || null,
           difficulty: data.difficulty || null,
           is_correct: data.isCorrect ?? null,
           user_answer: data.userAnswer || null,
           metadata: data.metadata || null
+        };
+        
+        // Log to activity_log
+        await supabaseClient.from('activity_log').insert(payload);
+        
+        // Also log to activity_all
+        await supabaseClient.from('activity_all').insert({
+          user_id: userId,
+          session_id: getSessionId(),
+          user_type: getUserType(userId),
+          event_type: eventType,
+          page: CURRENT_PAGE,
+          element_id: null,
+          element_text: null,
+          element_type: null,
+          url: window.location.href,
+          referrer: document.referrer || null,
+          metadata: {
+            ...data,
+            fromActivityLog: true
+          }
         });
       } catch (e) {
         console.error('Activity log error:', e);
       }
     }
 
+    // All events
     async function logEvent(eventType, data = {}) {
       try {
         const userId = currentUser?.id || null;
@@ -80,7 +107,7 @@
           session_id: getSessionId(),
           user_type: getUserType(userId),
           event_type: eventType,
-          page: 'index',
+          page: CURRENT_PAGE,
           element_id: data.elementId || null,
           element_text: data.elementText ? String(data.elementText).substring(0, 100) : null,
           element_type: data.elementType || null,
@@ -94,29 +121,133 @@
     }
 
     function initAnalytics() {
-      // Track page view
+      // === PAGE VIEW ===
       logActivity('page_view', {
         metadata: { referrer: document.referrer }
       });
       logEvent('page_view', {
-        metadata: { referrer: document.referrer, userAgent: navigator.userAgent }
+        metadata: { 
+          referrer: document.referrer, 
+          userAgent: navigator.userAgent,
+          screenWidth: window.innerWidth,
+          screenHeight: window.innerHeight
+        }
       });
 
-      // Track all clicks
+      // === CLICK TRACKING (all clicks) ===
       document.addEventListener('click', (e) => {
-        const target = e.target.closest('button, a, .btn, .type-checkbox, input[type="checkbox"], input[type="radio"], .star, .problem-nav-item');
-        if (target) {
-          logEvent('click', {
-            elementId: target.id || target.className?.split(' ')[0] || null,
-            elementText: target.textContent?.trim() || target.value || '',
-            elementType: target.tagName.toLowerCase(),
-            metadata: { classList: Array.from(target.classList || []) }
+        const target = e.target;
+        const clickedEl = target.closest('button, a, input, select, .btn, .type-checkbox, .star, .problem-nav-item, .auth-button, details, summary') || target;
+        
+        logEvent('click', {
+          elementId: clickedEl.id || null,
+          elementText: (clickedEl.textContent?.trim() || clickedEl.value || '').substring(0, 100),
+          elementType: clickedEl.tagName?.toLowerCase() || null,
+          metadata: { 
+            classList: Array.from(clickedEl.classList || []),
+            x: e.clientX,
+            y: e.clientY,
+            targetTag: target.tagName?.toLowerCase()
+          }
+        });
+      });
+
+      // === INPUT CHANGE TRACKING ===
+      document.addEventListener('change', (e) => {
+        const target = e.target;
+        if (target.matches('input, select, textarea')) {
+          let value = target.type === 'password' ? '[hidden]' : target.value;
+          if (target.type === 'checkbox' || target.type === 'radio') {
+            value = target.checked;
+          }
+          logEvent('input_change', {
+            elementId: target.id || target.name || null,
+            elementType: target.type || target.tagName?.toLowerCase(),
+            metadata: { value: value }
+          });
+        }
+      });
+
+      // === SCROLL TRACKING (throttled, every 25%) ===
+      let scrollTimeout;
+      document.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          const scrollDepth = Math.round((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100);
+          const depthBucket = Math.floor(scrollDepth / 25) * 25;
+          if (depthBucket > lastScrollDepth) {
+            lastScrollDepth = depthBucket;
+            logEvent('scroll', {
+              metadata: { depth: depthBucket }
+            });
+          }
+        }, 500);
+      });
+
+      // === TAB VISIBILITY ===
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          tabHiddenTime = Date.now();
+          logEvent('tab_hidden');
+        } else {
+          const timeAway = tabHiddenTime ? Math.round((Date.now() - tabHiddenTime) / 1000) : null;
+          logEvent('tab_visible', {
+            metadata: { secondsAway: timeAway }
+          });
+        }
+      });
+
+      // === COPY TRACKING ===
+      document.addEventListener('copy', (e) => {
+        const selection = window.getSelection()?.toString() || '';
+        logEvent('copy', {
+          metadata: { textLength: selection.length }
+        });
+      });
+
+      // === ERROR TRACKING ===
+      window.addEventListener('error', (e) => {
+        logEvent('error', {
+          metadata: { 
+            message: e.message,
+            filename: e.filename,
+            lineno: e.lineno
+          }
+        });
+      });
+
+      // === PAGE LEAVE ===
+      window.addEventListener('beforeunload', () => {
+        const timeOnPage = Math.round((Date.now() - pageLoadTime) / 1000);
+        const data = JSON.stringify({
+          user_id: currentUser?.id || null,
+          session_id: getSessionId(),
+          user_type: getUserType(currentUser?.id),
+          event_type: 'page_leave',
+          page: CURRENT_PAGE,
+          url: window.location.href,
+          metadata: { secondsOnPage: timeOnPage, scrollDepth: lastScrollDepth }
+        });
+        navigator.sendBeacon(
+          `${SUPABASE_URL}/rest/v1/activity_all?apikey=${SUPABASE_ANON_KEY}`,
+          data
+        );
+      });
+
+      // === KEYBOARD TRACKING (specific keys) ===
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === 'Escape') {
+          logEvent('keyboard', {
+            elementId: e.target.id || null,
+            elementType: e.target.tagName?.toLowerCase(),
+            metadata: { key: e.key }
           });
         }
       });
     }
 
     setTimeout(initAnalytics, 500);
+
 
     // SECURITY FIX: HTML escaping function
     function escapeHtml(text) {
@@ -2169,6 +2300,12 @@
         
         currentReportProblemData = chosenProblems.find(p => p.id === problemId);
         
+        // Track modal open
+        logEvent('modal_open', {
+          elementId: 'reportModal',
+          metadata: { problemId: problemId }
+        });
+        
         document.getElementById('reportQuality').checked = false;
         document.getElementById('reportDifficulty').checked = false;
         document.getElementById('reportAnswer').checked = false;
@@ -2226,6 +2363,11 @@
       function closeReportModal() {
         document.getElementById('reportModal').style.display = 'none';
         currentReportProblemId = null;
+        
+        // Track modal close
+        logEvent('modal_close', {
+          elementId: 'reportModal'
+        });
       }
 
       window.onclick = function(event) {
@@ -2428,6 +2570,12 @@
             console.error('Error submitting report:', error);
             alert('Failed to submit report. Please try again.');
           } else {
+            // Track report submission
+            logActivity('report_submit', {
+              problemId: currentReportProblemId,
+              metadata: { reportTypes: reportData.report_types }
+            });
+            
             alert('Thank you! Your report has been submitted.');
             closeReportModal();
           }

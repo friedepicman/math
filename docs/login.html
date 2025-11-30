@@ -289,6 +289,122 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0ZGJwbHhreWFvY3lyanBtanliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMDgxMDUsImV4cCI6MjA2NzY4NDEwNX0.hE0V09JxdLYNbZqPVH3HZxNpLPP2rXIaBsNGUHO3upc';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // ============================================
+    // ANALYTICS TRACKING
+    // ============================================
+    const MOD_USER_ID = '6af62d68-67e7-42f6-b91f-58cac9d81cba';
+    const CURRENT_PAGE = 'login';
+    let pageLoadTime = Date.now();
+    let currentUser = null;
+
+    function getSessionId() {
+      let sessionId = localStorage.getItem('mockAIME_sessionId');
+      if (!sessionId) {
+        sessionId = 'sess_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
+        localStorage.setItem('mockAIME_sessionId', sessionId);
+      }
+      return sessionId;
+    }
+
+    function getUserType(userId) {
+      if (!userId) return 'guest';
+      if (userId === MOD_USER_ID) return 'mod';
+      return 'user';
+    }
+
+    async function logActivity(eventType, data = {}) {
+      try {
+        const userId = currentUser?.id || null;
+        
+        // Log to activity_log
+        await supabaseClient.from('activity_log').insert({
+          user_id: userId,
+          session_id: getSessionId(),
+          user_type: getUserType(userId),
+          event_type: eventType,
+          page: CURRENT_PAGE,
+          problem_id: null,
+          problem_source: null,
+          difficulty: null,
+          is_correct: null,
+          user_answer: null,
+          metadata: data.metadata || null
+        });
+        
+        // Also log to activity_all
+        await supabaseClient.from('activity_all').insert({
+          user_id: userId,
+          session_id: getSessionId(),
+          user_type: getUserType(userId),
+          event_type: eventType,
+          page: CURRENT_PAGE,
+          element_id: null,
+          element_text: null,
+          element_type: null,
+          url: window.location.href,
+          referrer: document.referrer || null,
+          metadata: {
+            ...data,
+            fromActivityLog: true
+          }
+        });
+      } catch (e) {
+        console.error('Activity log error:', e);
+      }
+    }
+
+    async function logEvent(eventType, data = {}) {
+      try {
+        const userId = currentUser?.id || null;
+        await supabaseClient.from('activity_all').insert({
+          user_id: userId,
+          session_id: getSessionId(),
+          user_type: getUserType(userId),
+          event_type: eventType,
+          page: CURRENT_PAGE,
+          element_id: data.elementId || null,
+          element_text: data.elementText ? String(data.elementText).substring(0, 100) : null,
+          element_type: data.elementType || null,
+          url: window.location.href,
+          referrer: document.referrer || null,
+          metadata: data.metadata || null
+        });
+      } catch (e) {
+        console.error('Event log error:', e);
+      }
+    }
+
+    function initAnalytics() {
+      logActivity('page_view', { metadata: { referrer: document.referrer } });
+      logEvent('page_view', {
+        metadata: { referrer: document.referrer, userAgent: navigator.userAgent }
+      });
+
+      document.addEventListener('click', (e) => {
+        const target = e.target;
+        const clickedEl = target.closest('button, a, input, .auth-tab') || target;
+        logEvent('click', {
+          elementId: clickedEl.id || null,
+          elementText: (clickedEl.textContent?.trim() || '').substring(0, 100),
+          elementType: clickedEl.tagName?.toLowerCase() || null,
+          metadata: { classList: Array.from(clickedEl.classList || []) }
+        });
+      });
+
+      document.addEventListener('change', (e) => {
+        const target = e.target;
+        if (target.matches('input, select')) {
+          logEvent('input_change', {
+            elementId: target.id || null,
+            elementType: target.type,
+            metadata: { value: target.type === 'password' ? '[hidden]' : target.value }
+          });
+        }
+      });
+    }
+
+    setTimeout(initAnalytics, 500);
+
     // Check if user is already logged in
     window.onload = async () => {
       const { data: { session } } = await supabaseClient.auth.getSession();
@@ -369,6 +485,10 @@
 
         if (error) throw error;
         
+        // Track successful login
+        currentUser = data.user;
+        logActivity('login', { metadata: { method: 'email' } });
+        
         showSuccess('Signed in successfully! Redirecting...');
         setTimeout(() => {
           window.location.href = 'profile.html';
@@ -409,6 +529,9 @@
         });
 
         if (error) throw error;
+        
+        // Track successful signup
+        logActivity('signup', { metadata: { method: 'email' } });
         
         showSuccess('Account created! Please check your email to verify your account.');
       } catch (error) {

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="refresh" content="3;url=index.html">
   <title>Page Not Found - Mock AIME</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.4/dist/umd/supabase.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -48,5 +49,41 @@
     <p>This page doesn't exist.</p>
     <a href="index.html">Go to Mock AIME</a>
   </div>
+  <script>
+    const SUPABASE_URL = 'https://ftdbplxkyaocyrjpmjyb.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0ZGJwbHhreWFvY3lyanBtanliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMDgxMDUsImV4cCI6MjA2NzY4NDEwNX0.hE0V09JxdLYNbZqPVH3HZxNpLPP2rXIaBsNGUHO3upc';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function getSessionId() {
+      let sessionId = localStorage.getItem('mockAIME_sessionId');
+      if (!sessionId) {
+        sessionId = 'sess_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
+        localStorage.setItem('mockAIME_sessionId', sessionId);
+      }
+      return sessionId;
+    }
+
+    // Log 404 page view
+    supabaseClient.from('activity_log').insert({
+      session_id: getSessionId(),
+      user_type: 'guest',
+      event_type: 'page_view',
+      page: '404',
+      metadata: { 
+        referrer: document.referrer,
+        attemptedUrl: window.location.href
+      }
+    });
+
+    supabaseClient.from('activity_all').insert({
+      session_id: getSessionId(),
+      user_type: 'guest',
+      event_type: 'page_view',
+      page: '404',
+      url: window.location.href,
+      referrer: document.referrer,
+      metadata: { attemptedUrl: window.location.href }
+    });
+  </script>
 </body>
 </html>
