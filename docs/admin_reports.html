@@ -744,6 +744,15 @@
         if (originalTextarea) originalTextarea.value = problem.text || '';
         if (rewrittenTextarea) rewrittenTextarea.value = problem.rewritten_problem || '';
         
+        // Populate proposed problem text if it exists
+        const details = JSON.parse(report.details || '{}');
+        if (details.proposed_problem) {
+          const proposedProblemRender = document.getElementById(`proposed-problem-${reportId}`);
+          if (proposedProblemRender) {
+            setMathContent(proposedProblemRender, details.proposed_problem);
+          }
+        }
+        
         // Force MathJax render
         if (window.MathJax) {
           MathJax.typesetPromise().catch(err => console.error('MathJax error:', err));
@@ -963,6 +972,7 @@
 
       // Problem Statement
       if (types.includes('problem_statement')) {
+        const proposedProblemId = `proposed-problem-${report.id}`;
         changesHTML += `
           <div class="change-card">
             <div class="change-header">
@@ -973,7 +983,14 @@
               </div>
             </div>
             <div class="change-content">
-              ${details.proposed_problem ? `<div class="change-detail"><strong>New Problem Text:</strong><br><textarea readonly style="width: 100%; min-height: 80px;">${escapeHtml(details.proposed_problem)}</textarea></div>` : ''}
+              ${details.proposed_problem ? `
+                <div class="change-detail">
+                  <strong>New Problem Text (Rendered):</strong>
+                  <div class="rendered-problem mathjax-render" id="${proposedProblemId}" style="margin-top: 10px;"></div>
+                  <button class="toggle-raw-btn" style="margin-top: 10px;" onclick="toggleElement('${proposedProblemId}-raw')">Show Raw Text</button>
+                  <textarea id="${proposedProblemId}-raw" readonly style="width: 100%; min-height: 80px; display: none; margin-top: 10px;">${escapeHtml(details.proposed_problem)}</textarea>
+                </div>
+              ` : ''}
               ${details.proposed_problem_answer ? `<div class="change-detail"><strong>New Answer:</strong> ${escapeHtml(details.proposed_problem_answer)}</div>` : ''}
               ${details.problem_details ? `<div class="change-detail"><strong>Reason:</strong> ${escapeHtml(details.problem_details)}</div>` : ''}
             </div>
@@ -1071,6 +1088,19 @@
       } else {
         textarea.classList.add('show');
         btn.textContent = 'Hide Raw Text';
+      }
+    }
+
+    function toggleElement(elementId) {
+      const element = document.getElementById(elementId);
+      const btn = event.target;
+      
+      if (element.style.display === 'none') {
+        element.style.display = 'block';
+        btn.textContent = 'Hide Raw Text';
+      } else {
+        element.style.display = 'none';
+        btn.textContent = 'Show Raw Text';
       }
     }
 
