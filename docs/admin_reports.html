@@ -702,6 +702,25 @@
     function expandReport(reportId) {
       expandedReportId = reportId;
       renderReports();
+      
+      // Populate content after render
+      setTimeout(() => {
+        const report = allReports.find(r => r.id === reportId);
+        if (!report) return;
+
+        const problem = allProblems[report.problem_id];
+        if (!problem) return;
+
+        const originalRender = document.getElementById(`original-render-${problem.id}`);
+        const rewrittenRender = document.getElementById(`rewritten-render-${problem.id}`);
+        const originalTextarea = document.getElementById(`raw-original-${problem.id}`);
+        const rewrittenTextarea = document.getElementById(`raw-rewritten-${problem.id}`);
+
+        if (originalRender) setMathContent(originalRender, problem.text || '');
+        if (rewrittenRender) setMathContent(rewrittenRender, problem.rewritten_problem || '');
+        if (originalTextarea) originalTextarea.value = problem.text || '';
+        if (rewrittenTextarea) rewrittenTextarea.value = problem.rewritten_problem || '';
+      }, 100);
     }
 
     function closeReport() {
@@ -971,73 +990,6 @@
       return changesHTML || '<p style="padding: 20px; color: #666;">No specific changes proposed.</p>';
     }
 
-    // After rendering, populate the textareas and rendered content
-    setTimeout(() => {
-      const reportId = expandedReportId;
-      if (!reportId) return;
-
-      const report = allReports.find(r => r.id === reportId);
-      if (!report) return;
-
-      const problem = allProblems[report.problem_id];
-      if (!problem) return;
-
-      const originalRender = document.getElementById(`original-render-${problem.id}`);
-      const rewrittenRender = document.getElementById(`rewritten-render-${problem.id}`);
-      const originalTextarea = document.getElementById(`raw-original-${problem.id}`);
-      const rewrittenTextarea = document.getElementById(`raw-rewritten-${problem.id}`);
-
-      if (originalRender) setMathContent(originalRender, problem.text || '');
-      if (rewrittenRender) setMathContent(rewrittenRender, problem.rewritten_problem || '');
-      if (originalTextarea) originalTextarea.value = problem.text || '';
-      if (rewrittenTextarea) rewrittenTextarea.value = problem.rewritten_problem || '';
-    }, 300);
-
-    function renderStars(problemId, currentQuality) {
-      const quality = currentQuality || 0;
-      let starsHTML = '';
-      
-      for (let i = 1; i <= 5; i++) {
-        const filled = i <= quality ? 'filled' : '';
-        starsHTML += `<span class="star ${filled}" data-rating="${i}">★</span>`;
-      }
-      
-      return starsHTML;
-    }
-
-    // Star interaction handlers
-    document.addEventListener('click', function(e) {
-      if (e.target && e.target.classList && e.target.classList.contains('star')) {
-        const starsContainer = e.target.parentElement;
-        const problemId = starsContainer.id.replace('stars-', '');
-        const rating = parseInt(e.target.getAttribute('data-rating'));
-        setQuality(problemId, rating);
-      }
-    });
-
-    document.addEventListener('mouseenter', function(e) {
-      if (e.target && e.target.classList && e.target.classList.contains('star')) {
-        const rating = parseInt(e.target.getAttribute('data-rating'));
-        const starsContainer = e.target.parentElement;
-        const allStars = starsContainer.querySelectorAll('.star');
-        
-        allStars.forEach((star, index) => {
-          star.classList.remove('hover');
-          if (index < rating) {
-            star.classList.add('hover');
-          }
-        });
-      }
-    }, true);
-
-    document.addEventListener('mouseleave', function(e) {
-      if (e.target && e.target.classList && e.target.classList.contains('star')) {
-        const starsContainer = e.target.parentElement;
-        const allStars = starsContainer.querySelectorAll('.star');
-        allStars.forEach(star => star.classList.remove('hover'));
-      }
-    }, true);
-
     function toggleOriginalSection(problemId) {
       const section = document.getElementById(`original-section-${problemId}`);
       const btn = document.getElementById(`toggle-original-btn-${problemId}`);
@@ -1058,6 +1010,18 @@
     // Add this new function
     function rejectChange(event) {
     event.target.closest('.change-card').style.display = 'none';
+    }
+
+    function renderStars(problemId, currentQuality) {
+      const quality = currentQuality || 0;
+      let starsHTML = '';
+      
+      for (let i = 1; i <= 5; i++) {
+        const filled = i <= quality ? 'filled' : '';
+        starsHTML += `<span class="star ${filled}" data-rating="${i}">★</span>`;
+      }
+      
+      return starsHTML;
     }
 
     function toggleRawText(problemId, type) {
@@ -1102,6 +1066,39 @@
         showSaveStatus(problemId, '✓ Quality updated');
       }
     }
+
+    // Star interaction handlers
+    document.addEventListener('click', function(e) {
+      if (e.target && e.target.classList && e.target.classList.contains('star')) {
+        const starsContainer = e.target.parentElement;
+        const problemId = starsContainer.id.replace('stars-', '');
+        const rating = parseInt(e.target.getAttribute('data-rating'));
+        setQuality(problemId, rating);
+      }
+    });
+
+    document.addEventListener('mouseenter', function(e) {
+      if (e.target && e.target.classList && e.target.classList.contains('star')) {
+        const rating = parseInt(e.target.getAttribute('data-rating'));
+        const starsContainer = e.target.parentElement;
+        const allStars = starsContainer.querySelectorAll('.star');
+        
+        allStars.forEach((star, index) => {
+          star.classList.remove('hover');
+          if (index < rating) {
+            star.classList.add('hover');
+          }
+        });
+      }
+    }, true);
+
+    document.addEventListener('mouseleave', function(e) {
+      if (e.target && e.target.classList && e.target.classList.contains('star')) {
+        const starsContainer = e.target.parentElement;
+        const allStars = starsContainer.querySelectorAll('.star');
+        allStars.forEach(star => star.classList.remove('hover'));
+      }
+    }, true);
 
     async function saveRewrittenProblem(problemId) {
       const text = document.getElementById(`raw-rewritten-${problemId}`).value;

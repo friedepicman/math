@@ -1,0 +1,206 @@
+id,source,db_answer,csv_answer
+8402,PUMaC 2016 Geometry B #7,421,9
+8403,PUMaC 2016 Geometry B #8,175,421
+8459,PUMaC 2014 Algebra B #6,1685,34
+8465,PUMaC 2014 Combinatorics B #5,19,7921
+8499,PUMaC 2013 Combinatorics A #1,12,24
+8516,PUMaC 2013 Geometry A #5,\tfrac{1}{2},1 + 2
+8565,PUMaC 2010 Algebra A #8,22,28
+8568,PUMaC 2010 Combinatorics B #4,120,32
+8569,PUMaC 2010 Combinatorics A #4,32,18
+10793,HMMT February 2022 Combinatorics #1,|A \cup B \cup C| - 104,10
+10798,HMMT February 2022 Combinatorics #6,108,1390
+10802,HMMT February 2022 Combinatorics #10,1,1000000000004
+10809,HMMT February 2022 Geometry #7,2,16902
+10812,HMMT February 2022 Geometry #10,AC \cap BD,103360
+10874,HMMT February 2018 Combinatorics #2,"100,110,11","100, 110, 11"
+10876,HMMT February 2018 Combinatorics #4,15,2 \cdot \binom{30}{15} = 310235040
+10884,HMMT February 2018 Geometry #2,9,"(7, 9)"
+10886,HMMT February 2018 Geometry #4,\frac{\sqrt3}6,\frac{\sqrt{3}}{6}
+10888,HMMT February 2018 Geometry #6,1/2,"(8, 2)"
+10948,HMMT February 2020 Combinatorics #6,\frac{3^{1000}-1}{4\cdot3^{999}},\frac{3-3^{-999}}{4}
+10946,HMMT February 2020 Combinatorics #4,576,20736
+10956,HMMT February 2020 Geometry #4,\frac{3 + \sqrt{5}}{2},\frac{3+\sqrt{5}}{2}
+10959,HMMT February 2020 Geometry #7,\sqrt{48}x,\frac{96\sqrt{10}}{13}
+10961,HMMT February 2020 Geometry #9,2\sqrt{k_ak_b+k_ak_c+k_bk_c},294
+9896,HMMT February 2023 Combinatorics #9,\frac{1}{\binom{2n}{n}} (-\frac 12 \binom{2n}{n}  + 2^{2n-1}),\frac{2^{100}}{\binom{100}{50}} - 1
+9588,HMMT February 2019 Geometry #5,\frac{1+\sqrt{2}}{2},\frac{\sqrt{2}+1}{2} \text{ OR } \frac{\sqrt{2}-1}{2}
+7644,SMT 2012 Algebra #2,"1,3,5,7","1, 3, 5, 7"
+9642,HMMT February 2025 Geometry #9,\boxed {14+4\sqrt{37}},14 + 4\sqrt{37}
+9670,HMMT February 2025 Guts #17,\frac{-19}{10},-\frac{19}{10}
+7646,SMT 2012 Algebra #4,"(1,1,1),(1,3,3),(3,1,3),(3,3,1)","(1, 1, 1), (1, 3, 3), (3, 1, 3), (3, 3, 1)"
+9683,HMMT February 2025 Guts #30,\frac{7\sqrt{30}}{60},\frac{7}{2\sqrt{30}}
+9715,HMMT February 2017 Geometry #10,\frac{21}{22}.,\frac{21}{22}
+9783,HMMT February 2016 Algebra #2,"n=1,2,4","1,2,4"
+8047,SMT 2020 Geometry #6,"(8,7)","(8, 7)"
+10028,HMMT February 2014 Algebra #7,101,\frac{5151}{50}
+10142,HMMT February 2013 Guts #29,2012,\binom{4025}{2012}
+10078,HMMT February 2014 Guts #27,400,5530
+10125,HMMT February 2013 Guts #12,10,202
+10127,HMMT February 2013 Guts #14,9,\frac{7}{9}
+10167,HMMT February 2012 Algebra #8,4,84
+10148,HMMT February 2013 Guts #35,1,614.519
+10160,HMMT February 2012 Algebra #1,1,\sqrt{4^{2012} + 1}
+10164,HMMT February 2012 Algebra #5,485364,"\left(\frac{\sqrt{30}}{3}, \frac{\sqrt{30}}{4}, \frac{2\sqrt{30}}{5}\right), \left(\frac{\sqrt{30}}{3}, \frac{\sqrt{30}}{2}, \frac{\sqrt{30}}{5}\right)"
+9667,HMMT February 2025 Guts #14,5+\sqrt{5},5 + \sqrt{5}
+9809,HMMT February 2016 Geometry #8,2+4ln2,2 + 4\ln(2)
+9810,HMMT February 2016 Geometry #9,\frac{28\sqrt{69}}{5},\frac{28}{5}\sqrt{69}
+10038,HMMT February 2014 Combinatorics #7,720,2048
+10049,HMMT February 2014 Geometry #8,\frac{1}{2} *GA * GY * \sin{x},\frac{600}{73}
+10068,HMMT February 2014 Guts #17,11,1007
+7898,SMT 2023 Algebra #1,\tfrac{9-  \sqrt{17}}{2},\frac{9-\sqrt{17}}{2}
+7913,SMT 2023 Algebra #5,\tfrac{13}{2},\frac{13}{2}
+7914,SMT 2023 Algebra #6,\tfrac{5\pi}{36},\frac{5\pi}{36}
+7915,SMT 2023 Algebra #7,\tfrac{\sqrt{17}}{2},\frac{\sqrt{17}}{2}
+7929,SMT 2023 Discrete #8,\tfrac{19}{11},\frac{19}{11}
+7957,SMT 2022 Algebra #2,\tfrac{1+\sqrt{8089}}{2},\frac{1+\sqrt{8089}}{2}
+7935,SMT 2023 Geometry #1,4+2\sqrt{3},4 + 2\sqrt{3}
+7971,SMT 2022 Calculus #3,\tfrac{1}{4},\frac{1}{4}
+7972,SMT 2022 Calculus #4,-4\pi -2,-4\pi - 2
+8043,SMT 2020 Geometry #2,4,1
+7977,SMT 2022 Calculus #9,\tfrac{\pi^2}{18},\frac{\pi^2}{18}
+7978,SMT 2022 Calculus #10,"0, \tfrac{5\pi\sqrt{3}}{9}","0, \frac{5\pi\sqrt{3}}{9}"
+7984,SMT 2022 Discrete #3,\tfrac{131}{243},\frac{131}{243}
+7986,SMT 2022 Discrete #5,\tfrac{163}{10},\frac{163}{10}
+7988,SMT 2022 Discrete #7,\tfrac{256}{5929},\frac{256}{5929}
+7996,SMT 2022 Geometry #2,110,110°
+7998,SMT 2022 Geometry #4,\tfrac{225\sqrt{2}}{8},\frac{225\sqrt{2}}{8}
+7999,SMT 2022 Geometry #5,\tfrac{675}{78},\frac{625}{78}
+8000,SMT 2022 Geometry #6,\tfrac{2 - \sqrt{3}}{4},\frac{1}{2} - \frac{\sqrt{3}}{4}
+8002,SMT 2022 Geometry #8,\tfrac{750\sqrt{481}}{481},\frac{\sqrt{750}}{\sqrt{481}}
+8004,SMT 2022 Geometry #10,(240+180\sqrt{2})\pi,(240 + 180\sqrt{2})\pi
+8044,SMT 2020 Geometry #3,1,\frac{45}{38}
+8014,SMT 2014 Geometry #6,\frac{196\sqrt{3}}{169},\frac{192\sqrt{3}}{169}
+8045,SMT 2020 Geometry #4,\frac{45}{38},25
+8056,SMT 2019 Geometry #3,15,15°
+8074,SMT 2018 Geometry #3,3+\sqrt{3},3 + \sqrt{3}
+8075,SMT 2018 Geometry #4,4-2\sqrt{3},4 - 2\sqrt{3}
+8402,PUMaC 2016 Geometry B #7,421,9
+8403,PUMaC 2016 Geometry B #8,175,421
+8459,PUMaC 2014 Algebra B #6,1685,34
+8465,PUMaC 2014 Combinatorics B #5,19,7921
+8499,PUMaC 2013 Combinatorics A #1,12,24
+8516,PUMaC 2013 Geometry A #5,\tfrac{1}{2},1 + 2
+8565,PUMaC 2010 Algebra A #8,22,28
+8568,PUMaC 2010 Combinatorics B #4,120,32
+8569,PUMaC 2010 Combinatorics A #4,32,18
+9896,HMMT February 2023 Combinatorics #9,\frac{1}{\binom{2n}{n}} (-\frac 12 \binom{2n}{n}  + 2^{2n-1}),\frac{2^{100}}{\binom{100}{50}} - 1
+9588,HMMT February 2019 Geometry #5,\frac{1+\sqrt{2}}{2},\frac{\sqrt{2}+1}{2} \text{ OR } \frac{\sqrt{2}-1}{2}
+7644,SMT 2012 Algebra #2,"1,3,5,7","1, 3, 5, 7"
+9642,HMMT February 2025 Geometry #9,\boxed {14+4\sqrt{37}},14 + 4\sqrt{37}
+9670,HMMT February 2025 Guts #17,\frac{-19}{10},-\frac{19}{10}
+7646,SMT 2012 Algebra #4,"(1,1,1),(1,3,3),(3,1,3),(3,3,1)","(1, 1, 1), (1, 3, 3), (3, 1, 3), (3, 3, 1)"
+9683,HMMT February 2025 Guts #30,\frac{7\sqrt{30}}{60},\frac{7}{2\sqrt{30}}
+9715,HMMT February 2017 Geometry #10,\frac{21}{22}.,\frac{21}{22}
+9783,HMMT February 2016 Algebra #2,"n=1,2,4","1,2,4"
+8047,SMT 2020 Geometry #6,"(8,7)","(8, 7)"
+10028,HMMT February 2014 Algebra #7,101,\frac{5151}{50}
+10142,HMMT February 2013 Guts #29,2012,\binom{4025}{2012}
+10078,HMMT February 2014 Guts #27,400,5530
+10125,HMMT February 2013 Guts #12,10,202
+10127,HMMT February 2013 Guts #14,9,\frac{7}{9}
+10167,HMMT February 2012 Algebra #8,4,84
+10148,HMMT February 2013 Guts #35,1,614.519
+10160,HMMT February 2012 Algebra #1,1,\sqrt{4^{2012} + 1}
+10164,HMMT February 2012 Algebra #5,485364,"\left(\frac{\sqrt{30}}{3}, \frac{\sqrt{30}}{4}, \frac{2\sqrt{30}}{5}\right), \left(\frac{\sqrt{30}}{3}, \frac{\sqrt{30}}{2}, \frac{\sqrt{30}}{5}\right)"
+9586,HMMT February 2019 Geometry #3,\sqrt{3}+\frac{2\pi}{3},\sqrt{3} + \frac{2\pi}{3}
+9590,HMMT February 2019 Geometry #7,\tfrac{65}{4},\frac{65}{4}
+9591,HMMT February 2019 Geometry #8,\tfrac{6}{7},\frac{6}{7}
+9600,HMMT February 2015 Algebra #7,3\sqrt{13} - 9,-9 + 3\sqrt{13}
+9607,HMMT February 2015 Geometry #4,\dfrac{37}{76},\frac{37}{76}
+9610,HMMT February 2015 Geometry #7,\tfrac{17}{144},\frac{17}{144}
+9611,HMMT February 2015 Geometry #8,\tfrac{2\pi}{3} + \tfrac{\sqrt{3}}{4},\frac{2\pi}{3} + \frac{\sqrt{3}}{4}
+9638,HMMT February 2025 Geometry #5,\sqrt{23}-2\sqrt{3},\sqrt{23} - 2\sqrt{3}
+9658,HMMT February 2025 Guts #5,2\sqrt{2} - 2,2\sqrt{2} - 2 = 2(\sqrt{2} - 1)
+9676,HMMT February 2025 Guts #23,\frac{3\sqrt{3} -3}{2},\frac{3\sqrt{3}-3}{2} = \frac{3}{2}(\sqrt{3} - 1)
+9713,HMMT February 2017 Geometry #8,\frac{17 + \sqrt{51}}{34},\frac{17+\sqrt{51}}{34}
+9790,HMMT February 2016 Algebra #9,995 \cdot 2^{998},995 \times 2^{998}
+9716,HMMT February 2017 Combinatorics #1,\frac{11}{20},\frac{11}{200}
+9824,HMMT February 2016 Guts #13,48+\sqrt{2016},48 + \sqrt{2016}
+9888,HMMT February 2023 Combinatorics #1,\tfrac{99}{101},\frac{99}{101}
+9897,HMMT February 2023 Combinatorics #10,\frac{1}{100 (100!)^2}  \sum_n \binom{100}{n} \binom{100}{n-1},\frac{1}{100 \cdot 100!^2}\binom{200}{99}
+9943,HMMT February 2023 Guts #26,5\sqrt{3}+8,8 + 5\sqrt{3}
+9967,HMMT February 2024 Combinatorics #8,2^{4048},\frac{4}{2024}\binom{4048}{2024} - 2
+9974,HMMT February 2024 Geometry #5,4\sqrt{5}-\sqrt{7},4\sqrt{5} - \sqrt{7}
+9978,HMMT February 2024 Geometry #9,\sqrt{38}-3,\sqrt{38} - 3
+9997,HMMT February 2024 Guts #8,60^\circ,60°
+10025,HMMT February 2014 Algebra #4,-3/2,-\frac{3}{2}
+10005,HMMT February 2024 Guts #16,2\sqrt{17}-2,2(\sqrt{17} - 1)
+10008,HMMT February 2024 Guts #19,\frac{1170}{19},\frac{1170°}{19}
+10022,HMMT February 2014 Algebra #1,4 \ \text{or } \ 6,"4, 6"
+10027,HMMT February 2014 Algebra #6,20.5,\frac{41}{2}
+10029,HMMT February 2014 Algebra #8,\pm 2.25,\pm\frac{9}{4}
+10030,HMMT February 2014 Algebra #9,-1,-\frac{11+4i}{3}
+10032,HMMT February 2014 Combinatorics #1,\dfrac{19}{165},\frac{19}{165}
+10033,HMMT February 2014 Combinatorics #2,1}^{4}\binom{10}{k} \binom{10-k}{5-k},7560
+10043,HMMT February 2014 Geometry #2,24,\frac{169}{24}
+10044,HMMT February 2014 Geometry #3,14,8\sqrt{14}
+10047,HMMT February 2014 Geometry #6,3,\sqrt{3}
+10050,HMMT February 2014 Geometry #9,\tan(\alpha+\beta)^{-1},\frac{92}{61}
+10051,HMMT February 2014 Geometry #10,\dfrac4{15},\frac{1235}{108}
+10063,HMMT February 2014 Guts #12,x^3-9x^2+81x-243,x^3 - 3x^2 + 9x - 9
+10067,HMMT February 2014 Guts #16,\frac{72+32\sqrt{2}}{7},\frac{72 + 32\sqrt{2}}{7}
+10074,HMMT February 2014 Guts #23,\frac{117}{268},\frac{8825}{201}
+10081,HMMT February 2014 Guts #30,1-\frac{1}{\sqrt{2}},1 - \frac{\sqrt{2}}{2}
+10079,HMMT February 2014 Guts #28,\dfrac{3^{2014}}{2^{2014}2014!}.,\frac{3^{2014}}{2^{2014} \cdot 2014!}
+10080,HMMT February 2014 Guts #29,-4x+6,5
+10082,HMMT February 2014 Guts #31,1007,\frac{2014(1 + \binom{2013}{1007})}{2^{2014}}
+10083,HMMT February 2014 Guts #32,2+1.5i,"(1, 2), (4, 2), (\frac{5}{2}, 2 \pm \frac{3}{2}i)"
+10096,HMMT February 2013 Algebra #3,103,577
+10097,HMMT February 2013 Algebra #4,A=-7,-7
+10094,HMMT February 2013 Algebra #1,3+\sqrt{7},3 + \sqrt{7}
+10101,HMMT February 2013 Algebra #8,10+2 \sqrt{17},10 \pm 2\sqrt{17}
+10103,HMMT February 2013 Algebra #10,14925,89
+10098,HMMT February 2013 Algebra #5,1+\sqrt{5},1 + \sqrt{5}
+10115,HMMT February 2013 Guts #2,\boxed{2(2-\sqrt3)\le|x-y|+|y-z|\le2},4 - 2\sqrt{3}
+10121,HMMT February 2013 Guts #8,\frac56,\frac{5}{6}
+10126,HMMT February 2013 Guts #13,5,7
+10139,HMMT February 2013 Guts #26,"(\frac{1}{5},\frac{1}{3})","(\frac{3-\sqrt{5}}{4}, \frac{1}{3}]"
+10146,HMMT February 2013 Guts #33,"10^{16}, 11^{15} \approx 0.4*10^{16}",66071772829247409
+10154,HMMT February 2013 Geometry #5,\frac{-1}{8},-\frac{1}{8}
+10162,HMMT February 2012 Algebra #3,"(\frac{1-\sqrt{3}}2, \frac{3-\sqrt{3}}2)","\left(\frac{1-\sqrt{3}}{2}, \frac{3-\sqrt{3}}{2}\right)"
+10165,HMMT February 2012 Algebra #6,2^{1006}\sqrt{2^{2010}+2}-2^{2011},2^{1006}\sqrt{2^{2010} + 2} - 2^{2011}
+10169,HMMT February 2012 Algebra #10,1,126
+10232,HMMT February 2009 Algebra #2,\binom {n}{0}+\binom {n}{2} i^2 + \cdots,1004
+10260,HMMT February 2009 Combinatorics #10,3^n-(n+1)(2^n-n-1)-\binom{n+2}{2},3^n - (n + 1) \cdot 2^n + n(n + 1)/2
+10266,HMMT February 2009 Geometry #2,23,\frac{2\sqrt{3}}{3}
+7563,SMT 2013 General #9,\frac{10}{11},10/11
+7566,SMT 2013 General #12,4,\frac{25}{4}
+10952,HMMT February 2020 Combinatorics #10,\frac{24}7,\frac{24}{7}
+10947,HMMT February 2020 Combinatorics #5,976,10.976
+10052,HMMT February 2014 Guts #1,3*7*19*401,3 \cdot 7 \cdot 19 \cdot 401
+10057,HMMT February 2014 Guts #6,n+\frac{4}{n-2},"0, 1, 3, 4, 6"
+10011,HMMT February 2024 Guts #22,36,\frac{49}{36}
+7627,SMT 2013 Team #11,73513440,73513440 = 2^5 \cdot 3^3 \cdot 5 \cdot 7 \cdot 11 \cdot 13 \cdot 17
+7616,SMT 2013 Algebra #10,"6, \frac{1\pm\sqrt{13}}{2}","6, \frac{-1\pm\sqrt{13}}{2}"
+8401,PUMaC 2016 Geometry B #6,9,14
+10068,HMMT February 2014 Guts #17,11,1007
+9829,HMMT February 2016 Guts #18,\tfrac{1}{2},\frac{1}{2}
+9963,HMMT February 2024 Combinatorics #4,2048,4096
+10066,HMMT February 2014 Guts #15,72,\frac{1}{2}(7 - 3\sqrt{5})
+9659,HMMT February 2025 Guts #6,2 \sqrt{13},2\sqrt{13}
+9707,HMMT February 2017 Geometry #2,\dfrac{1323}{26},\frac{1323}{26}
+10046,HMMT February 2014 Geometry #5,5,3 - \sqrt{5}
+9893,HMMT February 2023 Combinatorics #6,2736,2664
+9935,HMMT February 2023 Guts #18,168+48\sqrt{7},168 + 48\sqrt{7}
+9977,HMMT February 2024 Geometry #8,128-64\sqrt{3},64(2 - \sqrt{3})
+10014,HMMT February 2024 Guts #25,123+6\sqrt{119},123 + 6\sqrt{119}
+10059,HMMT February 2014 Guts #8,2^{16}-1,131069
+10045,HMMT February 2014 Geometry #4,28^\circ,28
+10071,HMMT February 2014 Guts #20,0}^{2014} \dbinom{2014}{n} 15^{n} (-1)^{2014-n},\frac{1}{2}(16^{2014} - 14^{2014})
+10136,HMMT February 2013 Guts #23,[ADXQ] - [AYZ] - [XDY] - [QXZ],\frac{19\sqrt{3}}{2}
+10166,HMMT February 2012 Algebra #7,e^{\frac{2\log x\log y}{\log 2}},y = \sqrt{2}
+10177,HMMT February 2012 Geometry #8,"\frac{9 + \sqrt{33}}{2}, \frac{9 - \sqrt{33}}{2}.","\{\frac{9+\sqrt{33}}{2}, \frac{9-\sqrt{33}}{2}\}"
+10801,HMMT February 2022 Combinatorics #9,2022,216695
+10879,HMMT February 2018 Combinatorics #7,2,1009! \cdot 1010!
+10880,HMMT February 2018 Combinatorics #8,\frac{1}{ \binom{7}{i} },\frac{151}{105}
+10952,HMMT February 2020 Combinatorics #10,\frac{24}7,\frac{24}{7}
+10947,HMMT February 2020 Combinatorics #5,976,10.976
+10052,HMMT February 2014 Guts #1,3*7*19*401,3 \cdot 7 \cdot 19 \cdot 401
+10057,HMMT February 2014 Guts #6,n+\frac{4}{n-2},"0, 1, 3, 4, 6"
+10011,HMMT February 2024 Guts #22,36,\frac{49}{36}
+7627,SMT 2013 Team #11,73513440,73513440 = 2^5 \cdot 3^3 \cdot 5 \cdot 7 \cdot 11 \cdot 13 \cdot 17
+7616,SMT 2013 Algebra #10,"6, \frac{1\pm\sqrt{13}}{2}","6, \frac{-1\pm\sqrt{13}}{2}"
+10011,HMMT February 2024 Guts #22,36,\frac{49}{36}
+7627,SMT 2013 Team #11,73513440,73513440 = 2^5 \cdot 3^3 \cdot 5 \cdot 7 \cdot 11 \cdot 13 \cdot 17
+7616,SMT 2013 Algebra #10,"6, \frac{1\pm\sqrt{13}}{2}","6, \frac{-1\pm\sqrt{13}}{2}"

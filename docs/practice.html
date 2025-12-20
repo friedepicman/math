@@ -3183,7 +3183,7 @@
     });
 
     document.addEventListener('mouseenter', function(e) {
-      if (e.target.classList.contains('star') && e.target.closest('#reportQualityStars')) {
+      if (e.target.classList?.contains('star') && e.target.closest('#reportQualityStars')) {
         const rating = parseInt(e.target.getAttribute('data-rating'));
         const stars = document.querySelectorAll('#reportQualityStars .star');
         stars.forEach((star, index) => {
@@ -3196,7 +3196,7 @@
     }, true);
 
     document.addEventListener('mouseleave', function(e) {
-      if (e.target.classList.contains('star') && e.target.closest('#reportQualityStars')) {
+      if (e.target.classList?.contains('star') && e.target.closest('#reportQualityStars')) {
         const stars = document.querySelectorAll('#reportQualityStars .star');
         stars.forEach(star => star.classList.remove('hover'));
       }
