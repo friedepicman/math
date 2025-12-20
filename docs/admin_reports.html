@@ -564,6 +564,12 @@
       <div class="stat-number" id="totalCount">0</div>
       <div class="stat-label">Total Reports</div>
     </div>
+    <div class="stat-card" style="border-left-color: #28a745;">
+      <label class="checkbox-label" style="justify-content: center; margin: 0;">
+        <input type="checkbox" id="showHandledCheckbox" onchange="toggleShowHandled()" style="margin: 0;">
+        <span style="font-weight: 600; color: #004488;">Show Handled Reports</span>
+      </label>
+    </div>
   </div>
 
   <div id="reportsContainer">
@@ -588,6 +594,7 @@
     let allReports = [];
     let allProblems = {};
     let expandedReportId = null;
+    let showHandled = false;
 
     window.onload = async () => {
       await loadReports();
@@ -619,7 +626,6 @@
         const { data, error } = await supabaseClient
           .from('problem_reports')
           .select('*')
-          .eq('handled', false)
           .order('created_at', { ascending: true }); // Oldest first
 
         if (error) throw error;
@@ -651,19 +657,26 @@
     }
 
     function updateStats() {
-      document.getElementById('pendingCount').textContent = allReports.length;
+      const pendingReports = allReports.filter(r => !r.handled);
+      document.getElementById('pendingCount').textContent = pendingReports.length;
       document.getElementById('totalCount').textContent = allReports.length;
     }
 
     function renderReports() {
       const container = document.getElementById('reportsContainer');
 
-      if (allReports.length === 0) {
-        container.innerHTML = '<div class="no-reports"><div class="no-reports-icon">🎉</div><h2>All Clear!</h2><p>No pending reports to review.</p></div>';
+      // Filter reports based on showHandled
+      const reportsToShow = showHandled ? allReports : allReports.filter(r => !r.handled);
+
+      if (reportsToShow.length === 0) {
+        const message = showHandled 
+          ? '<div class="no-reports"><div class="no-reports-icon">📋</div><h2>No Reports</h2><p>There are no reports in the system.</p></div>'
+          : '<div class="no-reports"><div class="no-reports-icon">🎉</div><h2>All Clear!</h2><p>No pending reports to review.</p></div>';
+        container.innerHTML = message;
         return;
       }
 
-      container.innerHTML = allReports.map(report => {
+      container.innerHTML = reportsToShow.map(report => {
         if (expandedReportId === report.id) {
           return renderExpandedReport(report);
         } else {
@@ -677,9 +690,18 @@
       }
     }
 
+    function toggleShowHandled() {
+      showHandled = document.getElementById('showHandledCheckbox').checked;
+      expandedReportId = null; // Close any expanded report
+      renderReports();
+    }
+
     function renderCollapsedReport(report) {
       const types = report.report_type.split(',');
       const date = new Date(report.created_at).toLocaleDateString();
+      const isHandled = report.handled;
+      const borderColor = isHandled ? '#28a745' : '#ffc107';
+      const handledBadge = isHandled ? '<span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">✓ HANDLED</span>' : '';
       
       const typeBadges = types.map(type => {
         const label = type.replace('_', ' ');
@@ -687,10 +709,11 @@
       }).join('');
 
       return `
-        <div class="report-collapsed" onclick="expandReport(${report.id})">
+        <div class="report-collapsed" onclick="expandReport(${report.id})" style="border-left-color: ${borderColor}; ${isHandled ? 'opacity: 0.7;' : ''}">
           <div class="report-collapsed-header">
             <div class="report-collapsed-left">
-              <div class="report-id-badge">#${report.id}</div>
+              <div class="report-id-badge" style="${isHandled ? 'background: #28a745;' : ''}">#${report.id}</div>
+              ${handledBadge}
               <div class="report-types-compact">${typeBadges}</div>
             </div>
             <div class="report-date-small">Problem ${report.problem_id} • ${date}</div>
@@ -720,7 +743,12 @@
         if (rewrittenRender) setMathContent(rewrittenRender, problem.rewritten_problem || '');
         if (originalTextarea) originalTextarea.value = problem.text || '';
         if (rewrittenTextarea) rewrittenTextarea.value = problem.rewritten_problem || '';
-      }, 100);
+        
+        // Force MathJax render
+        if (window.MathJax) {
+          MathJax.typesetPromise().catch(err => console.error('MathJax error:', err));
+        }
+      }, 300);
     }
 
     function closeReport() {
@@ -735,21 +763,25 @@
       const details = JSON.parse(report.details || '{}');
       const types = report.report_type.split(',');
       const date = new Date(report.created_at).toLocaleString();
+      const isHandled = report.handled;
 
       const qualityClass = `quality-${problem.quality || 0}`;
       const reviewedClass = problem.manually_reviewed ? 'reviewed' : '';
+      const disabledAttr = isHandled ? 'disabled' : '';
+      const readonlyAttr = isHandled ? 'readonly' : '';
+      const handledStyle = isHandled ? 'opacity: 0.6; pointer-events: none;' : '';
 
       return `
-        <div class="report-expanded">
-          <div class="report-expanded-header">
+        <div class="report-expanded" style="${isHandled ? 'border-left-color: #28a745;' : ''}">
+          <div class="report-expanded-header" style="${isHandled ? 'background: #e8f5e9;' : ''}">
             <div>
-              <h2 style="margin: 0;">Report #${report.id}</h2>
+              <h2 style="margin: 0;">Report #${report.id} ${isHandled ? '<span style="color: #28a745; font-size: 18px;">✓ HANDLED</span>' : ''}</h2>
               <div style="color: #666; font-size: 14px; margin-top: 5px;">${date}</div>
             </div>
             <button class="close-report-btn" onclick="closeReport()">✕ Close</button>
           </div>
 
-          <div class="problem-editor-section">
+          <div class="problem-editor-section" style="${handledStyle}">
             <div class="section-title">📝 Problem Editor - Problem #${problem.id}</div>
             
             <div class="problem-card ${qualityClass} ${reviewedClass}" id="problem-${problem.id}">
@@ -768,53 +800,55 @@
                   <label class="checkbox-label">
                     <input type="checkbox" 
                            ${problem.manually_reviewed ? 'checked' : ''} 
+                           ${disabledAttr}
                            onchange="updateReviewStatus(${problem.id}, this.checked)">
                     Manually Reviewed
                   </label>
                   <label class="checkbox-label">
                     <input type="checkbox" 
                            ${problem.finalized ? 'checked' : ''} 
+                           ${disabledAttr}
                            onchange="updateFinalizedStatus(${problem.id}, this.checked)">
                     Finalized
                   </label>
                 </div>
               </div>
               
-              <button class="toggle-raw-btn" id="toggle-original-btn-${problem.id}" onclick="toggleOriginalSection(${problem.id})">Show Original Problem</button>
+              <button class="toggle-raw-btn" ${disabledAttr} id="toggle-original-btn-${problem.id}" onclick="toggleOriginalSection(${problem.id})">Show Original Problem</button>
               
               <div class="original-section" id="original-section-${problem.id}">
                 <div class="section-label">Original Problem Statement:</div>
                 <div class="rendered-problem mathjax-render" id="original-render-${problem.id}"></div>
-                <button class="toggle-raw-btn" style="margin-top: 10px;" id="toggle-original-raw-btn-${problem.id}" onclick="toggleRawText(${problem.id}, 'original')">Show Raw Text</button>
-                <textarea class="raw-textarea" id="raw-original-${problem.id}" onblur="saveProblemText(${problem.id})"></textarea>
+                <button class="toggle-raw-btn" ${disabledAttr} style="margin-top: 10px;" id="toggle-original-raw-btn-${problem.id}" onclick="toggleRawText(${problem.id}, 'original')">Show Raw Text</button>
+                <textarea class="raw-textarea" ${readonlyAttr} id="raw-original-${problem.id}" onblur="saveProblemText(${problem.id})"></textarea>
               </div>
               
               <div class="rewritten-section">
                 <div class="section-label">Rewritten Problem (AIME Format):</div>
                 <div class="rendered-problem mathjax-render" id="rewritten-render-${problem.id}"></div>
-                <button class="toggle-raw-btn" style="margin-top: 10px;" id="toggle-rewritten-btn-${problem.id}" onclick="toggleRawText(${problem.id}, 'rewritten')">Show Raw Text</button>
-                <textarea class="raw-textarea" id="raw-rewritten-${problem.id}" onblur="saveRewrittenProblem(${problem.id})"></textarea>
+                <button class="toggle-raw-btn" ${disabledAttr} style="margin-top: 10px;" id="toggle-rewritten-btn-${problem.id}" onclick="toggleRawText(${problem.id}, 'rewritten')">Show Raw Text</button>
+                <textarea class="raw-textarea" ${readonlyAttr} id="raw-rewritten-${problem.id}" onblur="saveRewrittenProblem(${problem.id})"></textarea>
               </div>
               
               <div class="fields-row">
                 <div class="field-group">
                   <label>Answer:</label>
-                  <input type="text" id="answer-${problem.id}" value="${escapeHtml(problem.answer || '')}" onblur="saveProblem(${problem.id})" style="width: 100px;" />
+                  <input type="text" ${readonlyAttr} id="answer-${problem.id}" value="${escapeHtml(problem.answer || '')}" onblur="saveProblem(${problem.id})" style="width: 100px;" />
                 </div>
                 
                 <div class="field-group">
                   <label>AIME Answer (mod 1000):</label>
-                  <input type="text" id="aime-answer-${problem.id}" value="${problem.aime_answer || ''}" onblur="saveProblem(${problem.id})" style="width: 100px;" />
+                  <input type="text" ${readonlyAttr} id="aime-answer-${problem.id}" value="${problem.aime_answer || ''}" onblur="saveProblem(${problem.id})" style="width: 100px;" />
                 </div>
                 
                 <div class="field-group">
                   <label>Difficulty:</label>
-                  <input type="text" id="difficulty-${problem.id}" value="${problem.difficulty || ''}" onblur="saveProblem(${problem.id})" style="width: 80px;" />
+                  <input type="text" ${readonlyAttr} id="difficulty-${problem.id}" value="${problem.difficulty || ''}" onblur="saveProblem(${problem.id})" style="width: 80px;" />
                 </div>
                 
                 <div class="field-group">
                   <label>Type:</label>
-                  <select id="type-${problem.id}" onchange="saveProblem(${problem.id})" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-width: 130px;">
+                  <select id="type-${problem.id}" ${disabledAttr} onchange="saveProblem(${problem.id})" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-width: 130px;">
                     <option value="" ${!problem.type ? 'selected' : ''}>None</option>
                     <option value="algebra" ${problem.type === 'algebra' ? 'selected' : ''}>Algebra</option>
                     <option value="geometry" ${problem.type === 'geometry' ? 'selected' : ''}>Geometry</option>
@@ -826,7 +860,7 @@
                 
                 <div class="field-group">
                   <label>Source:</label>
-                  <input type="text" id="source-${problem.id}" value="${escapeHtml(problem.source || '')}" onblur="saveProblem(${problem.id})" style="width: 250px;" />
+                  <input type="text" ${readonlyAttr} id="source-${problem.id}" value="${escapeHtml(problem.source || '')}" onblur="saveProblem(${problem.id})" style="width: 250px;" />
                 </div>
               </div>
               
@@ -836,17 +870,18 @@
               </div>
               
               <div style="margin-top: 10px;">
-                <button onclick="saveProblem(${problem.id})">Save Changes</button>
+                <button ${disabledAttr} onclick="saveProblem(${problem.id})">Save Changes</button>
                 <span class="save-status" id="status-${problem.id}"></span>
               </div>
             </div>
           </div>
 
-          <div class="proposed-changes-section">
+          <div class="proposed-changes-section" style="${handledStyle}">
             <div class="section-title">💡 Proposed Changes</div>
-            ${renderProposedChanges(report, problem, details, types)}
+            ${renderProposedChanges(report, problem, details, types, isHandled)}
           </div>
 
+          ${isHandled ? '' : `
           <div class="mark-handled-section">
             <div>
               <strong style="font-size: 16px;">Done reviewing this report?</strong>
@@ -856,12 +891,14 @@
               ✓ Mark as Handled
             </button>
           </div>
+          `}
         </div>
       `;
     }
 
-    function renderProposedChanges(report, problem, details, types) {
+    function renderProposedChanges(report, problem, details, types, isHandled) {
       let changesHTML = '';
+      const disabledAttr = isHandled ? 'disabled' : '';
 
       // Quality
       if (types.includes('quality') && details.quality_rating) {
@@ -870,8 +907,8 @@
             <div class="change-header">
               <div class="change-title">⭐ Quality Rating: ${details.quality_rating}/5</div>
               <div class="change-actions">
-                <button class="btn-accept" onclick="acceptQuality(event, ${problem.id}, ${details.quality_rating})">✓ Accept</button>
-                <button class="btn-reject" onclick="rejectChange(event)">✗ Reject</button>
+                <button class="btn-accept" ${disabledAttr} onclick="acceptQuality(event, ${problem.id}, ${details.quality_rating})">✓ Accept</button>
+                <button class="btn-reject" ${disabledAttr} onclick="rejectChange(event)">✗ Reject</button>
               </div>
             </div>
             <div class="change-content">
@@ -890,8 +927,8 @@
             <div class="change-header">
               <div class="change-title">📊 Difficulty Rating: ${details.difficulty_rating}</div>
               <div class="change-actions">
-                <button class="btn-accept" onclick="acceptDifficulty(event, ${problem.id}, ${details.difficulty_rating})">✓ Accept</button>
-                <button class="btn-reject" onclick="rejectChange(event)">✗ Reject</button>
+                <button class="btn-accept" ${disabledAttr} onclick="acceptDifficulty(event, ${problem.id}, ${details.difficulty_rating})">✓ Accept</button>
+                <button class="btn-reject" ${disabledAttr} onclick="rejectChange(event)">✗ Reject</button>
               </div>
             </div>
             <div class="change-content">
@@ -910,8 +947,8 @@
             <div class="change-header">
               <div class="change-title">✏️ Correct Answer: ${escapeHtml(details.proposed_answer)}</div>
               <div class="change-actions">
-                <button class="btn-accept" onclick="acceptAnswer(event, ${problem.id}, '${escapeHtml(details.proposed_answer)}')">✓ Accept</button>
-                <button class="btn-reject" onclick="rejectChange(event)">✗ Reject</button>
+                <button class="btn-accept" ${disabledAttr} onclick="acceptAnswer(event, ${problem.id}, '${escapeHtml(details.proposed_answer)}')">✓ Accept</button>
+                <button class="btn-reject" ${disabledAttr} onclick="rejectChange(event)">✗ Reject</button>
               </div>
             </div>
             <div class="change-content">
@@ -931,8 +968,8 @@
             <div class="change-header">
               <div class="change-title">📝 Problem Statement Changes</div>
               <div class="change-actions">
-                <button class="btn-accept" onclick="acceptProblemStatement(event, ${problem.id}, ${report.id})">✓ Accept</button>
-                <button class="btn-reject" onclick="rejectChange(event)">✗ Reject</button>
+                <button class="btn-accept" ${disabledAttr} onclick="acceptProblemStatement(event, ${problem.id}, ${report.id})">✓ Accept</button>
+                <button class="btn-reject" ${disabledAttr} onclick="rejectChange(event)">✗ Reject</button>
               </div>
             </div>
             <div class="change-content">
@@ -951,8 +988,8 @@
             <div class="change-header">
               <div class="change-title">📚 Source: ${escapeHtml(details.proposed_source)}</div>
               <div class="change-actions">
-                <button class="btn-accept" onclick="acceptSource(event, ${problem.id}, '${escapeHtml(details.proposed_source)}')">✓ Accept</button>
-                <button class="btn-reject" onclick="rejectChange(event)">✗ Reject</button>
+                <button class="btn-accept" ${disabledAttr} onclick="acceptSource(event, ${problem.id}, '${escapeHtml(details.proposed_source)}')">✓ Accept</button>
+                <button class="btn-reject" ${disabledAttr} onclick="rejectChange(event)">✗ Reject</button>
               </div>
             </div>
             <div class="change-content">
@@ -974,8 +1011,8 @@
             <div class="change-header">
               <div class="change-title">🏷️ Problem Type: ${proposedTypeLabel}</div>
               <div class="change-actions">
-                <button class="btn-accept" onclick="acceptType(event, ${problem.id}, '${details.proposed_type}')">✓ Accept</button>
-                <button class="btn-reject" onclick="rejectChange(event)">✗ Reject</button>
+                <button class="btn-accept" ${disabledAttr} onclick="acceptType(event, ${problem.id}, '${details.proposed_type}')">✓ Accept</button>
+                <button class="btn-reject" ${disabledAttr} onclick="rejectChange(event)">✗ Reject</button>
               </div>
             </div>
             <div class="change-content">
