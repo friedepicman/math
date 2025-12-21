@@ -1359,6 +1359,56 @@
       box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
     }
 
+    /* AMC Answer Choice Buttons */
+    .answer-choices {
+      display: none;
+      gap: 8px;
+    }
+
+    .answer-choices.visible {
+      display: flex;
+    }
+
+    .answer-choice {
+      width: 44px;
+      height: 44px;
+      border: 2px solid var(--border-strong);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .answer-choice:hover {
+      border-color: var(--primary-blue);
+      background: rgba(0, 86, 179, 0.1);
+    }
+
+    .answer-choice.selected {
+      background: var(--primary-blue);
+      color: white;
+      border-color: var(--primary-blue);
+    }
+
+    .answer-choice.correct-answer {
+      background: var(--success-color);
+      color: white;
+      border-color: var(--success-color);
+    }
+
+    .answer-choice.wrong-answer {
+      background: var(--error-color);
+      color: white;
+      border-color: var(--error-color);
+    }
+
     /* Result Display */
     .result-display {
       margin-top: 20px;
@@ -1912,6 +1962,7 @@
       <div style="display: flex; gap: 0; align-items: center;">
         <a href="index.html">Mock Test</a>
         <a href="practice.html" style="background: rgba(255,255,255,0.15);">Practice</a>
+        <a href="past_tests.html">Past Tests</a>
         <a href="login.html" class="auth-button">Login</a>
         <div class="user-info"></div>
         <button class="dark-mode-toggle" onclick="toggleDarkMode()">🌙 Dark</button>
@@ -2126,6 +2177,13 @@
         <div class="answer-section">
           <span style="font-weight: 500;">Answer:</span>
           <input type="text" class="answer-input" id="answerInput" maxlength="3" placeholder="000" />
+          <div class="answer-choices" id="answerChoices">
+            <button class="answer-choice" onclick="selectAnswerChoice('A')">A</button>
+            <button class="answer-choice" onclick="selectAnswerChoice('B')">B</button>
+            <button class="answer-choice" onclick="selectAnswerChoice('C')">C</button>
+            <button class="answer-choice" onclick="selectAnswerChoice('D')">D</button>
+            <button class="answer-choice" onclick="selectAnswerChoice('E')">E</button>
+          </div>
           <button class="btn-primary" id="submitBtn" onclick="submitAnswer()">Submit</button>
           <button class="btn-skip" onclick="skipProblem()">Skip</button>
           <button class="report-button" id="reportBtnPre" onclick="openReportModal()" style="margin-left: auto;">Report Issue</button>
@@ -2706,13 +2764,23 @@
       document.getElementById('answerInput').value = '';
       document.getElementById('answerInput').disabled = false;
       
-      // Update placeholder based on problem type (AMC vs AIME-style)
+      // Update input type based on problem type (AMC vs AIME-style)
       const answerInput = document.getElementById('answerInput');
+      const answerChoices = document.getElementById('answerChoices');
+      
       if (isAMCProblem(problem)) {
-        answerInput.placeholder = 'A';
-        answerInput.maxLength = 1;
-        answerInput.style.textTransform = 'uppercase';
+        // Hide text input, show choice buttons
+        answerInput.style.display = 'none';
+        answerChoices.classList.add('visible');
+        // Reset all choice buttons
+        document.querySelectorAll('.answer-choice').forEach(btn => {
+          btn.classList.remove('selected', 'correct-answer', 'wrong-answer');
+        });
+        selectedAnswerChoice = null;
       } else {
+        // Show text input, hide choice buttons
+        answerInput.style.display = '';
+        answerChoices.classList.remove('visible');
         answerInput.placeholder = '000';
         answerInput.maxLength = 3;
         answerInput.style.textTransform = 'none';
@@ -2721,7 +2789,23 @@
       document.getElementById('submitBtn').disabled = false;
       document.getElementById('resultDisplay').classList.remove('show', 'correct', 'incorrect');
       
-      setTimeout(() => document.getElementById('answerInput').focus(), 100);
+      // Focus on input only for non-AMC problems
+      if (!isAMCProblem(problem)) {
+        setTimeout(() => document.getElementById('answerInput').focus(), 100);
+      }
+    }
+
+    // Track selected answer choice for AMC problems
+    let selectedAnswerChoice = null;
+
+    function selectAnswerChoice(choice) {
+      selectedAnswerChoice = choice;
+      document.querySelectorAll('.answer-choice').forEach(btn => {
+        btn.classList.remove('selected');
+        if (btn.textContent === choice) {
+          btn.classList.add('selected');
+        }
+      });
     }
 
     async function startPractice() {
@@ -2755,12 +2839,20 @@
     async function submitAnswer() {
       if (!currentProblem) return;
       
-      const userAnswer = document.getElementById('answerInput').value.trim().toUpperCase();
-      if (!userAnswer) return;
+      // Get user answer - from choice buttons for AMC, from input for AIME
+      let userAnswer;
+      if (isAMCProblem(currentProblem)) {
+        userAnswer = selectedAnswerChoice || '';
+        if (!userAnswer) return;
+      } else {
+        userAnswer = document.getElementById('answerInput').value.trim().toUpperCase();
+        if (!userAnswer) return;
+      }
       
       // Disable inputs while processing
       document.getElementById('answerInput').disabled = true;
       document.getElementById('submitBtn').disabled = true;
+      document.querySelectorAll('.answer-choice').forEach(btn => btn.disabled = true);
       
       const difficulty = parseFloat(currentProblem.difficulty);
       const problemType = currentProblem.type;
@@ -2788,6 +2880,7 @@
             alert('Error submitting answer. Please try again.');
             document.getElementById('answerInput').disabled = false;
             document.getElementById('submitBtn').disabled = false;
+            document.querySelectorAll('.answer-choice').forEach(btn => btn.disabled = false);
             return;
           }
           
@@ -2804,6 +2897,7 @@
           alert('Error submitting answer. Please try again.');
           document.getElementById('answerInput').disabled = false;
           document.getElementById('submitBtn').disabled = false;
+          document.querySelectorAll('.answer-choice').forEach(btn => btn.disabled = false);
           return;
         }
       } else {
@@ -2851,6 +2945,18 @@
       resultDisplay.className = 'result-display show ' + (isCorrect ? 'correct' : 'incorrect');
       
       document.getElementById('resultHeader').textContent = isCorrect ? 'Correct!' : 'Incorrect';
+      
+      // Update AMC choice buttons to show correct/wrong
+      if (isAMCProblem(currentProblem)) {
+        document.querySelectorAll('.answer-choice').forEach(btn => {
+          btn.classList.remove('selected');
+          if (btn.textContent === correctAnswer) {
+            btn.classList.add('correct-answer');
+          } else if (btn.textContent === userAnswer && !isCorrect) {
+            btn.classList.add('wrong-answer');
+          }
+        });
+      }
       
       // Build XP display - hide if 0 XP loss (below level 50)
       let xpDisplayHtml = '';

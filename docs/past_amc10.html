@@ -1,0 +1,1794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Practice with past AMC 10 tests from 1999-2025. All 25 problems with answer checking." />
+  <link rel="icon" type="image/png" href="256px_transparentBG.png">
+  <title>Past AMC 10 - Mock AIME</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/latin-modern-roman@1.0.0/style.min.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.4/dist/umd/supabase.min.js"></script>
+
+  <script>
+    const SUPABASE_URL = 'https://ftdbplxkyaocyrjpmjyb.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0ZGJwbHhreWFvY3lyanBtanliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMDgxMDUsImV4cCI6MjA2NzY4NDEwNX0.hE0V09JxdLYNbZqPVH3HZxNpLPP2rXIaBsNGUHO3upc';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = null;
+    let loadedProblems = [];
+
+    // Analytics
+    const MOD_USER_ID = '6af62d68-67e7-42f6-b91f-58cac9d81cba';
+
+    function getSessionId() {
+      let sessionId = localStorage.getItem('mockAIME_sessionId');
+      if (!sessionId) {
+        sessionId = 'sess_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
+        localStorage.setItem('mockAIME_sessionId', sessionId);
+      }
+      return sessionId;
+    }
+
+    function getUserType(userId) {
+      if (!userId) return 'guest';
+      if (userId === MOD_USER_ID) return 'mod';
+      return 'user';
+    }
+
+    async function logActivity(eventType, data = {}) {
+      try {
+        const userId = currentUser?.id || null;
+        await supabaseClient.from('activity_log').insert({
+          user_id: userId,
+          session_id: getSessionId(),
+          user_type: getUserType(userId),
+          event_type: eventType,
+          page: 'past_amc10',
+          problem_id: data.problemId || null,
+          problem_source: data.source || null,
+          difficulty: data.difficulty || null,
+          is_correct: data.isCorrect ?? null,
+          user_answer: data.userAnswer || null,
+          metadata: data.metadata || null
+        });
+      } catch (e) {
+        console.error('Activity log error:', e);
+      }
+    }
+
+    async function logEvent(eventType, data = {}) {
+      try {
+        const userId = currentUser?.id || null;
+        await supabaseClient.from('activity_all').insert({
+          user_id: userId,
+          session_id: getSessionId(),
+          user_type: getUserType(userId),
+          event_type: eventType,
+          page: 'past_amc10',
+          element_id: data.elementId || null,
+          element_text: data.elementText ? String(data.elementText).substring(0, 100) : null,
+          element_type: data.elementType || null,
+          url: window.location.href,
+          referrer: document.referrer || null,
+          metadata: data.metadata || null
+        });
+      } catch (e) {
+        console.error('Event log error:', e);
+      }
+    }
+
+    function initAnalytics() {
+      logActivity('page_view', { metadata: { referrer: document.referrer } });
+      logEvent('page_view', { metadata: { referrer: document.referrer, userAgent: navigator.userAgent } });
+
+      document.addEventListener('click', (e) => {
+        const target = e.target.closest('button, a, select');
+        if (target) {
+          logEvent('click', {
+            elementId: target.id || target.className?.split(' ')[0] || null,
+            elementText: target.textContent?.trim() || target.value || '',
+            elementType: target.tagName.toLowerCase(),
+            metadata: { classList: Array.from(target.classList || []) }
+          });
+        }
+      });
+    }
+
+    setTimeout(initAnalytics, 500);
+  </script>
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    :root {
+      --bg-primary: #f8f9fa;
+      --bg-secondary: #e9ecef;
+      --bg-card: white;
+      --text-primary: #212529;
+      --text-secondary: #495057;
+      --text-tertiary: #6c757d;
+      --border-color: #e9ecef;
+      --border-strong: #dee2e6;
+      --primary-blue: #0056b3;
+      --primary-blue-light: #0066cc;
+      --accent-secondary: #00aa66;
+      --success-color: #28a745;
+      --error-color: #dc3545;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-card: #1f1f3a;
+      --text-primary: #e0e0e0;
+      --text-secondary: #b0b0b0;
+      --text-tertiary: #888;
+      --border-color: #2a2a4a;
+      --border-strong: #3a3a5a;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    nav {
+      background: linear-gradient(135deg, #0056b3 0%, #004494 100%);
+      padding: 0;
+      box-shadow: 0 2px 8px rgba(0, 86, 179, 0.3);
+      margin-bottom: 40px;
+      border-bottom: 3px solid #00aa66;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 20px;
+      transition: background 0.2s;
+      display: inline-block;
+    }
+
+    nav a:hover { background: rgba(255,255,255,0.1); }
+
+    .dark-mode-toggle {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+      margin-left: 10px;
+    }
+
+    .dark-mode-toggle:hover { background: rgba(255,255,255,0.2); }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary-blue);
+      margin-bottom: 32px;
+      font-size: 2.2rem;
+    }
+
+    .selector-section {
+      background: var(--bg-card);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+
+    /* Decade Tabs */
+    .decade-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .decade-tab {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .decade-tab:hover {
+      border-color: var(--primary-blue);
+      background: rgba(0, 86, 179, 0.1);
+    }
+
+    .decade-tab.active {
+      background: var(--primary-blue);
+      color: white;
+      border-color: var(--primary-blue);
+    }
+
+    /* Years Grid */
+    .decade-years {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .year-btn {
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.15s;
+      min-width: 70px;
+    }
+
+    .year-btn:hover {
+      border-color: var(--primary-blue);
+      background: var(--primary-blue);
+      color: white;
+    }
+
+    .year-btn.selected {
+      background: var(--primary-blue);
+      color: white;
+      border-color: var(--primary-blue);
+    }
+
+    .version-selector {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      padding-top: 20px;
+      margin-top: 20px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .version-selector.visible {
+      display: flex;
+    }
+
+    .version-label {
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .version-btn {
+      padding: 12px 28px;
+      font-size: 16px;
+      font-weight: 600;
+      border: 2px solid var(--border-strong);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .version-btn:hover {
+      border-color: var(--primary-blue);
+      background: var(--primary-blue);
+      color: white;
+    }
+
+    .version-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Loading Indicator */
+    .loading-indicator {
+      text-align: center;
+      padding: 40px 20px;
+      background: var(--bg-card);
+      border-radius: 12px;
+      margin: 20px 0;
+      box-shadow: var(--shadow-sm);
+      display: none;
+    }
+
+    .loading-indicator.visible { display: block; }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--border-color);
+      border-top: 4px solid var(--primary-blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Problems Wrapper */
+    .problems-wrapper {
+      background: var(--bg-card);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      border: 2px solid var(--border-color);
+      margin-bottom: 30px;
+      display: none;
+    }
+
+    .problems-wrapper.visible { display: block; }
+
+    .problems-header {
+      border-bottom: 3px solid var(--primary-blue);
+      padding-bottom: 15px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .problems-header h2 {
+      color: var(--primary-blue);
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    /* Cutoff Info Bar */
+    .cutoff-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 14px 20px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      margin-bottom: 25px;
+      justify-content: center;
+    }
+
+    .cutoff-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 100px;
+    }
+
+    .cutoff-label {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .cutoff-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary-blue);
+    }
+
+    /* Problem Card */
+    .problem {
+      background: var(--bg-card);
+      padding: 28px;
+      padding-top: 48px;
+      margin: 24px 0;
+      border-radius: 8px;
+      box-shadow: var(--shadow-sm);
+      border: 2px solid var(--border-color);
+      border-left: 5px solid var(--primary-blue);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .problem:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-blue-light);
+      border-left-color: var(--accent-secondary);
+    }
+
+    .source-label {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: var(--bg-secondary);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    a.source-label:hover {
+      background: var(--primary-blue);
+      color: white;
+    }
+
+    .problem-text {
+      line-height: 1.8;
+      margin-bottom: 16px;
+    }
+
+    .problem-text img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* AoPS LaTeX images - display inline with text */
+    .problem-text img.latex,
+    .problem-text .mwe-math-fallback-image-inline {
+      display: inline !important;
+      vertical-align: middle !important;
+      margin: 0 2px !important;
+      height: auto;
+    }
+
+    /* Math element wrapper - must be inline */
+    .problem-text .mwe-math-element {
+      display: inline !important;
+      vertical-align: middle !important;
+    }
+
+    /* Centered/display math should be block */
+    .problem-text img.latexcenter,
+    .problem-text .mwe-math-fallback-image-display {
+      display: block !important;
+      margin: 16px auto;
+    }
+
+    .problem-text img[width],
+    .problem-text .image {
+      display: block;
+      margin: 16px auto;
+    }
+
+    .problem-text img[height="17"],
+    .problem-text img[height="18"],
+    .problem-text img[height="19"],
+    .problem-text img[height="20"] {
+      display: inline !important;
+      vertical-align: middle !important;
+      margin: 0 2px;
+    }
+
+    .problem-text .loading-problem {
+      color: var(--text-tertiary);
+      font-style: italic;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .aops-fail-indicator {
+      color: var(--error-color);
+      font-weight: bold;
+      font-size: 18px;
+      margin-left: 4px;
+      cursor: help;
+    }
+
+    .no-answer-indicator {
+      color: #f59e0b;
+      font-weight: bold;
+      font-size: 18px;
+      margin-left: 4px;
+      cursor: help;
+    }
+
+    .load-error {
+      color: var(--error-color);
+      font-style: italic;
+    }
+
+    .problem-indicators {
+      display: inline;
+    }
+
+    .problem-text .toc,
+    .problem-text #toc,
+    .problem-text .mw-editsection,
+    .problem-text .navbox,
+    .problem-text .noprint {
+      display: none !important;
+    }
+
+    .answer {
+      margin-top: 28px;
+      padding-top: 20px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .answer-label {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* Answer Choice Buttons */
+    .answer-choices {
+      display: flex;
+      gap: 8px;
+    }
+
+    .answer-choice {
+      width: 44px;
+      height: 44px;
+      border: 2px solid var(--border-strong);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .answer-choice:hover {
+      border-color: var(--primary-blue);
+      background: rgba(0, 86, 179, 0.1);
+    }
+
+    .answer-choice.selected {
+      background: var(--primary-blue);
+      color: white;
+      border-color: var(--primary-blue);
+    }
+
+    .answer-choice.correct-answer {
+      background: var(--success-color);
+      color: white;
+      border-color: var(--success-color);
+    }
+
+    .answer-choice.wrong-answer {
+      background: var(--error-color);
+      color: white;
+      border-color: var(--error-color);
+    }
+
+    .result {
+      display: inline-block;
+      margin-left: 12px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .correct { color: #28a745; }
+    .incorrect { color: #dc3545; }
+
+    .problem.correct-bg {
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+      border-color: #28a745;
+      border-left-color: #28a745;
+    }
+
+    .problem.incorrect-bg {
+      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+      border-color: #dc3545;
+      border-left-color: #dc3545;
+    }
+
+    .problem.unanswered-bg {
+      background: var(--bg-secondary);
+      border-color: var(--border-strong);
+      border-left-color: var(--border-strong);
+    }
+
+    [data-theme="dark"] .problem.correct-bg {
+      background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
+      border-color: #40916c;
+      border-left-color: #40916c;
+    }
+
+    [data-theme="dark"] .problem.incorrect-bg {
+      background: linear-gradient(135deg, #5c1a1a 0%, #7d2828 100%);
+      border-color: #dc3545;
+      border-left-color: #dc3545;
+    }
+
+    [data-theme="dark"] .problem.unanswered-bg {
+      background: var(--bg-secondary);
+    }
+
+    /* Summary */
+    #summary {
+      margin: 24px 0;
+      padding: 24px;
+      background: var(--bg-card);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+      display: none;
+    }
+
+    #summary.visible {
+      display: block;
+      animation: summarySlideIn 0.5s ease-out;
+    }
+
+    @keyframes summarySlideIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .summary-header {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary-blue);
+      margin-bottom: 20px;
+    }
+
+    /* Results Cutoffs Section */
+    .results-cutoffs {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 2px solid var(--border-color);
+    }
+
+    .results-cutoffs h3 {
+      margin: 0 0 16px 0;
+      color: var(--primary-blue);
+      font-size: 18px;
+    }
+
+    .results-cutoff-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .results-cutoff-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 100px;
+      padding: 12px 16px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+    }
+
+    .results-label {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .results-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .results-value.qualified {
+      color: #28a745;
+    }
+
+    .results-value.not-qualified {
+      color: var(--text-primary);
+    }
+
+    /* Secondary Button */
+    .btn-secondary {
+      padding: 10px 20px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: var(--border-color);
+      border-color: var(--primary-blue);
+    }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+      gap: 12px;
+      max-width: 650px;
+    }
+
+    .problem-indicator {
+      width: 50px;
+      height: 50px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      transition: all 0.3s;
+      border: 2px solid transparent;
+    }
+
+    .problem-indicator.correct {
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+      color: #155724;
+      border-color: #28a745;
+    }
+
+    [data-theme="dark"] .problem-indicator.correct {
+      background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+      color: #a5d6a7;
+    }
+
+    .problem-indicator.incorrect {
+      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+      color: #721c24;
+      border-color: #dc3545;
+    }
+
+    [data-theme="dark"] .problem-indicator.incorrect {
+      background: linear-gradient(135deg, #b71c1c 0%, #c62828 100%);
+      color: #ef9a9a;
+    }
+
+    .problem-indicator.unanswered {
+      background: var(--bg-secondary);
+      color: var(--text-tertiary);
+      border-color: var(--border-strong);
+    }
+
+    /* Buttons */
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary-blue);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-blue-light);
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.5rem; }
+      .decade-tabs { gap: 6px; }
+      .decade-tab { padding: 8px 12px; font-size: 13px; }
+      .decade-years { gap: 6px; }
+      .year-btn { padding: 8px 14px; font-size: 13px; min-width: 60px; }
+      nav a { padding: 16px 12px; font-size: 14px; }
+      .answer-choice { width: 40px; height: 40px; font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
+      <a href="index.html" style="display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 600; padding: 16px 0;">
+        <img src="256px_transparentBG.png" alt="Mock AIME Logo" style="height: 40px; width: auto;">
+        Mock AIME
+      </a>
+      <div style="display: flex; gap: 0; align-items: center;">
+        <a href="index.html">Mock Test</a>
+        <a href="practice.html">Practice</a>
+        <a href="past_tests.html">Past Tests</a>
+        <a href="login.html" class="auth-button">Login</a>
+        <div class="user-info"></div>
+        <button class="dark-mode-toggle" onclick="toggleDarkMode()">🌙 Dark</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1>Past AMC 10 Tests</h1>
+
+    <div class="selector-section">
+      <!-- Decade Tabs -->
+      <div class="decade-tabs" id="decadeTabs">
+        <button class="decade-tab" data-decade="2000">2000s</button>
+        <button class="decade-tab" data-decade="2010">2010s</button>
+        <button class="decade-tab active" data-decade="2020">2020s</button>
+      </div>
+
+      <!-- Years for selected decade -->
+      <div class="decade-years" id="decadeYears">
+        <!-- Populated by JavaScript -->
+      </div>
+
+      <div class="version-selector" id="versionSelector">
+        <span class="version-label" id="versionLabel">Select version:</span>
+        <button class="version-btn" id="versionBtnA" data-version="A">AMC 10A</button>
+        <button class="version-btn" id="versionBtnB" data-version="B">AMC 10B</button>
+      </div>
+
+      <div class="version-selector" id="versionSelector2021">
+        <span class="version-label">2021 AMC 10:</span>
+        <div style="display: flex; flex-direction: column; gap: 12px; align-items: center;">
+          <div style="display: flex; gap: 12px;">
+            <button class="version-btn version-btn-2021" data-season="Spring" data-version="A">Spring A</button>
+            <button class="version-btn version-btn-2021" data-season="Spring" data-version="B">Spring B</button>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button class="version-btn version-btn-2021" data-season="Fall" data-version="A">Fall A</button>
+            <button class="version-btn version-btn-2021" data-season="Fall" data-version="B">Fall B</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="loading-indicator" id="loadingIndicator">
+      <div class="loading-spinner"></div>
+      <p style="margin-top: 16px; font-weight: 500; color: var(--text-secondary);">Loading test...</p>
+    </div>
+
+    <div class="problems-wrapper" id="problemsWrapper">
+      <div class="problems-header">
+        <h2 id="testTitle">Test</h2>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <button class="btn-secondary" id="toggleCutoffBtn" onclick="toggleCutoffInfo()" style="display: none;">Show Contest Info</button>
+          <button class="btn-primary" onclick="checkAnswers()">Check Answers</button>
+        </div>
+      </div>
+
+      <div class="cutoff-info" id="cutoffInfo" style="display: none;">
+        <div class="cutoff-item">
+          <span class="cutoff-label">AIME Cutoff</span>
+          <span class="cutoff-value" id="cutoffAIME">—</span>
+        </div>
+        <div class="cutoff-item">
+          <span class="cutoff-label">Honor Roll (5%)</span>
+          <span class="cutoff-value" id="cutoffHR">—</span>
+        </div>
+        <div class="cutoff-item">
+          <span class="cutoff-label">DHR (1%)</span>
+          <span class="cutoff-value" id="cutoffDHR">—</span>
+        </div>
+        <div class="cutoff-item">
+          <span class="cutoff-label">Mean</span>
+          <span class="cutoff-value" id="cutoffMean">—</span>
+        </div>
+      </div>
+
+      <div id="problemsList"></div>
+    </div>
+
+    <div id="summary">
+      <div class="summary-header" id="summaryHeader">Score: 0 / 25</div>
+      <div class="problem-grid" id="problemGrid"></div>
+      <div class="results-cutoffs" id="resultsCutoffs" style="display: none;">
+        <h3>Your Results vs Contest Cutoffs</h3>
+        <div class="results-cutoff-grid">
+          <div class="results-cutoff-item">
+            <span class="results-label">Your Score</span>
+            <span class="results-value" id="resultsUserScore">—</span>
+          </div>
+          <div class="results-cutoff-item">
+            <span class="results-label">AIME Cutoff</span>
+            <span class="results-value" id="resultsAIME">—</span>
+          </div>
+          <div class="results-cutoff-item">
+            <span class="results-label">Honor Roll (5%)</span>
+            <span class="results-value" id="resultsHR">—</span>
+          </div>
+          <div class="results-cutoff-item">
+            <span class="results-label">DHR (1%)</span>
+            <span class="results-value" id="resultsDHR">—</span>
+          </div>
+          <div class="results-cutoff-item">
+            <span class="results-label">Mean</span>
+            <span class="results-value" id="resultsMean">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let selectedYear = null;
+    let selectedDecade = '2020';
+    let currentTestName = null;
+    let userAnswers = {};
+    let currentCutoffs = null;
+
+    // AMC 10 years by decade (ascending order)
+    const decadeYears = {
+      '2000': [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009],
+      '2010': [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019],
+      '2020': [2020, 2021, 2022, 2023, 2024]
+    };
+
+    // Initialize decade tabs
+    function initDecadeTabs() {
+      renderYearsForDecade('2020');
+
+      document.querySelectorAll('.decade-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          selectDecade(tab.dataset.decade);
+        });
+      });
+    }
+
+    function selectDecade(decade) {
+      selectedDecade = decade;
+      selectedYear = null;
+
+      document.querySelectorAll('.decade-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.decade === decade);
+      });
+
+      renderYearsForDecade(decade);
+    }
+
+    function renderYearsForDecade(decade) {
+      const container = document.getElementById('decadeYears');
+      const years = decadeYears[decade] || [];
+
+      container.innerHTML = years.map(year => 
+        `<button class="year-btn" data-year="${year}">${year}</button>`
+      ).join('');
+
+      container.querySelectorAll('.year-btn').forEach(btn => {
+        btn.addEventListener('click', () => selectYear(parseInt(btn.dataset.year)));
+      });
+    }
+
+    // Dark mode
+    function toggleDarkMode() {
+      const html = document.documentElement;
+      const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      document.querySelector('.dark-mode-toggle').textContent = newTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+    }
+
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    if (savedTheme === 'dark') {
+      document.querySelector('.dark-mode-toggle').textContent = '☀️ Light';
+    }
+
+    // Auth
+    async function updateAuthUI() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      currentUser = session?.user || null;
+      
+      const authButton = document.querySelector('.auth-button');
+      const userInfo = document.querySelector('.user-info');
+      
+      if (currentUser) {
+        if (authButton) {
+          authButton.textContent = 'Profile';
+          authButton.href = 'profile.html';
+        }
+        
+        if (userInfo) {
+          const displayName = currentUser.user_metadata?.display_name || currentUser.email;
+          userInfo.innerHTML = `
+            <span style="color: white; margin-right: 15px;">Welcome, ${displayName}!</span>
+            <button onclick="signOut()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Sign Out</button>
+          `;
+        }
+      }
+    }
+
+    async function signOut() {
+      await supabaseClient.auth.signOut();
+      window.location.reload();
+    }
+
+    function selectYear(year) {
+      selectedYear = year;
+      userAnswers = {};
+
+      document.querySelectorAll('.year-btn').forEach(btn => {
+        btn.classList.toggle('selected', parseInt(btn.dataset.year) === year);
+      });
+
+      const versionSelector = document.getElementById('versionSelector');
+      const versionSelector2021 = document.getElementById('versionSelector2021');
+      
+      // Handle special years
+      if (year <= 2001) {
+        // 2000-2001: No A/B versions, load directly
+        versionSelector.classList.remove('visible');
+        versionSelector2021.classList.remove('visible');
+        loadTest(`${year} AMC 10`);
+      } else if (year === 2021) {
+        // 2021: Spring and Fall versions (4 total)
+        versionSelector.classList.remove('visible');
+        versionSelector2021.classList.add('visible');
+      } else {
+        // 2002+: A/B versions
+        versionSelector2021.classList.remove('visible');
+        document.getElementById('versionLabel').textContent = `${year} AMC 10:`;
+        document.getElementById('versionBtnA').textContent = 'AMC 10A';
+        document.getElementById('versionBtnA').dataset.version = 'A';
+        document.getElementById('versionBtnB').textContent = 'AMC 10B';
+        document.getElementById('versionBtnB').dataset.version = 'B';
+        versionSelector.classList.add('visible');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', initDecadeTabs);
+
+    // Handle version button clicks
+    document.querySelectorAll('.version-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (selectedYear) {
+          loadTest(`${selectedYear} AMC 10${btn.dataset.version}`);
+        }
+      });
+    });
+
+    // Handle 2021 version button clicks
+    document.querySelectorAll('.version-btn-2021').forEach(btn => {
+      btn.addEventListener('click', () => {
+        loadTest(`2021 ${btn.dataset.season} AMC 10${btn.dataset.version}`);
+      });
+    });
+
+    function escapeHtml(text) {
+      if (!text) return text;
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function setMathContent(element, content) {
+      if (!content) {
+        element.innerHTML = '<em>No content</em>';
+        return;
+      }
+      element.textContent = content;
+      if (window.MathJax) {
+        MathJax.typesetPromise([element]).catch(err => console.error('MathJax error:', err));
+      }
+    }
+
+    // Set HTML content from AoPS API
+    function setHtmlContent(element, html) {
+      if (!html) {
+        element.innerHTML = '<em>No content</em>';
+        return;
+      }
+      
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html;
+      
+      // Remove edit sections
+      tempDiv.querySelectorAll('.mw-editsection').forEach(el => el.remove());
+      
+      // Remove table of contents
+      tempDiv.querySelectorAll('.toc, #toc').forEach(el => el.remove());
+      
+      // Find content between Problem header and next h2 header
+      const allContent = tempDiv.innerHTML;
+      
+      // Find where Problem section starts (after the Problem h2)
+      const problemHeaderMatch = allContent.match(/<h2[^>]*>.*?Problem.*?<\/h2>/i);
+      let startIndex = 0;
+      if (problemHeaderMatch) {
+        startIndex = problemHeaderMatch.index + problemHeaderMatch[0].length;
+      }
+      
+      // Find the next h2 header after the problem content
+      const remainingContent = allContent.substring(startIndex);
+      const nextH2Match = remainingContent.match(/<h2[^>]*>/i);
+      let endIndex = allContent.length;
+      if (nextH2Match) {
+        endIndex = startIndex + nextH2Match.index;
+      }
+      
+      // Extract just the problem content
+      let problemContent = allContent.substring(startIndex, endIndex);
+      
+      // Clean up the content
+      const cleanDiv = document.createElement('div');
+      cleanDiv.innerHTML = problemContent;
+      
+      // Remove any "Problem N" headers (h2, bold, etc.)
+      cleanDiv.querySelectorAll('h2').forEach(h2 => {
+        const text = h2.textContent.trim();
+        if (text === 'Problem' || /^Problem\s+\d+$/.test(text)) {
+          h2.remove();
+        }
+      });
+      
+      // Remove big bold "Problem N" text
+      cleanDiv.querySelectorAll('p, div, b, strong, big').forEach(el => {
+        const text = el.textContent.trim();
+        if (/^Problem\s+\d+$/.test(text)) {
+          el.remove();
+        }
+      });
+      
+      // Remove redirect/note text like "The following problem is from..."
+      cleanDiv.querySelectorAll('p, blockquote, i, em').forEach(el => {
+        const text = el.textContent.trim().toLowerCase();
+        if (text.length < 300 && (
+            text.includes('the following problem is from') || 
+            text.includes('redirect to this page') ||
+            text.includes('problems redirect to') ||
+            text.includes('so those problems redirect'))) {
+          el.remove();
+        }
+      });
+      
+      // Remove all links but keep their text content (preserve images)
+      cleanDiv.querySelectorAll('a').forEach(link => {
+        const img = link.querySelector('img');
+        if (img) {
+          link.parentNode.replaceChild(img, link);
+        } else {
+          const text = document.createTextNode(link.textContent);
+          link.parentNode.replaceChild(text, link);
+        }
+      });
+      
+      // Fix math element display
+      cleanDiv.querySelectorAll('.mwe-math-element').forEach(mathEl => {
+        mathEl.style.display = 'inline';
+        mathEl.style.verticalAlign = 'middle';
+      });
+      
+      cleanDiv.querySelectorAll('.mwe-math-fallback-image-inline').forEach(img => {
+        img.style.display = 'inline';
+        img.style.verticalAlign = 'middle';
+        img.style.margin = '0 2px';
+      });
+      
+      cleanDiv.querySelectorAll('img').forEach(img => {
+        const height = parseInt(img.getAttribute('height') || '0');
+        const isLatex = img.classList.contains('latex') || 
+                        img.classList.contains('mwe-math-fallback-image-inline') ||
+                        img.alt?.startsWith('$') ||
+                        img.src?.includes('latex') ||
+                        img.src?.includes('math');
+        
+        if (height < 50 || isLatex) {
+          img.style.display = 'inline';
+          img.style.verticalAlign = 'middle';
+          img.style.margin = '0 2px';
+        }
+      });
+      
+      element.innerHTML = cleanDiv.innerHTML;
+      
+      if (window.MathJax) {
+        MathJax.typesetPromise([element]).catch(err => console.error('MathJax error:', err));
+      }
+    }
+
+    // Fetch from AoPS - returns { html, redirectedSource } 
+    // redirectedSource is set if the page redirected (e.g., "2022 AMC 12A #1")
+    async function fetchFromAoPS(pageName) {
+      try {
+        const url = `https://artofproblemsolving.com/wiki/api.php?action=parse&page=${encodeURIComponent(pageName)}&format=json&prop=text&origin=*&redirects=true`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.parse && data.parse.text && data.parse.text['*']) {
+          let html = data.parse.text['*'];
+          
+          // Check if this is a redirect page (contains "Redirect to:" text)
+          if (html.includes('Redirect to:') || html.includes('#REDIRECT')) {
+            // Try to extract the redirect target and fetch it
+            const redirectMatch = html.match(/href="\/wiki\/index\.php\/([^"]+)"/);
+            if (redirectMatch) {
+              const redirectTarget = decodeURIComponent(redirectMatch[1]);
+              const redirectUrl = `https://artofproblemsolving.com/wiki/api.php?action=parse&page=${encodeURIComponent(redirectTarget)}&format=json&prop=text&origin=*`;
+              const redirectResponse = await fetch(redirectUrl);
+              const redirectData = await redirectResponse.json();
+              if (redirectData.parse && redirectData.parse.text && redirectData.parse.text['*']) {
+                // Convert redirect target to source format: "2022_AMC_12A_Problems/Problem_1" -> "2022 AMC 12A #1"
+                const sourceMatch = redirectTarget.match(/^(\d{4})_(.+)_Problems\/Problem_(\d+)$/);
+                let redirectedSource = null;
+                if (sourceMatch) {
+                  const year = sourceMatch[1];
+                  const contest = sourceMatch[2].replace(/_/g, ' ');
+                  const problemNum = sourceMatch[3];
+                  redirectedSource = `${year} ${contest} #${problemNum}`;
+                }
+                return { html: redirectData.parse.text['*'], redirectedSource };
+              }
+            }
+          }
+          
+          return { html, redirectedSource: null };
+        }
+        return { html: null, redirectedSource: null };
+      } catch (err) {
+        console.error('AoPS fetch error:', err);
+        return { html: null, redirectedSource: null };
+      }
+    }
+
+    // Fetch answer from database using pattern matching
+    // Handles combined sources like "2022 AMC 10B #1 / 12B #1"
+    async function fetchAnswerFromDB(source) {
+      try {
+        // Extract the contest and problem number pattern
+        // e.g., "2022 AMC 10B #1" -> "%10B #1"
+        const match = source.match(/(\d+[AB])\s*#(\d+)$/);
+        if (!match) {
+          console.error('Could not parse source:', source);
+          return null;
+        }
+        
+        const pattern = `%${match[1]} #${match[2]}`;
+        
+        const { data, error } = await supabaseClient
+          .from('problems')
+          .select('answer')
+          .like('source', pattern)
+          .maybeSingle();
+        
+        if (error) {
+          console.error('DB error for source:', source, error);
+          return null;
+        }
+        
+        if (data && data.answer) {
+          return data.answer;
+        }
+        return null;
+      } catch (err) {
+        console.error('DB fetch error for source:', source, err);
+        return null;
+      }
+    }
+
+    function getAoPSPageName(testName, problemNum) {
+      // Handle 2021 Spring/Fall naming conventions
+      // AoPS uses "2021_AMC_10A" for Spring 2021 (no "Spring" in name)
+      // AoPS uses "2021_Fall_AMC_10A" for Fall 2021
+      let normalized = testName;
+      
+      // Remove "Spring" from 2021 tests - AoPS doesn't use it
+      if (normalized.includes('2021 Spring')) {
+        normalized = normalized.replace('2021 Spring ', '2021 ');
+      }
+      
+      normalized = normalized.replace(/ /g, '_');
+      return `${normalized}_Problems/Problem_${problemNum}`;
+    }
+
+    async function loadTest(testName, retryCount = 0) {
+      if (!testName) {
+        alert('Please select a test');
+        return;
+      }
+
+      currentTestName = testName;
+
+      document.getElementById('loadingIndicator').classList.add('visible');
+      document.getElementById('problemsWrapper').classList.remove('visible');
+      document.getElementById('summary').classList.remove('visible');
+      document.getElementById('cutoffInfo').style.display = 'none';
+      document.getElementById('toggleCutoffBtn').style.display = 'none';
+      document.getElementById('resultsCutoffs').style.display = 'none';
+      userAnswers = {};
+      currentCutoffs = null;
+
+      try {
+        // AMC 10 always has 25 problems
+        const numProblems = 25;
+        loadedProblems = [];
+        
+        // Extract year and contest identifier (e.g., "2022" and "10A" from "2022 AMC 10A")
+        const yearMatch = testName.match(/^(\d{4})/);
+        const year = yearMatch ? yearMatch[1] : '';
+        const contestMatch = testName.match(/AMC\s*(\d+[AB])/i);
+        const contestId = contestMatch ? contestMatch[1] : '';
+        
+        // Helper function to fetch with retry
+        async function fetchWithRetry(queryFn, maxRetries = 3) {
+          for (let i = 0; i < maxRetries; i++) {
+            const { data, error } = await queryFn();
+            if (!error && data) return data;
+            if (i < maxRetries - 1) {
+              await new Promise(r => setTimeout(r, 200 * (i + 1))); // Wait 200ms, 400ms, 600ms
+            }
+          }
+          return [];
+        }
+        
+        // Fetch answers that match this year and contest
+        // Use two queries: one for direct matches, one for combined sources
+        const directData = await fetchWithRetry(() =>
+          supabaseClient
+            .from('problems')
+            .select('source, answer')
+            .like('source', `${year} AMC ${contestId} #%`)
+        );
+        
+        const combinedData = await fetchWithRetry(() =>
+          supabaseClient
+            .from('problems')
+            .select('source, answer')
+            .like('source', `${year} AMC ${contestId} #% / %`)
+        );
+        
+        // Create answer lookup map by problem number
+        const answerMap = {};
+        
+        // Process direct matches
+        if (directData) {
+          directData.forEach(p => {
+            const match = p.source.match(/#(\d+)/);
+            if (match) {
+              const problemNum = parseInt(match[1]);
+              answerMap[problemNum] = p.answer;
+            }
+          });
+        }
+        
+        // Process combined sources (these have the 10A problem number first)
+        if (combinedData) {
+          combinedData.forEach(p => {
+            const match = p.source.match(/#(\d+)/);
+            if (match) {
+              const problemNum = parseInt(match[1]);
+              answerMap[problemNum] = p.answer;
+            }
+          });
+        }
+        
+        for (let i = 1; i <= numProblems; i++) {
+          const source = `${testName} #${i}`;
+          loadedProblems.push({
+            source: source,
+            answer: answerMap[i] || '',
+            problemNum: i
+          });
+        }
+
+        console.log('Answers loaded:', loadedProblems.filter(p => p.answer).length, 'of', numProblems);
+        await displayProblems(testName);
+
+        logActivity('past_test_load', {
+          source: testName,
+          metadata: { problemCount: loadedProblems.length }
+        });
+
+      } catch (err) {
+        console.error('Error:', err);
+        alert('Error loading test. Please try again.');
+      } finally {
+        document.getElementById('loadingIndicator').classList.remove('visible');
+      }
+    }
+
+    function selectAnswer(index, answer) {
+      userAnswers[index] = answer;
+      document.querySelectorAll(`#problem-${index} .answer-choice`).forEach(btn => {
+        btn.classList.remove('selected');
+        if (btn.textContent === answer) {
+          btn.classList.add('selected');
+        }
+      });
+    }
+
+    async function fetchCutoffs(testName) {
+      try {
+        // Parse test name: "2024 AMC 10A" -> year=2024, contest="AMC 10A"
+        // Or "2021 Spring AMC 10A" -> year=2021, contest="Spring AMC 10A"
+        const match = testName.match(/^(\d{4})\s+(.+)$/);
+        if (!match) return;
+
+        const year = parseInt(match[1]);
+        let contest = match[2];
+
+        // Handle Spring/Fall variants
+        if (contest.includes('Spring') || contest.includes('Fall')) {
+          contest = contest.replace('AMC 10', 'AMC 10').trim();
+        }
+
+        const { data, error } = await supabaseClient
+          .from('contest_cutoffs')
+          .select('*')
+          .eq('year', year)
+          .like('contest', `%${contest.replace('AMC 10', 'AMC 10')}%`)
+          .single();
+
+        if (error || !data) {
+          // Try without Spring/Fall
+          const simpleContest = contest.replace('Spring ', '').replace('Fall ', '');
+          const { data: data2 } = await supabaseClient
+            .from('contest_cutoffs')
+            .select('*')
+            .eq('year', year)
+            .eq('contest', simpleContest)
+            .single();
+          
+          if (data2) {
+            currentCutoffs = data2;
+            displayCutoffs(data2);
+          }
+          return;
+        }
+
+        currentCutoffs = data;
+        displayCutoffs(data);
+      } catch (err) {
+        console.error('Error fetching cutoffs:', err);
+      }
+    }
+
+    function displayCutoffs(data) {
+      // Show the toggle button
+      document.getElementById('toggleCutoffBtn').style.display = 'inline-block';
+      
+      // Populate cutoff values (but keep hidden)
+      document.getElementById('cutoffAIME').textContent = data.aime_cutoff || '—';
+      document.getElementById('cutoffHR').textContent = data.honor_roll || '—';
+      document.getElementById('cutoffDHR').textContent = data.dhr || '—';
+      document.getElementById('cutoffMean').textContent = data.mean || '—';
+    }
+
+    function toggleCutoffInfo() {
+      const cutoffInfo = document.getElementById('cutoffInfo');
+      const btn = document.getElementById('toggleCutoffBtn');
+      
+      if (cutoffInfo.style.display === 'none' || cutoffInfo.style.display === '') {
+        cutoffInfo.style.display = 'flex';
+        btn.textContent = 'Hide Contest Info';
+      } else {
+        cutoffInfo.style.display = 'none';
+        btn.textContent = 'Show Contest Info';
+      }
+    }
+
+    function showResultsCutoffs(userScore, rawScore) {
+      if (!currentCutoffs) return;
+      
+      const resultsSection = document.getElementById('resultsCutoffs');
+      resultsSection.style.display = 'block';
+      
+      // User score (AMC scoring: 6 per correct, 1.5 per blank)
+      // Count actual answered problems (non-empty answers)
+      let answered = 0;
+      for (let i = 0; i < loadedProblems.length; i++) {
+        if (userAnswers[i] && userAnswers[i] !== '') {
+          answered++;
+        }
+      }
+      const blanks = loadedProblems.length - answered;
+      const amcScore = (rawScore * 6) + (blanks * 1.5);
+      document.getElementById('resultsUserScore').textContent = `${amcScore} pts`;
+      
+      // AIME Cutoff
+      const aimeValue = currentCutoffs.aime_cutoff;
+      const aimeElement = document.getElementById('resultsAIME');
+      aimeElement.textContent = aimeValue || '—';
+      if (aimeValue && amcScore >= aimeValue) {
+        aimeElement.classList.add('qualified');
+        aimeElement.classList.remove('not-qualified');
+      } else {
+        aimeElement.classList.remove('qualified');
+        aimeElement.classList.add('not-qualified');
+      }
+      
+      // Honor Roll
+      const hrValue = currentCutoffs.honor_roll;
+      const hrElement = document.getElementById('resultsHR');
+      hrElement.textContent = hrValue || '—';
+      if (hrValue && amcScore >= hrValue) {
+        hrElement.classList.add('qualified');
+        hrElement.classList.remove('not-qualified');
+      } else {
+        hrElement.classList.remove('qualified');
+        hrElement.classList.add('not-qualified');
+      }
+      
+      // DHR
+      const dhrValue = currentCutoffs.dhr;
+      const dhrElement = document.getElementById('resultsDHR');
+      dhrElement.textContent = dhrValue || '—';
+      if (dhrValue && amcScore >= dhrValue) {
+        dhrElement.classList.add('qualified');
+        dhrElement.classList.remove('not-qualified');
+      } else {
+        dhrElement.classList.remove('qualified');
+        dhrElement.classList.add('not-qualified');
+      }
+      
+      // Mean (no highlighting)
+      document.getElementById('resultsMean').textContent = currentCutoffs.mean || '—';
+    }
+
+
+    async function displayProblems(testName) {
+      document.getElementById('testTitle').textContent = testName;
+      document.getElementById('problemsWrapper').classList.add('visible');
+      document.getElementById('summary').classList.remove('visible');
+      
+      // Fetch and display cutoffs for this test
+      fetchCutoffs(testName);
+
+      const container = document.getElementById('problemsList');
+      container.innerHTML = '';
+
+      loadedProblems.forEach((problem, index) => {
+        const div = document.createElement('div');
+        div.className = 'problem mathjax-process';
+        div.id = `problem-${index}`;
+
+        const problemNum = index + 1;
+        const aopsLink = `https://artofproblemsolving.com/wiki/index.php/${getAoPSPageName(testName, problemNum)}`;
+
+        div.innerHTML = `
+          <a href="${aopsLink}" target="_blank" class="source-label" id="source-${index}" style="display: none;">${escapeHtml(problem.source)}</a>
+          <strong>Problem ${problemNum}:</strong>
+          <div class="problem-text" id="text-${index}">
+            <div class="loading-problem">Loading problem...</div>
+          </div>
+          <div class="answer">
+            <span class="answer-label">Answer:</span>
+            <div class="answer-choices">
+              <button class="answer-choice" onclick="selectAnswer(${index}, 'A')">A</button>
+              <button class="answer-choice" onclick="selectAnswer(${index}, 'B')">B</button>
+              <button class="answer-choice" onclick="selectAnswer(${index}, 'C')">C</button>
+              <button class="answer-choice" onclick="selectAnswer(${index}, 'D')">D</button>
+              <button class="answer-choice" onclick="selectAnswer(${index}, 'E')">E</button>
+            </div>
+            <span class="result" id="result-${index}"></span>
+          </div>
+        `;
+
+        container.appendChild(div);
+      });
+
+      // Fetch all problems from AoPS API in parallel
+      // Answers are already loaded in loadedProblems from loadTest()
+      const fetchPromises = loadedProblems.map(async (problem, index) => {
+        const problemNum = index + 1;
+        const pageName = getAoPSPageName(testName, problemNum);
+        const { html, redirectedSource } = await fetchFromAoPS(pageName);
+        const textElement = document.getElementById(`text-${index}`);
+        const problemDiv = document.getElementById(`problem-${index}`);
+        
+        let problemLoaded = false;
+        let answerLoaded = !!loadedProblems[index].answer;
+        
+        if (html) {
+          setHtmlContent(textElement, html);
+          problemLoaded = true;
+        } else {
+          textElement.innerHTML = '<em class="load-error">Failed to load problem from AoPS</em>';
+        }
+        
+        // If no answer yet and we have a redirect, try fetching answer for redirected source
+        if (!answerLoaded && redirectedSource) {
+          const answer = await fetchAnswerFromDB(redirectedSource);
+          if (answer) {
+            loadedProblems[index].answer = answer;
+            answerLoaded = true;
+          }
+        }
+        
+        // Show indicators for missing problem or answer
+        const indicatorContainer = document.createElement('span');
+        indicatorContainer.className = 'problem-indicators';
+        
+        if (!problemLoaded) {
+          const asterisk = document.createElement('span');
+          asterisk.className = 'aops-fail-indicator';
+          asterisk.textContent = ' *';
+          asterisk.title = 'Failed to load problem from AoPS';
+          indicatorContainer.appendChild(asterisk);
+        }
+        
+        if (!answerLoaded) {
+          const noAnswer = document.createElement('span');
+          noAnswer.className = 'no-answer-indicator';
+          noAnswer.textContent = ' ?';
+          noAnswer.title = 'Answer not found in database';
+          indicatorContainer.appendChild(noAnswer);
+        }
+        
+        if (indicatorContainer.children.length > 0) {
+          const strongEl = problemDiv.querySelector('strong');
+          if (strongEl) {
+            strongEl.insertAdjacentElement('afterend', indicatorContainer);
+          }
+        }
+      });
+
+      await Promise.all(fetchPromises);
+
+      document.getElementById('problemsWrapper').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function checkAnswers() {
+      let correct = 0;
+      const results = [];
+
+      loadedProblems.forEach((problem, index) => {
+        const problemDiv = document.getElementById(`problem-${index}`);
+        const resultSpan = document.getElementById(`result-${index}`);
+        const sourceLink = document.getElementById(`source-${index}`);
+        
+        const userAnswer = userAnswers[index] || '';
+        const correctAnswer = String(problem.answer || '').toUpperCase().trim();
+
+        const isCorrect = userAnswer !== '' && userAnswer === correctAnswer;
+        const isUnanswered = userAnswer === '';
+
+        problemDiv.classList.remove('correct-bg', 'incorrect-bg', 'unanswered-bg');
+
+        // Show the source link to AoPS
+        if (sourceLink) {
+          sourceLink.style.display = '';
+        }
+
+        // Update answer choice buttons
+        document.querySelectorAll(`#problem-${index} .answer-choice`).forEach(btn => {
+          btn.classList.remove('correct-answer', 'wrong-answer');
+          if (btn.textContent === correctAnswer) {
+            btn.classList.add('correct-answer');
+          } else if (btn.textContent === userAnswer && !isCorrect) {
+            btn.classList.add('wrong-answer');
+          }
+        });
+
+        if (isCorrect) {
+          correct++;
+          problemDiv.classList.add('correct-bg');
+          resultSpan.className = 'result correct';
+          resultSpan.textContent = 'Correct';
+          results.push({ index: index + 1, status: 'correct' });
+        } else if (isUnanswered) {
+          problemDiv.classList.add('unanswered-bg');
+          resultSpan.className = 'result';
+          resultSpan.textContent = '';
+          results.push({ index: index + 1, status: 'unanswered' });
+        } else {
+          problemDiv.classList.add('incorrect-bg');
+          resultSpan.className = 'result incorrect';
+          resultSpan.textContent = `Correct answer: ${correctAnswer}`;
+          results.push({ index: index + 1, status: 'incorrect' });
+        }
+
+        logActivity('past_problem_check', {
+          problemId: problem.id,
+          source: problem.source,
+          isCorrect: isCorrect,
+          userAnswer: userAnswer
+        });
+      });
+
+      document.getElementById('summaryHeader').textContent = `Score: ${correct} / ${loadedProblems.length}`;
+      
+      const grid = document.getElementById('problemGrid');
+      grid.innerHTML = results.map(r => `
+        <div class="problem-indicator ${r.status}">${r.index}</div>
+      `).join('');
+
+      // Show results with cutoff comparison
+      showResultsCutoffs(correct, correct);
+
+      document.getElementById('summary').classList.add('visible');
+      document.getElementById('summary').scrollIntoView({ behavior: 'smooth' });
+
+      logActivity('past_test_complete', {
+        metadata: {
+          testName: document.getElementById('testTitle').textContent,
+          score: correct,
+          total: loadedProblems.length
+        }
+      });
+
+      // Save attempt to database
+      savePastTestAttempt(correct, loadedProblems.length, results);
+    }
+
+    async function savePastTestAttempt(score, totalProblems, results) {
+      try {
+        const problemsData = loadedProblems.map((problem, index) => {
+          return {
+            id: problem.id,
+            source: problem.source,
+            text: problem.rewritten_problem || problem.text,
+            difficulty: problem.difficulty,
+            answer: problem.answer,
+            user_answer: userAnswers[index] || null,
+            link: problem.link
+          };
+        });
+
+        // Difficulty based on year (AMC 10 is generally easier)
+        let difficultyLevel = 2;
+        if (selectedYear >= 2016) {
+          difficultyLevel = 3;
+        } else if (selectedYear >= 2010) {
+          difficultyLevel = 2;
+        } else {
+          difficultyLevel = 1;
+        }
+
+        const attemptData = {
+          user_id: currentUser?.id || null,
+          session_id: getSessionId(),
+          difficulty_level: difficultyLevel,
+          score: score,
+          total_problems: totalProblems,
+          problems_data: problemsData,
+          test_name: currentTestName,
+          completed_at: new Date().toISOString()
+        };
+
+        const { data, error } = await supabaseClient
+          .from('mock_attempts')
+          .insert([attemptData])
+          .select();
+
+        if (error) {
+          console.error('Error saving past test attempt:', error);
+        } else {
+          console.log('Past test attempt saved successfully', data);
+        }
+      } catch (err) {
+        console.error('Error saving past test attempt:', err);
+      }
+    }
+
+    // Init
+    updateAuthUI();
+  </script>
+</body>
+</html>

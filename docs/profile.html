@@ -185,6 +185,31 @@
       font-size: 14px;
     }
 
+    .attempt-cutoffs {
+      margin-top: 6px;
+    }
+
+    .cutoff-badge {
+      display: inline-block;
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #e9ecef;
+      color: var(--text-secondary);
+      margin-right: 6px;
+    }
+
+    .cutoff-badge.qualified {
+      background: rgba(40, 167, 69, 0.15);
+      color: var(--success-color);
+      font-weight: 600;
+    }
+
+    .cutoff-badge.not-qualified {
+      background: rgba(108, 117, 125, 0.1);
+      color: #6c757d;
+    }
+
     .loading {
       text-align: center;
       padding: 40px;
@@ -955,6 +980,7 @@
       <div style="display: flex; gap: 0; align-items: center;">
         <a href="index.html">Mock Test</a>
         <a href="practice.html">Practice</a>
+        <a href="past_tests.html" style="background: rgba(255,255,255,0.15);">Past Tests</a>
         <a href="profile.html">Profile</a>
         <button onclick="signOut()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-left: 15px;">Sign Out</button>
       </div>
@@ -1023,7 +1049,7 @@
           </div>
           <div class="summary-stat">
             <div class="summary-stat-value" id="detailDifficulty">5</div>
-            <div class="summary-stat-label">Difficulty Level</div>
+            <div class="summary-stat-label" id="detailDifficultyLabel">Difficulty Level</div>
           </div>
           <div class="summary-stat">
             <div class="summary-stat-value" id="detailDate">-</div>
@@ -1383,19 +1409,81 @@
         return;
       }
 
-      container.innerHTML = attempts.map((attempt, index) => `
-        <div class="attempt-item" onclick="viewMockDetail(${index})">
-          <div class="attempt-info">
-            <div><strong>Difficulty Level ${attempt.difficulty_level}</strong></div>
-            <div class="attempt-date">${new Date(attempt.completed_at).toLocaleDateString()} at ${new Date(attempt.completed_at).toLocaleTimeString()}</div>
+      // Fetch cutoffs for all past tests
+      const testNames = [...new Set(attempts.filter(a => a.test_name).map(a => a.test_name))];
+      const cutoffsMap = {};
+      
+      if (testNames.length > 0) {
+        // Parse year and contest from test names
+        for (const testName of testNames) {
+          const match = testName.match(/^(\d{4})\s+(.+)$/);
+          if (match) {
+            const year = parseInt(match[1]);
+            let contest = match[2];
+            // Simplify contest name for lookup
+            const simpleContest = contest.replace('Spring ', '').replace('Fall ', '');
+            
+            const { data } = await supabaseClient
+              .from('contest_cutoffs')
+              .select('*')
+              .eq('year', year)
+              .eq('contest', simpleContest)
+              .single();
+            
+            if (data) {
+              cutoffsMap[testName] = data;
+            }
+          }
+        }
+      }
+
+      container.innerHTML = attempts.map((attempt, index) => {
+        const isPastTest = attempt.test_name && !attempt.test_name.startsWith('Mock');
+        const cutoff = cutoffsMap[attempt.test_name];
+        
+        // Calculate AMC score (6 points per correct, 1.5 per blank for AMC 10/12)
+        let scoreDisplay = `${attempt.score}/${attempt.total_problems}`;
+        let cutoffDisplay = '';
+        
+        if (isPastTest && cutoff) {
+          const isAMC = attempt.test_name.includes('AMC');
+          const isAIME = attempt.test_name.includes('AIME');
+          
+          if (isAMC && attempt.total_problems === 25) {
+            // AMC scoring: 6 per correct, 1.5 per blank, 0 per wrong
+            const blanks = attempt.total_problems - Object.keys(attempt.problems_data || {}).filter(k => attempt.problems_data[k]?.user_answer).length;
+            const amcScore = (attempt.score * 6) + (blanks * 1.5);
+            scoreDisplay = `${amcScore} pts (${attempt.score}/${attempt.total_problems})`;
+            
+            if (cutoff.aime_cutoff) {
+              const qualified = amcScore >= cutoff.aime_cutoff;
+              cutoffDisplay = `<span class="cutoff-badge ${qualified ? 'qualified' : 'not-qualified'}">AIME: ${cutoff.aime_cutoff}${qualified ? ' ✓' : ''}</span>`;
+            }
+          } else if (isAIME) {
+            if (cutoff.usajmo_cutoff_10a) {
+              cutoffDisplay = `<span class="cutoff-badge">USAJMO: ${cutoff.usajmo_cutoff_10a}</span>`;
+            }
+          }
+        }
+        
+        const title = isPastTest ? attempt.test_name : `Mock AIME - Level ${attempt.difficulty_level}`;
+        
+        return `
+          <div class="attempt-item" onclick="viewMockDetail(${index})">
+            <div class="attempt-info">
+              <div><strong>${title}</strong></div>
+              <div class="attempt-date">${new Date(attempt.completed_at).toLocaleDateString()} at ${new Date(attempt.completed_at).toLocaleTimeString()}</div>
+              ${cutoffDisplay ? `<div class="attempt-cutoffs">${cutoffDisplay}</div>` : ''}
+            </div>
+            <div class="attempt-score">${scoreDisplay}</div>
           </div>
-          <div class="attempt-score">${attempt.score}/${attempt.total_problems}</div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function viewMockDetail(index) {
       const attempt = allAttempts[index];
+      const isPastTest = attempt.test_name && !attempt.test_name.startsWith('Mock');
       
       document.getElementById('profileOverview').style.display = 'none';
       document.getElementById('mockDetailView').classList.add('active');
@@ -1403,7 +1491,8 @@
       const percentage = Math.round((attempt.score / attempt.total_problems) * 100);
       document.getElementById('detailScore').textContent = `${attempt.score}/${attempt.total_problems}`;
       document.getElementById('detailPercentage').textContent = `${percentage}%`;
-      document.getElementById('detailDifficulty').textContent = attempt.difficulty_level;
+      document.getElementById('detailDifficulty').textContent = isPastTest ? attempt.test_name : `Level ${attempt.difficulty_level}`;
+      document.getElementById('detailDifficultyLabel').textContent = isPastTest ? 'Test' : 'Difficulty Level';
       document.getElementById('detailDate').textContent = new Date(attempt.completed_at).toLocaleDateString();
 
       const overrides = attempt.overrides || {};
