@@ -751,6 +751,45 @@
       margin: 8px 0 0 0;
       font-size: 15px;
     }
+
+    .qual-scores-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .qual-score-item {
+      background: var(--bg-secondary);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+    }
+
+    .qual-score-item strong {
+      color: var(--primary-blue);
+      font-size: 16px;
+      transition: color 0.3s ease;
+    }
+
+    .qual-score-item.qualified {
+      background: rgba(40, 167, 69, 0.15);
+      border-color: var(--success-color);
+    }
+
+    .qual-score-item.qualified strong {
+      color: var(--success-color);
+    }
+
+    .qual-score-note {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      font-style: italic;
+    }
     
     .problem {
       background: var(--bg-card);
@@ -2132,6 +2171,122 @@
         "9": { "2.5": 0, "3.0": 1, "3.5": 2, "4.0": 2, "4.5": 2, "5.0": 1, "5.5": 2, "6.0": 1, "6.5": 2, "7.0": 1, "7.5": 1, "8.0": 0 },
         "10": { "2.5": 0, "3.0": 1, "3.5": 1, "4.0": 2, "4.5": 2, "5.0": 1, "5.5": 2, "6.0": 1, "6.5": 2, "7.0": 1, "7.5": 1, "8.0": 1 }
       };
+
+      // ============================================
+      // USAMO/JMO QUALIFICATION SCORE CALCULATION
+      // ============================================
+      
+      // Base AIME scores needed for qualification by difficulty level (assuming DHR on AMC)
+      const baseUSAMO = {
+        1: 12.5, 2: 12.1, 3: 12.0, 4: 11.7, 5: 11.4,
+        6: 11.1, 7: 11.0, 8: 10.5, 9: 10.0, 10: 9.5
+      };
+      const baseJMO = {
+        1: 11.0, 2: 10.6, 3: 10.5, 4: 10.2, 5: 9.9,
+        6: 9.6, 7: 9.5, 8: 9.0, 9: 8.5, 10: 8.0
+      };
+
+      // Competition modifiers (positive = easier problems, need higher score)
+      const compModifiers = {
+        'AIME': 0.6,
+        'BMT': 0,
+        'PUMAC': -1.0,
+        'HMMT': -1.0,
+        'CMIMC': -1.0,
+        'SMT': -0.6,
+        'PURPLE COMET': 0.6
+      };
+
+      // Quality modifiers (lower quality = slightly harder due to wording)
+      const qualityModifiers = {
+        3: -0.2,
+        4: -0.1,
+        5: 0
+      };
+
+      // Age modifiers (older = more likely seen, newer = fresher)
+      function getAgeModifier(year) {
+        if (year === null || year < 1990 || year > 2030) return 0;
+        if (year < 2015) return 0.1;
+        if (year <= 2020) return 0;
+        return -0.1;
+      }
+
+      // Extract year from source string (e.g., "Purple Comet 2020 High School #20")
+      function extractYear(source) {
+        if (!source) return null;
+        const match = source.match(/\b(19|20)\d{2}\b/);
+        if (match) {
+          const year = parseInt(match[0]);
+          if (year >= 1990 && year <= 2030) return year;
+        }
+        return null;
+      }
+
+      // Get competition type from source string
+      function getCompetition(source) {
+        if (!source) return null;
+        const upper = source.toUpperCase();
+        if (upper.includes('PURPLE COMET')) return 'PURPLE COMET';
+        if (upper.includes('AIME')) return 'AIME';
+        if (upper.includes('HMMT')) return 'HMMT';
+        if (upper.includes('PUMAC')) return 'PUMAC';
+        if (upper.includes('CMIMC')) return 'CMIMC';
+        if (upper.includes('BMT')) return 'BMT';
+        if (upper.includes('SMT')) return 'SMT';
+        return null;
+      }
+
+      // Calculate qualification scores for the current mock
+      let currentQualScores = { usamo: null, jmo: null };
+      
+      function calculateQualScores(problems, level) {
+        if (!problems || problems.length === 0) {
+          return { usamo: null, jmo: null };
+        }
+
+        let totalCompMod = 0;
+        let totalQualityMod = 0;
+        let totalAgeMod = 0;
+        let compCount = 0;
+        let qualityCount = 0;
+        let ageCount = 0;
+
+        problems.forEach(p => {
+          // Competition modifier
+          const comp = getCompetition(p.source);
+          if (comp && compModifiers[comp] !== undefined) {
+            totalCompMod += compModifiers[comp];
+            compCount++;
+          }
+
+          // Quality modifier
+          const quality = parseInt(p.quality);
+          if (quality >= 3 && quality <= 5 && qualityModifiers[quality] !== undefined) {
+            totalQualityMod += qualityModifiers[quality];
+            qualityCount++;
+          }
+
+          // Age modifier
+          const year = extractYear(p.source);
+          if (year !== null) {
+            totalAgeMod += getAgeModifier(year);
+            ageCount++;
+          }
+        });
+
+        const avgCompMod = compCount > 0 ? totalCompMod / compCount : 0;
+        const avgQualityMod = qualityCount > 0 ? totalQualityMod / qualityCount : 0;
+        const avgAgeMod = ageCount > 0 ? totalAgeMod / ageCount : 0;
+
+        const usamoRaw = baseUSAMO[level] + avgCompMod + avgQualityMod + avgAgeMod;
+        const jmoRaw = baseJMO[level] + avgCompMod + avgQualityMod + avgAgeMod;
+
+        return {
+          usamo: Math.ceil(usamoRaw),
+          jmo: Math.ceil(jmoRaw)
+        };
+      }
       
       function bucketizeFine() {
         const buckets = {};
@@ -2854,6 +3009,20 @@
           }
         });
 
+        // Determine qualification status
+        const usamoQualified = currentQualScores.usamo !== null && correctCount >= currentQualScores.usamo;
+        const jmoQualified = currentQualScores.jmo !== null && correctCount >= currentQualScores.jmo;
+
+        // Update qual score boxes with green if qualified
+        const qualUSAMO = document.getElementById('qual-usamo');
+        const qualJMO = document.getElementById('qual-jmo');
+        if (qualUSAMO) {
+          qualUSAMO.classList.toggle('qualified', usamoQualified);
+        }
+        if (qualJMO) {
+          qualJMO.classList.toggle('qualified', jmoQualified);
+        }
+
         const summaryDiv = document.getElementById("summary");
         summaryDiv.innerHTML = `
           <div class="summary-header">Score: ${correctCount} / ${chosenProblems.length}</div>
@@ -3021,12 +3190,20 @@
           chosenProblems.push(...sample(buckets[diff], count));
         }
 
+        // Calculate qualification scores
+        currentQualScores = calculateQualScores(chosenProblems, parseInt(level));
+
         const container = document.getElementById("problems");
         container.innerHTML = `
           <div class="problems-wrapper">
             <div class="problems-header">
               <h2>Problems</h2>
               <p>${chosenProblems.length} problems generated • Difficulty Level ${level}</p>
+              <div class="qual-scores-header">
+                <span class="qual-score-item" id="qual-usamo">USAMO: <strong>${currentQualScores.usamo !== null ? currentQualScores.usamo : '—'}</strong></span>
+                <span class="qual-score-item" id="qual-jmo">JMO: <strong>${currentQualScores.jmo !== null ? currentQualScores.jmo : '—'}</strong></span>
+                <span class="qual-score-note">AIME score needed to qualify for USA(J)MO</span>
+              </div>
             </div>
             <div id="problems-list"></div>
           </div>
