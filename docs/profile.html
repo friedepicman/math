@@ -216,6 +216,16 @@
       color: var(--text-secondary);
     }
 
+    .loading-problem {
+      color: var(--text-secondary);
+      font-style: italic;
+      padding: 20px 0;
+    }
+
+    .load-error {
+      color: var(--error-color);
+    }
+
     .success-message {
       background: rgba(40, 167, 69, 0.1);
       color: var(--success-color);
@@ -448,6 +458,48 @@
 
     .override-summary-icon {
       font-size: 20px;
+    }
+
+    /* Cutoff Info Section */
+    .cutoff-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      background: var(--bg-card);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      justify-content: center;
+    }
+
+    .cutoff-item {
+      text-align: center;
+      min-width: 100px;
+    }
+
+    .cutoff-label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .cutoff-value {
+      display: block;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary-blue);
+    }
+
+    .cutoff-value.qualified {
+      color: var(--success-color);
+    }
+
+    .cutoff-value.not-qualified {
+      color: var(--text-primary);
     }
 
     /* Level Shields */
@@ -1060,6 +1112,38 @@
         <div id="overrideSummary"></div>
       </div>
 
+      <!-- Contest Info/Cutoffs Section for Past Tests -->
+      <div class="cutoff-info" id="detailCutoffInfo" style="display: none;">
+        <div class="cutoff-item">
+          <span class="cutoff-label">Your Score</span>
+          <span class="cutoff-value" id="detailUserScore">—</span>
+        </div>
+        <div class="cutoff-item" id="detailAIMEItem">
+          <span class="cutoff-label">AIME Cutoff</span>
+          <span class="cutoff-value" id="detailAIMECutoff">—</span>
+        </div>
+        <div class="cutoff-item" id="detailHRItem">
+          <span class="cutoff-label">Honor Roll (5%)</span>
+          <span class="cutoff-value" id="detailHR">—</span>
+        </div>
+        <div class="cutoff-item" id="detailDHRItem">
+          <span class="cutoff-label">DHR (1%)</span>
+          <span class="cutoff-value" id="detailDHR">—</span>
+        </div>
+        <div class="cutoff-item" id="detailMeanItem">
+          <span class="cutoff-label">Mean</span>
+          <span class="cutoff-value" id="detailMean">—</span>
+        </div>
+        <div class="cutoff-item" id="detailUSAJMOItem" style="display: none;">
+          <span class="cutoff-label">USAJMO Cutoff</span>
+          <span class="cutoff-value" id="detailUSAJMO">—</span>
+        </div>
+        <div class="cutoff-item" id="detailUSAMOItem" style="display: none;">
+          <span class="cutoff-label">USAMO Cutoff</span>
+          <span class="cutoff-value" id="detailUSAMO">—</span>
+        </div>
+      </div>
+
       <div id="problemsList"></div>
     </div>
   </div>
@@ -1482,9 +1566,18 @@
       }).join('');
     }
 
-    function viewMockDetail(index) {
+    async function viewMockDetail(index) {
       const attempt = allAttempts[index];
       const isPastTest = attempt.test_name && !attempt.test_name.startsWith('Mock');
+      
+      logActivity('view_mock_detail', { 
+        metadata: { 
+          testName: attempt.test_name || `Mock Level ${attempt.difficulty_level}`,
+          score: attempt.score,
+          totalProblems: attempt.total_problems,
+          isPastTest: isPastTest
+        } 
+      });
       
       document.getElementById('profileOverview').style.display = 'none';
       document.getElementById('mockDetailView').classList.add('active');
@@ -1511,11 +1604,213 @@
         overrideSummaryDiv.innerHTML = '';
       }
 
+      // Display cutoffs for past tests
+      const cutoffSection = document.getElementById('detailCutoffInfo');
+      if (isPastTest) {
+        await displayCutoffsForTest(attempt);
+      } else {
+        cutoffSection.style.display = 'none';
+      }
+
       displayProblems(attempt);
       window.scrollTo(0, 0);
     }
 
+    async function displayCutoffsForTest(attempt) {
+      const cutoffSection = document.getElementById('detailCutoffInfo');
+      const testName = attempt.test_name;
+      
+      // Parse year and contest from test name
+      const match = testName.match(/^(\d{4})\s+(.+)$/);
+      if (!match) {
+        cutoffSection.style.display = 'none';
+        return;
+      }
+      
+      const year = parseInt(match[1]);
+      let contest = match[2];
+      const simpleContest = contest.replace('Spring ', '').replace('Fall ', '');
+      
+      // Determine test type
+      const isAMC = testName.includes('AMC');
+      const isAMC8 = testName.includes('AMC 8');
+      const isAMC10 = testName.includes('AMC 10');
+      const isAMC12 = testName.includes('AMC 12');
+      const isAIME = testName.includes('AIME');
+      
+      // Fetch cutoffs
+      let cutoffData = null;
+      try {
+        let { data } = await supabaseClient
+          .from('contest_cutoffs')
+          .select('*')
+          .eq('year', year)
+          .like('contest', `%${contest}%`)
+          .single();
+        
+        if (!data) {
+          const result = await supabaseClient
+            .from('contest_cutoffs')
+            .select('*')
+            .eq('year', year)
+            .eq('contest', simpleContest)
+            .single();
+          data = result.data;
+        }
+        
+        cutoffData = data;
+      } catch (err) {
+        console.error('Error fetching cutoffs:', err);
+      }
+      
+      // Calculate user's AMC score if applicable
+      let userScoreDisplay = `${attempt.score}`;
+      let amcScore = null;
+      
+      if ((isAMC10 || isAMC12) && attempt.total_problems === 25) {
+        // AMC scoring: 6 per correct, 1.5 per blank
+        const problems = attempt.problems_data || [];
+        let answered = 0;
+        problems.forEach(p => {
+          if (p.user_answer && p.user_answer !== '') answered++;
+        });
+        const blanks = attempt.total_problems - answered;
+        amcScore = (attempt.score * 6) + (blanks * 1.5);
+        userScoreDisplay = `${amcScore} pts`;
+      } else if (isAIME) {
+        userScoreDisplay = `${attempt.score}`;
+      }
+      
+      document.getElementById('detailUserScore').textContent = userScoreDisplay;
+      
+      // Reset visibility
+      document.getElementById('detailAIMEItem').style.display = 'none';
+      document.getElementById('detailHRItem').style.display = 'none';
+      document.getElementById('detailDHRItem').style.display = 'none';
+      document.getElementById('detailMeanItem').style.display = 'none';
+      document.getElementById('detailUSAJMOItem').style.display = 'none';
+      document.getElementById('detailUSAMOItem').style.display = 'none';
+      
+      if (cutoffData) {
+        // Show AMC cutoffs
+        if (isAMC10 || isAMC12) {
+          if (cutoffData.aime_cutoff) {
+            document.getElementById('detailAIMEItem').style.display = 'block';
+            const aimeEl = document.getElementById('detailAIMECutoff');
+            aimeEl.textContent = cutoffData.aime_cutoff;
+            if (amcScore !== null && amcScore >= cutoffData.aime_cutoff) {
+              aimeEl.classList.add('qualified');
+              aimeEl.classList.remove('not-qualified');
+            } else {
+              aimeEl.classList.remove('qualified');
+              aimeEl.classList.add('not-qualified');
+            }
+          }
+          if (cutoffData.honor_roll) {
+            document.getElementById('detailHRItem').style.display = 'block';
+            const hrEl = document.getElementById('detailHR');
+            hrEl.textContent = cutoffData.honor_roll;
+            if (amcScore !== null && amcScore >= cutoffData.honor_roll) {
+              hrEl.classList.add('qualified');
+              hrEl.classList.remove('not-qualified');
+            } else {
+              hrEl.classList.remove('qualified');
+              hrEl.classList.add('not-qualified');
+            }
+          }
+          if (cutoffData.dhr) {
+            document.getElementById('detailDHRItem').style.display = 'block';
+            const dhrEl = document.getElementById('detailDHR');
+            dhrEl.textContent = cutoffData.dhr;
+            if (amcScore !== null && amcScore >= cutoffData.dhr) {
+              dhrEl.classList.add('qualified');
+              dhrEl.classList.remove('not-qualified');
+            } else {
+              dhrEl.classList.remove('qualified');
+              dhrEl.classList.add('not-qualified');
+            }
+          }
+          if (cutoffData.mean) {
+            document.getElementById('detailMeanItem').style.display = 'block';
+            document.getElementById('detailMean').textContent = cutoffData.mean;
+          }
+        }
+        
+        // Show AIME cutoffs
+        if (isAIME) {
+          if (cutoffData.usajmo_cutoff_10a || cutoffData.usajmo_cutoff_10b) {
+            document.getElementById('detailUSAJMOItem').style.display = 'block';
+            const usajmoCutoff = cutoffData.usajmo_cutoff_10a || cutoffData.usajmo_cutoff_10b;
+            const usajmoEl = document.getElementById('detailUSAJMO');
+            usajmoEl.textContent = usajmoCutoff;
+            if (attempt.score >= usajmoCutoff) {
+              usajmoEl.classList.add('qualified');
+              usajmoEl.classList.remove('not-qualified');
+            } else {
+              usajmoEl.classList.remove('qualified');
+              usajmoEl.classList.add('not-qualified');
+            }
+          }
+          if (cutoffData.usamo_cutoff_12a || cutoffData.usamo_cutoff_12b) {
+            document.getElementById('detailUSAMOItem').style.display = 'block';
+            const usamoCutoff = cutoffData.usamo_cutoff_12a || cutoffData.usamo_cutoff_12b;
+            const usamoEl = document.getElementById('detailUSAMO');
+            usamoEl.textContent = usamoCutoff;
+            if (attempt.score >= usamoCutoff) {
+              usamoEl.classList.add('qualified');
+              usamoEl.classList.remove('not-qualified');
+            } else {
+              usamoEl.classList.remove('qualified');
+              usamoEl.classList.add('not-qualified');
+            }
+          }
+          if (cutoffData.mean) {
+            document.getElementById('detailMeanItem').style.display = 'block';
+            document.getElementById('detailMean').textContent = cutoffData.mean;
+          }
+        }
+        
+        // Show AMC 8 cutoffs
+        if (isAMC8) {
+          if (cutoffData.honor_roll) {
+            document.getElementById('detailHRItem').style.display = 'block';
+            const hrEl = document.getElementById('detailHR');
+            hrEl.textContent = cutoffData.honor_roll;
+            if (attempt.score >= cutoffData.honor_roll) {
+              hrEl.classList.add('qualified');
+              hrEl.classList.remove('not-qualified');
+            } else {
+              hrEl.classList.remove('qualified');
+              hrEl.classList.add('not-qualified');
+            }
+          }
+          if (cutoffData.dhr) {
+            document.getElementById('detailDHRItem').style.display = 'block';
+            const dhrEl = document.getElementById('detailDHR');
+            dhrEl.textContent = cutoffData.dhr;
+            if (attempt.score >= cutoffData.dhr) {
+              dhrEl.classList.add('qualified');
+              dhrEl.classList.remove('not-qualified');
+            } else {
+              dhrEl.classList.remove('qualified');
+              dhrEl.classList.add('not-qualified');
+            }
+          }
+          if (cutoffData.mean) {
+            document.getElementById('detailMeanItem').style.display = 'block';
+            document.getElementById('detailMean').textContent = cutoffData.mean;
+          }
+        }
+        
+        cutoffSection.style.display = 'flex';
+      } else {
+        // No cutoff data available, just show user score
+        cutoffSection.style.display = 'flex';
+      }
+    }
+
     function backToProfile() {
+      logActivity('back_to_profile');
       document.getElementById('profileOverview').style.display = 'block';
       document.getElementById('mockDetailView').classList.remove('active');
       window.scrollTo(0, 0);
@@ -1527,12 +1822,14 @@
 
       const problems = attempt.problems_data || [];
       const overrides = attempt.overrides || {};
+      const isPastTest = attempt.test_name && !attempt.test_name.startsWith('Mock');
       
       if (!problems || problems.length === 0) {
         container.innerHTML = '<p>No problem data available for this attempt.</p>';
         return;
       }
 
+      // For past tests, create initial HTML with loading placeholders then fetch from AoPS
       const problemsHTML = problems.map((problem, index) => {
         const userAnswer = problem.user_answer || null;
         const correctAnswer = problem.aime_answer ? String(problem.aime_answer % 1000) : String(problem.answer || '');
@@ -1565,17 +1862,36 @@
         const overrideBadgeHTML = wasOverridden ? '<span class="override-badge">Override</span>' : '';
         const overrideIndicatorHTML = wasOverridden ? '<div class="override-indicator"><span class="override-icon">✓</span>Manually marked as correct</div>' : '';
 
+        // For past tests, show loading state for problem text
+        const problemTextContent = isPastTest 
+          ? '<div class="loading-problem">Loading problem from AoPS...</div>'
+          : (problem.rewritten_problem || problem.text || 'Problem text not available');
+
+        // Generate AoPS link for past tests
+        let sourceLink = '';
+        if (isPastTest && attempt.test_name) {
+          const aopsPageName = getAoPSPageName(attempt.test_name, index + 1);
+          const aopsUrl = `https://artofproblemsolving.com/wiki/index.php/${aopsPageName}`;
+          sourceLink = `<a href="${aopsUrl}" target="_blank" class="source-label">${problem.source || attempt.test_name + ' #' + (index + 1)}</a>`;
+        } else if (problem.link) {
+          sourceLink = `<a href="${problem.link}" target="_blank" class="source-label">${problem.source || 'View Source'}</a>`;
+        } else if (problem.source) {
+          sourceLink = `<span class="source-label" style="cursor: default;">${problem.source}</span>`;
+        }
+
+        const difficultyDisplay = problem.difficulty ? `Difficulty: ${parseFloat(problem.difficulty).toFixed(1)}` : 'Difficulty: NaN';
+
         return `
-          <div class="problem-detail mathjax-process">
+          <div class="problem-detail mathjax-process" id="problem-detail-${index}">
             <div class="problem-header">
               <div>
                 <span class="problem-number">Problem ${index + 1}</span>
                 ${qualityBadge}
               </div>
-              <span class="problem-difficulty">Difficulty: ${parseFloat(problem.difficulty).toFixed(1)}</span>
+              <span class="problem-difficulty">${difficultyDisplay}</span>
             </div>
             
-            <div class="problem-text">${problem.rewritten_problem || problem.text || 'Problem text not available'}</div>
+            <div class="problem-text" id="problem-text-${index}">${problemTextContent}</div>
             
             <div class="answer-section">
               <div class="answer-box ${statusClass}" style="position: relative;">
@@ -1595,15 +1911,206 @@
             
             ${overrideIndicatorHTML}
             
-            ${problem.link ? `<a href="${problem.link}" target="_blank" class="source-label">${problem.source || 'View Source'}</a>` : (problem.source ? `<span class="source-label" style="cursor: default;">${problem.source}</span>` : '')}
+            ${sourceLink}
           </div>
         `;
       }).join('');
 
       container.innerHTML = problemsHTML;
 
+      // For past tests, fetch problem text from AoPS API
+      if (isPastTest && attempt.test_name) {
+        const fetchPromises = problems.map(async (problem, index) => {
+          const problemNum = index + 1;
+          const pageName = getAoPSPageName(attempt.test_name, problemNum);
+          const { html } = await fetchFromAoPS(pageName);
+          const textElement = document.getElementById(`problem-text-${index}`);
+          
+          if (html && textElement) {
+            setHtmlContent(textElement, html);
+          } else if (textElement) {
+            // Fallback to stored text if AoPS fetch fails
+            textElement.innerHTML = problem.rewritten_problem || problem.text || '<em class="load-error">Failed to load problem from AoPS</em>';
+          }
+        });
+        
+        await Promise.all(fetchPromises);
+      }
+
       if (window.MathJax) {
         MathJax.typesetPromise().catch(err => console.error('MathJax error:', err));
+      }
+    }
+
+    // Helper function to get AoPS page name from test name
+    function getAoPSPageName(testName, problemNum) {
+      // Handle 2021 Spring/Fall naming conventions
+      // AoPS uses "2021_AMC_12A" for Spring 2021 (no "Spring" in name)
+      // AoPS uses "2021_Fall_AMC_12A" for Fall 2021
+      let normalized = testName;
+      
+      // Remove "Spring" from 2021 tests - AoPS doesn't use it
+      if (normalized.includes('2021 Spring')) {
+        normalized = normalized.replace('2021 Spring ', '2021 ');
+      }
+      
+      normalized = normalized.replace(/ /g, '_');
+      return `${normalized}_Problems/Problem_${problemNum}`;
+    }
+
+    // Fetch from AoPS API - returns { html, redirectedSource } 
+    async function fetchFromAoPS(pageName) {
+      try {
+        const url = `https://artofproblemsolving.com/wiki/api.php?action=parse&page=${encodeURIComponent(pageName)}&format=json&prop=text&origin=*&redirects=true`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.parse && data.parse.text && data.parse.text['*']) {
+          let html = data.parse.text['*'];
+          
+          // Check if this is a redirect page (contains "Redirect to:" text)
+          if (html.includes('Redirect to:') || html.includes('#REDIRECT')) {
+            // Try to extract the redirect target and fetch it
+            const redirectMatch = html.match(/href="\/wiki\/index\.php\/([^"]+)"/);
+            if (redirectMatch) {
+              const redirectTarget = decodeURIComponent(redirectMatch[1]);
+              const redirectUrl = `https://artofproblemsolving.com/wiki/api.php?action=parse&page=${encodeURIComponent(redirectTarget)}&format=json&prop=text&origin=*`;
+              const redirectResponse = await fetch(redirectUrl);
+              const redirectData = await redirectResponse.json();
+              if (redirectData.parse && redirectData.parse.text && redirectData.parse.text['*']) {
+                const sourceMatch = redirectTarget.match(/^(\d{4})_(.+)_Problems\/Problem_(\d+)$/);
+                let redirectedSource = null;
+                if (sourceMatch) {
+                  const year = sourceMatch[1];
+                  const contest = sourceMatch[2].replace(/_/g, ' ');
+                  const problemNum = sourceMatch[3];
+                  redirectedSource = `${year} ${contest} #${problemNum}`;
+                }
+                return { html: redirectData.parse.text['*'], redirectedSource };
+              }
+            }
+          }
+          
+          return { html, redirectedSource: null };
+        }
+        return { html: null, redirectedSource: null };
+      } catch (err) {
+        console.error('AoPS fetch error:', err);
+        return { html: null, redirectedSource: null };
+      }
+    }
+
+    // Set HTML content from AoPS API (clean up and format)
+    function setHtmlContent(element, html) {
+      if (!html) {
+        element.innerHTML = '<em>No content</em>';
+        return;
+      }
+      
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html;
+      
+      // Remove edit sections
+      tempDiv.querySelectorAll('.mw-editsection').forEach(el => el.remove());
+      
+      // Remove table of contents
+      tempDiv.querySelectorAll('.toc, #toc').forEach(el => el.remove());
+      
+      // Find content between Problem header and next h2 header
+      const allContent = tempDiv.innerHTML;
+      
+      // Find where Problem section starts (after the Problem h2)
+      const problemHeaderMatch = allContent.match(/<h2[^>]*>.*?Problem.*?<\/h2>/i);
+      let startIndex = 0;
+      if (problemHeaderMatch) {
+        startIndex = problemHeaderMatch.index + problemHeaderMatch[0].length;
+      }
+      
+      // Find the next h2 header after the problem content
+      const remainingContent = allContent.substring(startIndex);
+      const nextH2Match = remainingContent.match(/<h2[^>]*>/i);
+      let endIndex = allContent.length;
+      if (nextH2Match) {
+        endIndex = startIndex + nextH2Match.index;
+      }
+      
+      // Extract just the problem content
+      let problemContent = allContent.substring(startIndex, endIndex);
+      
+      // Clean up the content
+      const cleanDiv = document.createElement('div');
+      cleanDiv.innerHTML = problemContent;
+      
+      // Remove any "Problem N" headers (h2, bold, etc.)
+      cleanDiv.querySelectorAll('h2').forEach(h2 => {
+        const text = h2.textContent.trim();
+        if (text === 'Problem' || /^Problem\s+\d+$/.test(text)) {
+          h2.remove();
+        }
+      });
+      
+      // Remove big bold "Problem N" text
+      cleanDiv.querySelectorAll('p, div, b, strong, big').forEach(el => {
+        const text = el.textContent.trim();
+        if (/^Problem\s+\d+$/.test(text)) {
+          el.remove();
+        }
+      });
+      
+      // Remove redirect/note text like "The following problem is from..."
+      cleanDiv.querySelectorAll('p, blockquote, i, em').forEach(el => {
+        const text = el.textContent.trim().toLowerCase();
+        if (text.length < 300 && (
+            text.includes('the following problem is from') || 
+            text.includes('redirect to this page') ||
+            text.includes('problems redirect to') ||
+            text.includes('so those problems redirect'))) {
+          el.remove();
+        }
+      });
+      
+      // Remove all links but keep their text content (preserve images)
+      cleanDiv.querySelectorAll('a').forEach(link => {
+        const img = link.querySelector('img');
+        if (img) {
+          link.parentNode.replaceChild(img, link);
+        } else {
+          const text = document.createTextNode(link.textContent);
+          link.parentNode.replaceChild(text, link);
+        }
+      });
+      
+      // Fix math element display
+      cleanDiv.querySelectorAll('.mwe-math-element').forEach(mathEl => {
+        mathEl.style.display = 'inline';
+        mathEl.style.verticalAlign = 'middle';
+      });
+      
+      cleanDiv.querySelectorAll('.mwe-math-fallback-image-inline').forEach(img => {
+        img.style.display = 'inline';
+        img.style.verticalAlign = 'middle';
+        img.style.margin = '0 2px';
+      });
+      
+      cleanDiv.querySelectorAll('img').forEach(img => {
+        const height = parseInt(img.getAttribute('height') || '0');
+        const isLatex = img.classList.contains('latex') || 
+                        img.classList.contains('mwe-math-fallback-image-inline') ||
+                        img.alt?.startsWith('$') ||
+                        img.src?.includes('latex') ||
+                        img.src?.includes('math');
+        
+        if (height < 50 || isLatex) {
+          img.style.display = 'inline';
+          img.style.verticalAlign = 'middle';
+          img.style.margin = '0 2px';
+        }
+      });
+      
+      element.innerHTML = cleanDiv.innerHTML;
+      
+      if (window.MathJax) {
+        MathJax.typesetPromise([element]).catch(err => console.error('MathJax error:', err));
       }
     }
 
@@ -1611,6 +2118,7 @@
       e.preventDefault();
       
       const displayName = document.getElementById('displayName').value;
+      logActivity('update_profile', { metadata: { displayName: displayName } });
 
       try {
         const { error } = await supabaseClient
@@ -1623,6 +2131,7 @@
 
         if (error) throw error;
 
+        logActivity('update_profile_success');
         document.getElementById('updateMessage').textContent = 'Profile updated successfully!';
         document.getElementById('updateMessage').style.display = 'block';
         
@@ -1634,6 +2143,7 @@
         document.getElementById('userAvatar').textContent = displayName.charAt(0).toUpperCase();
 
       } catch (error) {
+        logActivity('update_profile_error', { metadata: { error: error.message } });
         alert('Error updating profile: ' + error.message);
       }
     });
@@ -1645,6 +2155,7 @@
     }
 
     async function resetPassword() {
+      logActivity('reset_password_request');
       try {
         const { error } = await supabaseClient.auth.resetPasswordForEmail(currentUser.email, {
           redirectTo: `${window.location.origin}/reset-password.html`
@@ -1658,15 +2169,19 @@
     }
 
     async function deleteAccount() {
+      logActivity('delete_account_initiated');
       if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+        logActivity('delete_account_cancelled', { metadata: { stage: 'first_confirm' } });
         return;
       }
 
       if (!confirm('This will permanently delete all your data. Are you absolutely sure?')) {
+        logActivity('delete_account_cancelled', { metadata: { stage: 'second_confirm' } });
         return;
       }
 
       try {
+        logActivity('delete_account_confirmed');
         await supabaseClient.from('mock_attempts').delete().eq('user_id', currentUser.id);
         await supabaseClient.from('user_bookmarks').delete().eq('user_id', currentUser.id);
         await supabaseClient.from('user_profiles').delete().eq('id', currentUser.id);
