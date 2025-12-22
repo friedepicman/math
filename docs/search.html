@@ -15,6 +15,138 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0ZGJwbHhreWFvY3lyanBtanliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMDgxMDUsImV4cCI6MjA2NzY4NDEwNX0.hE0V09JxdLYNbZqPVH3HZxNpLPP2rXIaBsNGUHO3upc';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // ============================================
+    // ANALYTICS TRACKING
+    // ============================================
+    const MOD_USER_ID = '6af62d68-67e7-42f6-b91f-58cac9d81cba';
+    const CURRENT_PAGE = 'search';
+    let pageLoadTime = Date.now();
+
+    function getSessionId() {
+      let sessionId = localStorage.getItem('mockAIME_sessionId');
+      if (!sessionId) {
+        sessionId = 'sess_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
+        localStorage.setItem('mockAIME_sessionId', sessionId);
+      }
+      return sessionId;
+    }
+
+    function getUserType(userId) {
+      if (!userId) return 'guest';
+      if (userId === MOD_USER_ID) return 'mod';
+      return 'user';
+    }
+
+    async function logActivity(eventType, data = {}) {
+      try {
+        const userId = currentUser?.id || null;
+        const payload = {
+          user_id: userId,
+          session_id: getSessionId(),
+          user_type: getUserType(userId),
+          event_type: eventType,
+          page: CURRENT_PAGE,
+          problem_id: data.problemId || null,
+          problem_source: data.source || null,
+          difficulty: data.difficulty || null,
+          is_correct: data.isCorrect ?? null,
+          user_answer: data.userAnswer || null,
+          metadata: data.metadata || null
+        };
+        
+        await supabaseClient.from('activity_log').insert(payload);
+        
+        await supabaseClient.from('activity_all').insert({
+          user_id: userId,
+          session_id: getSessionId(),
+          user_type: getUserType(userId),
+          event_type: eventType,
+          page: CURRENT_PAGE,
+          element_id: null,
+          element_text: null,
+          element_type: null,
+          url: window.location.href,
+          referrer: document.referrer || null,
+          metadata: {
+            ...data,
+            fromActivityLog: true
+          }
+        });
+      } catch (e) {
+        console.error('Activity log error:', e);
+      }
+    }
+
+    async function logEvent(eventType, data = {}) {
+      try {
+        const userId = currentUser?.id || null;
+        await supabaseClient.from('activity_all').insert({
+          user_id: userId,
+          session_id: getSessionId(),
+          user_type: getUserType(userId),
+          event_type: eventType,
+          page: CURRENT_PAGE,
+          element_id: data.elementId || null,
+          element_text: data.elementText ? String(data.elementText).substring(0, 100) : null,
+          element_type: data.elementType || null,
+          url: window.location.href,
+          referrer: document.referrer || null,
+          metadata: data.metadata || null
+        });
+      } catch (e) {
+        console.error('Event log error:', e);
+      }
+    }
+
+    function initAnalytics() {
+      logActivity('page_view', {
+        metadata: { referrer: document.referrer }
+      });
+      logEvent('page_view', {
+        metadata: { 
+          referrer: document.referrer, 
+          userAgent: navigator.userAgent,
+          screenWidth: window.innerWidth,
+          screenHeight: window.innerHeight
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        const target = e.target;
+        const clickedEl = target.closest('button, a, input, select, .star, .difficulty-btn') || target;
+        
+        logEvent('click', {
+          elementId: clickedEl.id || null,
+          elementText: (clickedEl.textContent?.trim() || clickedEl.value || '').substring(0, 100),
+          elementType: clickedEl.tagName?.toLowerCase() || null,
+          metadata: { 
+            classList: Array.from(clickedEl.classList || []),
+            x: e.clientX,
+            y: e.clientY
+          }
+        });
+      });
+
+      window.addEventListener('beforeunload', () => {
+        const timeOnPage = Math.round((Date.now() - pageLoadTime) / 1000);
+        const data = JSON.stringify({
+          user_id: currentUser?.id || null,
+          session_id: getSessionId(),
+          user_type: getUserType(currentUser?.id),
+          event_type: 'page_leave',
+          page: CURRENT_PAGE,
+          url: window.location.href,
+          metadata: { secondsOnPage: timeOnPage }
+        });
+        navigator.sendBeacon(
+          `${SUPABASE_URL}/rest/v1/activity_all?apikey=${SUPABASE_ANON_KEY}`,
+          data
+        );
+      });
+    }
+
+    setTimeout(initAnalytics, 500);
+
     let currentUser = null;
     let allProblems = [];
     let filteredProblems = [];
@@ -76,6 +208,7 @@
     }
 
     async function signOut() {
+      logActivity('logout');
       await supabaseClient.auth.signOut();
       currentUser = null;
       await updateAuthUI();
@@ -172,6 +305,20 @@
         if (quality < minQuality || quality > maxQuality) return false;
 
         return true;
+      });
+
+      // Log search action
+      logActivity('search', {
+        metadata: {
+          problemId: problemId || null,
+          textSearch: textSearch || null,
+          sourceSearch: sourceSearch || null,
+          minDiff,
+          maxDiff,
+          minQuality,
+          maxQuality,
+          resultCount: filteredProblems.length
+        }
       });
 
       currentPage = 1;
@@ -295,6 +442,8 @@
 
     // Report Modal Functions
     function openReportModal(problemId) {
+      logActivity('open_report_modal', { problemId });
+      
       currentReportProblemId = problemId;
       currentReportProblemData = allProblems.find(p => p.id === problemId);
       
@@ -453,11 +602,18 @@
       const totalPages = Math.ceil(filteredProblems.length / problemsPerPage);
       if (page < 1 || page > totalPages) return;
       currentPage = page;
+      
+      logEvent('pagination', {
+        metadata: { page, totalPages, resultsCount: filteredProblems.length }
+      });
+      
       displayResults();
       document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function resetFilters() {
+      logActivity('reset_filters');
+      
       document.getElementById('problemId').value = '';
       document.getElementById('textSearch').value = '';
       document.getElementById('sourceSearch').value = '';
@@ -566,6 +722,10 @@
             console.error('Error submitting report:', error);
             alert('Failed to submit report. Please try again.');
           } else {
+            logActivity('report_submit', {
+              problemId: currentReportProblemId,
+              metadata: { reportTypes: reportData.report_types }
+            });
             alert('Thank you! Your report has been submitted.');
             closeReportModal();
           }
