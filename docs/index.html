@@ -347,6 +347,7 @@
     }
 
     async function signOut() {
+      logActivity('logout');
       await supabaseClient.auth.signOut();
       await updateAuthUI();
     }
@@ -1887,7 +1888,9 @@
     <script>
       function toggleSettings() {
         const filterOptions = document.getElementById('filterOptions');
-        filterOptions.style.display = filterOptions.style.display === 'none' ? 'block' : 'none';
+        const isOpening = filterOptions.style.display === 'none';
+        filterOptions.style.display = isOpening ? 'block' : 'none';
+        logActivity('toggle_settings', { metadata: { opened: isOpening } });
       }
     </script>
 
@@ -2088,6 +2091,8 @@
         
         const btn = document.querySelector('.dark-mode-toggle');
         btn.textContent = newTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+        
+        logActivity('toggle_dark_mode', { metadata: { theme: newTheme } });
       }
 
       // Load saved theme
@@ -2158,6 +2163,8 @@
           nav.classList.remove('visible');
           btn.textContent = 'Show Navigation';
         }
+        
+        logActivity('toggle_problem_nav', { metadata: { visible: navVisible } });
       }
 
       const difficultyTemplate = {
@@ -2531,8 +2538,9 @@
       function toggleCurrentAnswer() {
         const revealDiv = document.getElementById('currentAnswerReveal');
         const btn = event.target;
+        const isShowing = revealDiv.style.display === 'none';
         
-        if (revealDiv.style.display === 'none') {
+        if (isShowing) {
           if (currentReportProblemData) {
             const answer = currentReportProblemData.aime_answer 
               ? String(currentReportProblemData.aime_answer % 1000) 
@@ -2545,13 +2553,15 @@
           revealDiv.style.display = 'none';
           btn.textContent = 'Show Answer';
         }
+        logEvent('toggle_current_answer', { metadata: { showing: isShowing, problemId: currentReportProblemId } });
       }
 
       function toggleProblemCurrentAnswer() {
         const revealDiv = document.getElementById('problemCurrentAnswerReveal');
         const btn = event.target;
+        const isShowing = revealDiv.style.display === 'none';
         
-        if (revealDiv.style.display === 'none') {
+        if (isShowing) {
           if (currentReportProblemData) {
             const answer = currentReportProblemData.aime_answer 
               ? String(currentReportProblemData.aime_answer % 1000) 
@@ -2564,6 +2574,7 @@
           revealDiv.style.display = 'none';
           btn.textContent = 'Show Answer';
         }
+        logEvent('toggle_problem_current_answer', { metadata: { showing: isShowing, problemId: currentReportProblemId } });
       }
 
       function toggleReportSection(section) {
@@ -2579,20 +2590,16 @@
 
       function toggleQualityHelp() {
         const helpBox = document.getElementById('qualityHelpBox');
-        if (helpBox.style.display === 'none') {
-          helpBox.style.display = 'block';
-        } else {
-          helpBox.style.display = 'none';
-        }
+        const isOpening = helpBox.style.display === 'none';
+        helpBox.style.display = isOpening ? 'block' : 'none';
+        logEvent('toggle_quality_help', { metadata: { opened: isOpening } });
       }
 
       function toggleDifficultyHelp() {
         const helpBox = document.getElementById('difficultyHelpBox');
-        if (helpBox.style.display === 'none') {
-          helpBox.style.display = 'block';
-        } else {
-          helpBox.style.display = 'none';
-        }
+        const isOpening = helpBox.style.display === 'none';
+        helpBox.style.display = isOpening ? 'block' : 'none';
+        logEvent('toggle_difficulty_help', { metadata: { opened: isOpening } });
       }
 
       // Quality star handlers for report modal
@@ -2898,6 +2905,7 @@
 
       function showAnswers() {
         answersRevealed = true;
+        logActivity('show_answers', { metadata: { problemCount: chosenProblems.length } });
         chosenProblems.forEach((p, i) => {
           const problemDiv = document.querySelector(`.problem[data-problem-index="${i}"]`);
           if (!problemDiv) return;

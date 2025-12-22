@@ -994,6 +994,7 @@
       html.setAttribute('data-theme', newTheme);
       localStorage.setItem('theme', newTheme);
       document.querySelector('.dark-mode-toggle').textContent = newTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+      logActivity('toggle_dark_mode', { metadata: { theme: newTheme } });
     }
 
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -1027,6 +1028,7 @@
     }
 
     async function signOut() {
+      logActivity('logout');
       await supabaseClient.auth.signOut();
       window.location.reload();
     }
@@ -1034,6 +1036,8 @@
     function selectYear(year) {
       selectedYear = year;
       userAnswers = {};
+      
+      logActivity('select_year', { metadata: { year: year } });
 
       document.querySelectorAll('.year-btn').forEach(btn => {
         btn.classList.toggle('selected', parseInt(btn.dataset.year) === year);
@@ -1070,7 +1074,9 @@
     document.querySelectorAll('.version-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         if (selectedYear) {
-          loadTest(`${selectedYear} AMC 10${btn.dataset.version}`);
+          const testName = `${selectedYear} AMC 10${btn.dataset.version}`;
+          logActivity('select_version', { metadata: { testName: testName, version: btn.dataset.version } });
+          loadTest(testName);
         }
       });
     });
@@ -1078,7 +1084,9 @@
     // Handle 2021 version button clicks
     document.querySelectorAll('.version-btn-2021').forEach(btn => {
       btn.addEventListener('click', () => {
-        loadTest(`2021 ${btn.dataset.season} AMC 10${btn.dataset.version}`);
+        const testName = `2021 ${btn.dataset.season} AMC 10${btn.dataset.version}`;
+        logActivity('select_version', { metadata: { testName: testName, season: btn.dataset.season, version: btn.dataset.version } });
+        loadTest(testName);
       });
     });
 
@@ -1422,6 +1430,7 @@
           btn.classList.add('selected');
         }
       });
+      logEvent('select_answer', { metadata: { problemIndex: index, answer: answer } });
     }
 
     async function fetchCutoffs(testName) {
@@ -1484,14 +1493,17 @@
     function toggleCutoffInfo() {
       const cutoffInfo = document.getElementById('cutoffInfo');
       const btn = document.getElementById('toggleCutoffBtn');
+      const isOpening = cutoffInfo.style.display === 'none' || cutoffInfo.style.display === '';
       
-      if (cutoffInfo.style.display === 'none' || cutoffInfo.style.display === '') {
+      if (isOpening) {
         cutoffInfo.style.display = 'flex';
         btn.textContent = 'Hide Contest Info';
       } else {
         cutoffInfo.style.display = 'none';
         btn.textContent = 'Show Contest Info';
       }
+      
+      logActivity('toggle_cutoff_info', { metadata: { opened: isOpening } });
     }
 
     function showResultsCutoffs(userScore, rawScore) {
