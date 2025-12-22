@@ -3,417 +3,85 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Search and browse AIME-style problems from various math competitions." />
+  <link rel="icon" type="image/png" href="256px_transparentBG.png">
   <title>Problem Search - Mock AIME</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/latin-modern-roman@1.0.0/style.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.4/dist/umd/supabase.min.js"></script>
-  
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 1200px;
-      margin: auto;
-      padding: 20px;
-      background-color: #f9f9f9;
-    }
-    h1 {
-      text-align: center;
-      color: #004488;
-    }
-    .nav-buttons {
-      text-align: center;
-      margin: 20px 0;
-    }
-    .nav-buttons a {
-      display: inline-block;
-      padding: 10px 20px;
-      margin: 0 5px;
-      background: #004488;
-      color: white;
-      text-decoration: none;
-      border-radius: 4px;
-      font-size: 16px;
-    }
-    .nav-buttons a:hover {
-      background: #003366;
-    }
-    .auth-info {
-      text-align: center;
-      margin-bottom: 20px;
-      padding: 15px;
-      background: #e3f2fd;
-      border-radius: 8px;
-    }
-    .sign-out-btn {
-      background: #dc3545;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-left: 10px;
-    }
-    .sign-out-btn:hover {
-      background: #c82333;
-    }
-    .filters {
-      background: white;
-      padding: 20px;
-      margin: 20px 0;
-      border-radius: 8px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.05);
-    }
-    .filter-row {
-      margin: 15px 0;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-    .filter-label {
-      font-weight: bold;
-      min-width: 120px;
-    }
-    select, input[type="number"] {
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-    button {
-      padding: 10px 20px;
-      background: #004488;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-      margin: 5px;
-    }
-    button:hover {
-      background: #003366;
-    }
-    .results-info {
-      margin: 20px 0;
-      font-size: 16px;
-      font-weight: bold;
-      color: #004488;
-    }
-    .problem-card {
-      background: white;
-      padding: 20px;
-      margin: 15px 0;
-      border-radius: 8px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.05);
-      border-left: 4px solid #004488;
-      position: relative;
-    }
-    .problem-card.reviewed {
-      border-left-color: #28a745;
-    }
-    .problem-card.bad {
-      border-left-color: #dc3545;
-    }
-    .problem-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    .problem-id {
-      font-weight: bold;
-      color: #666;
-    }
-    .difficulty-badge {
-      display: inline-block;
-      background: #e0e0e0;
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-size: 14px;
-      margin-left: 10px;
-    }
-    .problem-text {
-      margin: 15px 0;
-      line-height: 1.6;
-    }
-    .problem-meta {
-      margin-top: 10px;
-      font-size: 14px;
-      color: #666;
-    }
-    .problem-meta > div {
-      margin: 5px 0;
-    }
-    .badge {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 3px;
-      font-size: 12px;
-      margin-left: 5px;
-    }
-    .badge-success {
-      background: #d4edda;
-      color: #155724;
-    }
-    .badge-danger {
-      background: #f8d7da;
-      color: #721c24;
-    }
-    .bookmark-btn {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      background: #ffc107;
-      color: #212529;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: all 0.2s;
-    }
-    .bookmark-btn:hover {
-      background: #e0a800;
-    }
-    .bookmark-btn.bookmarked {
-      background: #28a745;
-      color: white;
-    }
-    .bookmark-btn:disabled {
-      background: #6c757d;
-      color: white;
-      cursor: not-allowed;
-    }
-    .pagination {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-      margin: 20px 0;
-    }
-    label {
-      cursor: pointer;
-    }
-  </style>
-
-  <script>
-    window.MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']]
-      }
-    };
-  </script>
-  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-</head>
-<body>
-  <h1>Problem Search</h1>
-
-  <div class="nav-buttons">
-    <a href="index.html">Mock Generator</a>
-    <a href="login.html" class="auth-button">Login</a>
-  </div>
-
-  <div class="auth-info" id="authInfo">
-    <span id="authStatus">Checking authentication...</span>
-    <button class="sign-out-btn" id="signOutBtn" onclick="signOut()" style="display: none;">Sign Out</button>
-  </div>
-
-  <div class="filters">
-    <div class="filter-row">
-      <span class="filter-label">Difficulty Range:</span>
-      <input type="number" id="minDifficulty" min="1" max="8" step="0.5" value="1" />
-      <span>to</span>
-      <input type="number" id="maxDifficulty" min="1" max="8" step="0.5" value="8" />
-    </div>
-
-    <div class="filter-row">
-      <span class="filter-label">Answer Type:</span>
-      <select id="answerType">
-        <option value="all">All</option>
-        <option value="standard">Standard (positive integer ≤ 1000)</option>
-        <option value="expanded">Expanded (has aime_answer)</option>
-        <option value="other">Other</option>
-      </select>
-    </div>
-
-    <div class="filter-row">
-      <span class="filter-label">Answer Match:</span>
-      <select id="answerMatch">
-        <option value="all">All</option>
-        <option value="match">answer = aime_answer</option>
-        <option value="mismatch">answer ≠ aime_answer</option>
-      </select>
-    </div>
-
-    <div class="filter-row">
-      <span class="filter-label">Review Status:</span>
-      <label>
-        <input type="checkbox" id="onlyReviewed" />
-        Only Manually Reviewed
-      </label>
-      <label style="margin-left: 20px;">
-        <input type="checkbox" id="excludeBad" />
-        Exclude Bad Problems
-      </label>
-      <label style="margin-left: 20px;">
-        <input type="checkbox" id="showBookmarked" />
-        Show Only Bookmarked
-      </label>
-    </div>
-
-    <div class="filter-row">
-      <button onclick="searchProblems()">Search</button>
-      <button onclick="resetFilters()">Reset Filters</button>
-    </div>
-  </div>
-
-  <div class="results-info" id="resultsInfo"></div>
-
-  <div class="pagination" id="topPagination"></div>
-
-  <div id="results"></div>
-
-  <div class="pagination" id="bottomPagination"></div>
 
   <script>
     const SUPABASE_URL = 'https://ftdbplxkyaocyrjpmjyb.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0ZGJwbHhreWFvY3lyanBtanliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMDgxMDUsImV4cCI6MjA2NzY4NDEwNX0.hE0V09JxdLYNbZqPVH3HZxNpLPP2rXIaBsNGUHO3upc';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    // Admin auth check - redirects non-admins immediately
-    const ADMIN_UUID = '6af62d68-67e7-42f6-b91f-58cac9d81cba';
-    (async () => {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session || session.user.id !== ADMIN_UUID) {
-        window.location.href = '404.html';
-      }
-    })();
+
+    let currentUser = null;
     let allProblems = [];
     let filteredProblems = [];
     let currentPage = 1;
     const problemsPerPage = 20;
-    let currentUser = null;
-    let userBookmarks = [];
+    
+    // Report modal state
+    let currentReportProblemId = null;
+    let currentReportProblemData = null;
+    let reportQualityRating = 0;
+    let reportDifficultyRating = null;
 
-    // Authentication functions
+    // Dark mode
+    function initDarkMode() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      }
+    }
+
+    function toggleDarkMode() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+    }
+
+    initDarkMode();
+
+    // Auth
     async function updateAuthUI() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       currentUser = session?.user || null;
       
-      const authStatusEl = document.getElementById('authStatus');
-      const signOutBtn = document.getElementById('signOutBtn');
       const authButton = document.querySelector('.auth-button');
-      const showBookmarkedCheckbox = document.getElementById('showBookmarked');
+      const userInfo = document.querySelector('.user-info');
       
       if (currentUser) {
-        // User is logged in
-        const displayName = currentUser.user_metadata?.display_name || currentUser.email;
-        authStatusEl.textContent = `Logged in as: ${displayName}`;
-        signOutBtn.style.display = 'inline-block';
-        showBookmarkedCheckbox.parentElement.style.display = 'inline-block';
-        
         if (authButton) {
           authButton.textContent = 'Profile';
           authButton.href = 'profile.html';
         }
-
-        // Load user bookmarks
-        await loadUserBookmarks();
+        if (userInfo) {
+          const displayName = currentUser.user_metadata?.display_name || currentUser.email;
+          userInfo.innerHTML = `
+            <span style="color: white; margin-right: 15px;">Welcome, ${escapeHtml(displayName)}!</span>
+            <button onclick="signOut()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Sign Out</button>
+          `;
+        }
       } else {
-        // User is not logged in
-        authStatusEl.textContent = 'Not logged in (bookmarking disabled)';
-        signOutBtn.style.display = 'none';
-        showBookmarkedCheckbox.parentElement.style.display = 'none';
-        showBookmarkedCheckbox.checked = false;
-        
         if (authButton) {
           authButton.textContent = 'Login';
           authButton.href = 'login.html';
+        }
+        if (userInfo) {
+          userInfo.innerHTML = '';
         }
       }
     }
 
     async function signOut() {
       await supabaseClient.auth.signOut();
-      userBookmarks = [];
+      currentUser = null;
       await updateAuthUI();
-      // Refresh search to hide bookmarked filter
-      if (filteredProblems.length > 0) {
-        searchProblems();
-      }
     }
 
-    async function loadUserBookmarks() {
-      if (!currentUser) {
-        userBookmarks = [];
-        return;
-      }
-
-      try {
-        const { data, error } = await supabaseClient
-          .from('user_bookmarks')
-          .select('problem_id')
-          .eq('user_id', currentUser.id);
-
-        if (error) {
-          console.error('Error loading bookmarks:', error);
-          userBookmarks = [];
-        } else {
-          userBookmarks = data.map(b => b.problem_id);
-        }
-      } catch (err) {
-        console.error('Error loading bookmarks:', err);
-        userBookmarks = [];
-      }
-    }
-
-    async function toggleBookmark(problemId, button) {
-      if (!currentUser) {
-        alert('Please log in to bookmark problems');
-        return;
-      }
-
-      const isBookmarked = userBookmarks.includes(problemId);
-      button.disabled = true;
-      button.textContent = isBookmarked ? 'Removing...' : 'Adding...';
-
-      try {
-        if (isBookmarked) {
-          // Remove bookmark
-          const { error } = await supabaseClient
-            .from('user_bookmarks')
-            .delete()
-            .eq('user_id', currentUser.id)
-            .eq('problem_id', problemId);
-
-          if (error) throw error;
-
-          userBookmarks = userBookmarks.filter(id => id !== problemId);
-          button.textContent = 'Bookmark';
-          button.classList.remove('bookmarked');
-        } else {
-          // Add bookmark
-          const { error } = await supabaseClient
-            .from('user_bookmarks')
-            .insert([{
-              user_id: currentUser.id,
-              problem_id: problemId
-            }]);
-
-          if (error) throw error;
-
-          userBookmarks.push(problemId);
-          button.textContent = 'Bookmarked';
-          button.classList.add('bookmarked');
-        }
-      } catch (error) {
-        console.error('Error toggling bookmark:', error);
-        alert('Failed to update bookmark');
-        button.textContent = isBookmarked ? 'Bookmarked' : 'Bookmark';
-      } finally {
-        button.disabled = false;
-      }
-    }
-
-    // SECURITY FIX: HTML escaping function
+    // Security
     function escapeHtml(text) {
       if (!text) return text;
       const div = document.createElement('div');
@@ -421,21 +89,22 @@
       return div.innerHTML;
     }
 
-    // SECURITY FIX: Safe content insertion function
     function setMathContent(element, content) {
       if (!content) {
         element.innerHTML = '<em>No content</em>';
         return;
       }
-      // Use textContent to safely insert the content, then let MathJax process it
       element.textContent = content;
-      // Re-render MathJax for this element
       if (window.MathJax) {
         MathJax.typesetPromise([element]).catch(err => console.error('MathJax error:', err));
       }
     }
 
+    // Load problems
     async function loadProblems() {
+      const loadingEl = document.getElementById('loadingIndicator');
+      loadingEl.style.display = 'block';
+
       let from = 0;
       const chunkSize = 1000;
       let done = false;
@@ -449,6 +118,7 @@
         if (error) {
           console.error('Error loading problems:', error);
           alert('Failed to load problems');
+          loadingEl.style.display = 'none';
           return;
         }
 
@@ -457,53 +127,49 @@
         } else {
           allProblems.push(...data);
           from += chunkSize;
+          document.getElementById('loadingText').textContent = `Loading problems... ${allProblems.length}`;
         }
       }
 
       console.log('Loaded', allProblems.length, 'problems');
+      loadingEl.style.display = 'none';
+      document.getElementById('totalProblems').textContent = allProblems.length;
     }
 
+    // Search
     function searchProblems() {
-      const minDiff = parseFloat(document.getElementById('minDifficulty').value);
-      const maxDiff = parseFloat(document.getElementById('maxDifficulty').value);
-      const answerType = document.getElementById('answerType').value;
-      const answerMatch = document.getElementById('answerMatch').value;
-      const onlyReviewed = document.getElementById('onlyReviewed').checked;
-      const excludeBad = document.getElementById('excludeBad').checked;
-      const showBookmarked = document.getElementById('showBookmarked').checked;
+      const problemId = document.getElementById('problemId').value.trim();
+      const textSearch = document.getElementById('textSearch').value.trim().toLowerCase();
+      const sourceSearch = document.getElementById('sourceSearch').value.trim().toLowerCase();
+      const minDiff = parseFloat(document.getElementById('minDifficulty').value) || 0;
+      const maxDiff = parseFloat(document.getElementById('maxDifficulty').value) || 10;
+      const minQuality = parseInt(document.getElementById('minQuality').value) || 0;
+      const maxQuality = parseInt(document.getElementById('maxQuality').value) || 5;
 
       filteredProblems = allProblems.filter(p => {
-        // Difficulty filter
+        // Problem ID (exact match)
+        if (problemId && String(p.id) !== problemId) return false;
+
+        // Text search (substring in text or rewritten_problem)
+        if (textSearch) {
+          const text = (p.text || '').toLowerCase();
+          const rewritten = (p.rewritten_problem || '').toLowerCase();
+          if (!text.includes(textSearch) && !rewritten.includes(textSearch)) return false;
+        }
+
+        // Source search (substring)
+        if (sourceSearch) {
+          const source = (p.source || '').toLowerCase();
+          if (!source.includes(sourceSearch)) return false;
+        }
+
+        // Difficulty range
         const diff = parseFloat(p.difficulty);
         if (isNaN(diff) || diff < minDiff || diff > maxDiff) return false;
 
-        // Review filters
-        if (onlyReviewed && !p.manually_reviewed) return false;
-        if (excludeBad && p.bad_problem) return false;
-
-        // Bookmark filter
-        if (showBookmarked && !userBookmarks.includes(p.id)) return false;
-
-        // Answer type filter
-        if (answerType === 'standard') {
-          const type = p.answer_type?.toLowerCase().trim();
-          if (type !== 'positive integer <= 1000') return false;
-        } else if (answerType === 'expanded') {
-          if (p.aime_answer === null || p.aime_answer === undefined) return false;
-        } else if (answerType === 'other') {
-          const type = p.answer_type?.toLowerCase().trim();
-          if (type === 'positive integer <= 1000') return false;
-          if (p.aime_answer !== null && p.aime_answer !== undefined) return false;
-        }
-
-        // Answer match filter
-        if (answerMatch === 'match') {
-          if (!p.answer || !p.aime_answer) return false;
-          if (String(p.answer) !== String(p.aime_answer % 1000)) return false;
-        } else if (answerMatch === 'mismatch') {
-          if (!p.answer || !p.aime_answer) return false;
-          if (String(p.answer) === String(p.aime_answer % 1000)) return false;
-        }
+        // Quality range
+        const quality = parseInt(p.quality) || 0;
+        if (quality < minQuality || quality > maxQuality) return false;
 
         return true;
       });
@@ -518,99 +184,269 @@
       const endIdx = Math.min(startIdx + problemsPerPage, filteredProblems.length);
       const pageProblems = filteredProblems.slice(startIdx, endIdx);
 
-      document.getElementById('resultsInfo').textContent = 
-        `Found ${filteredProblems.length} problems | Showing ${startIdx + 1}-${endIdx}`;
+      document.getElementById('resultsInfo').innerHTML = `
+        <span class="results-count">Found <strong>${filteredProblems.length}</strong> problems</span>
+        ${filteredProblems.length > 0 ? `<span class="results-showing">Showing ${startIdx + 1}–${endIdx}</span>` : ''}
+      `;
 
       const resultsDiv = document.getElementById('results');
       resultsDiv.innerHTML = '';
 
       if (pageProblems.length === 0) {
-        resultsDiv.innerHTML = '<p style="text-align: center; color: #666;">No problems found matching your criteria.</p>';
-        document.getElementById('topPagination').innerHTML = '';
-        document.getElementById('bottomPagination').innerHTML = '';
+        resultsDiv.innerHTML = '<div class="no-results">No problems found matching your criteria.</div>';
+        document.getElementById('pagination').innerHTML = '';
         return;
       }
 
       pageProblems.forEach((p, index) => {
         const card = document.createElement('div');
         card.className = 'problem-card';
-        if (p.manually_reviewed) card.classList.add('reviewed');
-        if (p.bad_problem) card.classList.add('bad');
+        
+        const quality = parseInt(p.quality) || 0;
+        const qualityStars = '★'.repeat(quality) + '☆'.repeat(Math.max(0, 5 - quality));
+        const hasOriginal = p.text && p.rewritten_problem && p.text !== p.rewritten_problem;
+        const hasOriginalAnswer = p.answer !== null && p.aime_answer !== null && String(p.answer) !== String(p.aime_answer);
 
-        const answerMatch = p.answer && p.aime_answer && 
-          String(p.answer) === String(p.aime_answer % 1000);
-
-        const isBookmarked = userBookmarks.includes(p.id);
-
-        // SECURITY FIX: Safe content insertion
         card.innerHTML = `
-          ${currentUser ? `<button class="bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" onclick="toggleBookmark(${p.id}, this)">
-            ${isBookmarked ? 'Bookmarked' : 'Bookmark'}
-          </button>` : ''}
           <div class="problem-header">
-            <div>
-              <span class="problem-id">ID: ${p.id}</span>
+            <div class="problem-meta-left">
+              <span class="problem-id">#${p.id}</span>
               <span class="difficulty-badge">Difficulty: ${parseFloat(p.difficulty).toFixed(1)}</span>
-              ${p.manually_reviewed ? '<span class="badge badge-success">Reviewed</span>' : ''}
-              ${p.bad_problem ? '<span class="badge badge-danger">Bad Problem</span>' : ''}
+              <span class="quality-badge" title="Quality: ${quality}/5">${qualityStars}</span>
+            </div>
+            <div class="problem-actions">
+              <button class="report-btn" onclick="openReportModal(${p.id})">Report</button>
             </div>
           </div>
+          <div class="problem-source">${escapeHtml(p.source) || 'Unknown Source'}</div>
           <div class="problem-text" id="problem-text-${index}"></div>
-          <div class="problem-meta">
-            <div><strong>Answer:</strong> <span id="answer-${index}"></span></div>
-            <div><strong>AIME Answer:</strong> <span id="aime-answer-${index}"></span></div>
-            <div><strong>Answer Type:</strong> <span id="answer-type-${index}"></span></div>
-            <div><strong>Source:</strong> <span id="source-${index}"></span></div>
-            <div><a href="" target="_blank" id="link-${index}">[View Discussion]</a></div>
-            ${answerMatch ? '<div style="color: green; font-weight: bold;">✓ Answers match</div>' : ''}
-            ${p.answer && p.aime_answer && !answerMatch ? '<div style="color: red; font-weight: bold;">✗ Answers mismatch</div>' : ''}
+          ${hasOriginal ? `<button class="toggle-original-btn" onclick="toggleOriginalProblem(${index})">Show Original Problem</button>` : ''}
+          <div class="original-problem" id="original-problem-${index}" style="display: none;"></div>
+          <div class="problem-footer">
+            <div class="problem-answer">
+              <span class="answer-label">Answer:</span>
+              <span class="answer-value" id="answer-${index}"></span>
+              ${hasOriginalAnswer ? `<button class="toggle-original-btn small" onclick="toggleOriginalAnswer(${index})">Show Original</button>` : ''}
+              <span class="original-answer" id="original-answer-${index}" style="display: none;"></span>
+            </div>
+            ${p.link ? `<a href="${escapeHtml(p.link)}" target="_blank" class="aops-link">View on AoPS</a>` : ''}
           </div>
         `;
 
         resultsDiv.appendChild(card);
 
-        // SECURITY FIX: Safely set content after DOM insertion
+        // Store problem data for toggle functions
+        card.dataset.problem = JSON.stringify({
+          text: p.text,
+          rewritten_problem: p.rewritten_problem,
+          answer: p.answer,
+          aime_answer: p.aime_answer
+        });
+
+        // Safely set content
         const problemTextEl = document.getElementById(`problem-text-${index}`);
         const answerEl = document.getElementById(`answer-${index}`);
-        const aimeAnswerEl = document.getElementById(`aime-answer-${index}`);
-        const answerTypeEl = document.getElementById(`answer-type-${index}`);
-        const sourceEl = document.getElementById(`source-${index}`);
-        const linkEl = document.getElementById(`link-${index}`);
-
-        setMathContent(problemTextEl, p.text || '');
-        answerEl.textContent = p.answer || 'N/A';
-        aimeAnswerEl.textContent = p.aime_answer !== null ? p.aime_answer : 'N/A';
-        answerTypeEl.textContent = p.answer_type || 'N/A';
-        sourceEl.textContent = p.source || 'N/A';
         
-        if (p.link) {
-          linkEl.href = escapeHtml(p.link);
-          linkEl.textContent = '[View Discussion]';
-        } else {
-          linkEl.href = '#';
-          linkEl.textContent = '[No Link]';
+        setMathContent(problemTextEl, p.rewritten_problem || p.text || '');
+        answerEl.textContent = p.aime_answer !== null ? p.aime_answer : (p.answer || 'N/A');
+        
+        // Pre-populate original content (hidden)
+        if (hasOriginal) {
+          const originalProblemEl = document.getElementById(`original-problem-${index}`);
+          setMathContent(originalProblemEl, p.text || '');
+        }
+        if (hasOriginalAnswer) {
+          document.getElementById(`original-answer-${index}`).textContent = p.answer;
         }
       });
 
       renderPagination(totalPages);
 
-      // Re-render MathJax for all new content
       if (window.MathJax) {
         MathJax.typesetPromise().catch(err => console.error('MathJax error:', err));
       }
     }
 
-    function renderPagination(totalPages) {
-      const paginationHTML = `
-        <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>First</button>
-        <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>
-        <span>Page ${currentPage} of ${totalPages}</span>
-        <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>
-        <button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>Last</button>
-      `;
+    function toggleOriginalProblem(index) {
+      const originalEl = document.getElementById(`original-problem-${index}`);
+      const btn = event.target;
+      
+      if (originalEl.style.display === 'none') {
+        originalEl.style.display = 'block';
+        btn.textContent = 'Hide Original Problem';
+      } else {
+        originalEl.style.display = 'none';
+        btn.textContent = 'Show Original Problem';
+      }
+    }
 
-      document.getElementById('topPagination').innerHTML = paginationHTML;
-      document.getElementById('bottomPagination').innerHTML = paginationHTML;
+    function toggleOriginalAnswer(index) {
+      const originalEl = document.getElementById(`original-answer-${index}`);
+      const btn = event.target;
+      
+      if (originalEl.style.display === 'none') {
+        originalEl.style.display = 'inline';
+        btn.textContent = 'Hide Original';
+      } else {
+        originalEl.style.display = 'none';
+        btn.textContent = 'Show Original';
+      }
+    }
+
+    // Report Modal Functions
+    function openReportModal(problemId) {
+      currentReportProblemId = problemId;
+      currentReportProblemData = allProblems.find(p => p.id === problemId);
+      
+      document.getElementById('reportQuality').checked = false;
+      document.getElementById('reportDifficulty').checked = false;
+      document.getElementById('reportAnswer').checked = false;
+      document.getElementById('reportProblem').checked = false;
+      document.getElementById('reportSource').checked = false;
+      document.getElementById('reportType').checked = false;
+      
+      document.querySelectorAll('.report-section').forEach(section => {
+        section.style.display = 'none';
+      });
+      
+      reportQualityRating = 0;
+      reportDifficultyRating = null;
+      document.querySelectorAll('#reportQualityStars .star').forEach(star => star.classList.remove('filled'));
+      document.getElementById('reportQualityText').textContent = '(0/5)';
+      document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('selected'));
+      document.getElementById('selectedDifficulty').textContent = 'None';
+      
+      document.getElementById('qualityDetails').value = '';
+      document.getElementById('difficultyDetails').value = '';
+      document.getElementById('proposedAnswer').value = '';
+      document.getElementById('answerKeyLink').value = '';
+      document.getElementById('answerDetails').value = '';
+      document.getElementById('problemText').value = '';
+      document.getElementById('problemAnswer').value = '';
+      document.getElementById('problemDetails').value = '';
+      document.getElementById('proposedSource').value = '';
+      document.getElementById('sourceDetails').value = '';
+      document.getElementById('proposedType').value = '';
+      document.getElementById('typeDetails').value = '';
+      
+      if (currentReportProblemData) {
+        const currentAns = currentReportProblemData.aime_answer ? 
+          String(currentReportProblemData.aime_answer % 1000) : 
+          String(currentReportProblemData.answer || '-');
+        document.getElementById('currentAnswer').textContent = currentAns;
+        document.getElementById('currentSource').textContent = currentReportProblemData.source || 'Unknown';
+        document.getElementById('problemText').value = currentReportProblemData.rewritten_problem || currentReportProblemData.text || '';
+        
+        const typeLabels = { algebra: 'Algebra', geometry: 'Geometry', number_theory: 'Number Theory', counting: 'Counting', other: 'Other' };
+        document.getElementById('currentType').textContent = typeLabels[currentReportProblemData.type] || 'Not set';
+      }
+      document.getElementById('currentAnswerReveal').style.display = 'none';
+      document.getElementById('problemCurrentAnswerReveal').style.display = 'none';
+      document.getElementById('reportModal').style.display = 'block';
+    }
+
+    function closeReportModal() {
+      document.getElementById('reportModal').style.display = 'none';
+      currentReportProblemId = null;
+    }
+
+    function toggleReportSection(sectionName) {
+      const section = document.getElementById(sectionName + 'Section');
+      const checkbox = document.getElementById('report' + sectionName.charAt(0).toUpperCase() + sectionName.slice(1));
+      section.style.display = checkbox.checked ? 'block' : 'none';
+    }
+
+    function toggleQualityHelp() {
+      const helpBox = document.getElementById('qualityHelpBox');
+      helpBox.style.display = helpBox.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleDifficultyHelp() {
+      const helpBox = document.getElementById('difficultyHelpBox');
+      helpBox.style.display = helpBox.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleCurrentAnswer() {
+      const revealDiv = document.getElementById('currentAnswerReveal');
+      const btn = event.target;
+      
+      if (revealDiv.style.display === 'none') {
+        if (currentReportProblemData) {
+          const answer = currentReportProblemData.aime_answer 
+            ? String(currentReportProblemData.aime_answer % 1000) 
+            : String(currentReportProblemData.answer || 'Not available');
+          revealDiv.textContent = `Answer: ${answer}`;
+        }
+        revealDiv.style.display = 'block';
+        btn.textContent = 'Hide Answer';
+      } else {
+        revealDiv.style.display = 'none';
+        btn.textContent = 'Show Answer';
+      }
+    }
+
+    function toggleProblemCurrentAnswer() {
+      const revealDiv = document.getElementById('problemCurrentAnswerReveal');
+      const btn = event.target;
+      
+      if (revealDiv.style.display === 'none') {
+        if (currentReportProblemData) {
+          const answer = currentReportProblemData.aime_answer 
+            ? String(currentReportProblemData.aime_answer % 1000) 
+            : String(currentReportProblemData.answer || 'Not available');
+          revealDiv.textContent = `Answer: ${answer}`;
+        }
+        revealDiv.style.display = 'block';
+        btn.textContent = 'Hide Answer';
+      } else {
+        revealDiv.style.display = 'none';
+        btn.textContent = 'Show Answer';
+      }
+    }
+
+    function updateProblemPreview() {
+      const previewEl = document.getElementById('problemPreview');
+      const text = document.getElementById('problemText').value;
+      setMathContent(previewEl, text);
+    }
+
+    function renderPagination(totalPages) {
+      if (totalPages <= 1) {
+        document.getElementById('pagination').innerHTML = '';
+        return;
+      }
+
+      let paginationHTML = '<div class="pagination">';
+      
+      paginationHTML += `<button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>First</button>`;
+      paginationHTML += `<button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Prev</button>`;
+      
+      // Page numbers
+      const maxVisible = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+      if (endPage - startPage < maxVisible - 1) {
+        startPage = Math.max(1, endPage - maxVisible + 1);
+      }
+
+      if (startPage > 1) {
+        paginationHTML += `<span class="pagination-ellipsis">...</span>`;
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        paginationHTML += `<button class="page-num ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+      }
+
+      if (endPage < totalPages) {
+        paginationHTML += `<span class="pagination-ellipsis">...</span>`;
+      }
+
+      paginationHTML += `<button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>`;
+      paginationHTML += `<button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>Last</button>`;
+      
+      paginationHTML += '</div>';
+
+      document.getElementById('pagination').innerHTML = paginationHTML;
     }
 
     function goToPage(page) {
@@ -618,29 +454,1166 @@
       if (page < 1 || page > totalPages) return;
       currentPage = page;
       displayResults();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function resetFilters() {
-      document.getElementById('minDifficulty').value = 1;
-      document.getElementById('maxDifficulty').value = 8;
-      document.getElementById('answerType').value = 'all';
-      document.getElementById('answerMatch').value = 'all';
-      document.getElementById('onlyReviewed').checked = false;
-      document.getElementById('excludeBad').checked = false;
-      document.getElementById('showBookmarked').checked = false;
+      document.getElementById('problemId').value = '';
+      document.getElementById('textSearch').value = '';
+      document.getElementById('sourceSearch').value = '';
+      document.getElementById('minDifficulty').value = '1';
+      document.getElementById('maxDifficulty').value = '8';
+      document.getElementById('minQuality').value = '0';
+      document.getElementById('maxQuality').value = '5';
       filteredProblems = [];
       currentPage = 1;
-      document.getElementById('results').innerHTML = '';
-      document.getElementById('resultsInfo').textContent = '';
-      document.getElementById('topPagination').innerHTML = '';
-      document.getElementById('bottomPagination').innerHTML = '';
+      document.getElementById('results').innerHTML = '<div class="no-results">Use the filters above to search for problems.</div>';
+      document.getElementById('resultsInfo').innerHTML = '';
+      document.getElementById('pagination').innerHTML = '';
     }
 
     window.onload = async () => {
       await updateAuthUI();
       await loadProblems();
+      
+      // Report modal event listeners
+      document.querySelectorAll('#reportQualityStars .star').forEach(star => {
+        star.addEventListener('click', function() {
+          reportQualityRating = parseInt(this.dataset.rating);
+          document.querySelectorAll('#reportQualityStars .star').forEach((s, i) => {
+            s.classList.toggle('filled', i < reportQualityRating);
+          });
+          document.getElementById('reportQualityText').textContent = `(${reportQualityRating}/5)`;
+        });
+      });
+
+      document.querySelectorAll('.difficulty-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('selected'));
+          this.classList.add('selected');
+          reportDifficultyRating = parseFloat(this.dataset.diff);
+          document.getElementById('selectedDifficulty').textContent = reportDifficultyRating;
+        });
+      });
+
+      document.getElementById('submitReport').addEventListener('click', async () => {
+        if (!currentReportProblemId) return;
+
+        const submitButton = document.getElementById('submitReport');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Submitting...';
+
+        const reportData = {
+          problem_id: currentReportProblemId,
+          report_types: []
+        };
+
+        if (document.getElementById('reportQuality').checked) {
+          reportData.report_types.push('quality');
+          reportData.quality_rating = reportQualityRating;
+          reportData.quality_details = document.getElementById('qualityDetails').value.trim() || null;
+        }
+
+        if (document.getElementById('reportDifficulty').checked) {
+          reportData.report_types.push('difficulty');
+          reportData.difficulty_rating = reportDifficultyRating;
+          reportData.difficulty_details = document.getElementById('difficultyDetails').value.trim() || null;
+        }
+
+        if (document.getElementById('reportAnswer').checked) {
+          reportData.report_types.push('wrong_answer');
+          reportData.proposed_answer = document.getElementById('proposedAnswer').value.trim() || null;
+          reportData.answer_key_link = document.getElementById('answerKeyLink').value.trim() || null;
+          reportData.answer_details = document.getElementById('answerDetails').value.trim() || null;
+        }
+
+        if (document.getElementById('reportProblem').checked) {
+          reportData.report_types.push('problem_statement');
+          reportData.proposed_problem = document.getElementById('problemText').value.trim() || null;
+          reportData.proposed_problem_answer = document.getElementById('problemAnswer').value.trim() || null;
+          reportData.problem_details = document.getElementById('problemDetails').value.trim() || null;
+        }
+
+        if (document.getElementById('reportSource').checked) {
+          reportData.report_types.push('source');
+          reportData.proposed_source = document.getElementById('proposedSource').value.trim() || null;
+          reportData.source_details = document.getElementById('sourceDetails').value.trim() || null;
+        }
+
+        if (document.getElementById('reportType').checked) {
+          reportData.report_types.push('wrong_type');
+          reportData.proposed_type = document.getElementById('proposedType').value || null;
+          reportData.type_details = document.getElementById('typeDetails').value.trim() || null;
+        }
+
+        if (reportData.report_types.length === 0) {
+          alert('Please select at least one issue to report.');
+          submitButton.disabled = false;
+          submitButton.textContent = 'Submit Report';
+          return;
+        }
+
+        try {
+          const { error } = await supabaseClient
+            .from('problem_reports')
+            .insert([{
+              problem_id: currentReportProblemId,
+              report_type: reportData.report_types.join(','),
+              details: JSON.stringify(reportData)
+            }]);
+
+          if (error) {
+            console.error('Error submitting report:', error);
+            alert('Failed to submit report. Please try again.');
+          } else {
+            alert('Thank you! Your report has been submitted.');
+            closeReportModal();
+          }
+        } catch (err) {
+          console.error('Error:', err);
+          alert('Failed to submit report. Please try again.');
+        } finally {
+          submitButton.disabled = false;
+          submitButton.textContent = 'Submit Report';
+        }
+      });
+
+      // Close modal on outside click
+      window.onclick = function(event) {
+        const modal = document.getElementById('reportModal');
+        if (event.target === modal) {
+          closeReportModal();
+        }
+      };
+    };
+
+    // MathJax config
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
     };
   </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    :root {
+      --bg-primary: #f8f9fa;
+      --bg-secondary: #e9ecef;
+      --bg-card: #ffffff;
+      --text-primary: #212529;
+      --text-secondary: #495057;
+      --text-tertiary: #6c757d;
+      --border-color: #dee2e6;
+      --border-strong: #adb5bd;
+      --primary-blue: #0056b3;
+      --primary-blue-light: #0066cc;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
+      --accent-secondary: #00aa66;
+      --success-color: #28a745;
+      --error-color: #dc3545;
+      --warning-color: #ffc107;
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #1a1a1a;
+      --bg-secondary: #2d2d2d;
+      --bg-card: #2d2d2d;
+      --text-primary: #e0e0e0;
+      --text-secondary: #b0b0b0;
+      --text-tertiary: #888888;
+      --border-color: #404040;
+      --border-strong: #555555;
+      --primary-blue: #4a9eff;
+      --primary-blue-light: #6bb3ff;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 17px;
+      line-height: 1.7;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* Nav */
+    nav {
+      background: #0056b3;
+      box-shadow: 0 2px 8px rgba(0, 86, 179, 0.3);
+      margin-bottom: 40px;
+      border-bottom: 3px solid var(--accent-secondary);
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 20px 24px;
+      transition: all 0.2s;
+      display: inline-block;
+      font-weight: 500;
+    }
+
+    nav a:hover {
+      background: rgba(255,255,255,0.15);
+    }
+
+    nav a.active {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .dark-mode-toggle {
+      background: transparent;
+      border: 2px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 20px;
+      transition: all 0.2s;
+    }
+
+    .dark-mode-toggle:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.5);
+    }
+
+    .user-info {
+      float: right;
+      padding: 12px 20px;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary-blue);
+      font-size: 2.4rem;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--text-tertiary);
+      margin-bottom: 32px;
+      font-size: 16px;
+    }
+
+    /* Filters */
+    .filters-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .filters-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .filters-header h2 {
+      margin: 0;
+      font-size: 18px;
+      color: var(--primary-blue);
+    }
+
+    .filters-header span {
+      font-size: 14px;
+      color: var(--text-tertiary);
+    }
+
+    .filters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .filter-group label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .filter-group input,
+    .filter-group select {
+      padding: 10px 12px;
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 15px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      transition: border-color 0.2s;
+    }
+
+    .filter-group input:focus,
+    .filter-group select:focus {
+      outline: none;
+      border-color: var(--primary-blue);
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .filter-row input {
+      width: 80px;
+    }
+
+    .filter-row span {
+      color: var(--text-tertiary);
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 0;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .checkbox-group label {
+      font-size: 15px;
+      cursor: pointer;
+      text-transform: none;
+      font-weight: 500;
+    }
+
+    .filter-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary-blue);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-blue-light);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 2px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border-color);
+    }
+
+    /* Loading */
+    .loading-indicator {
+      text-align: center;
+      padding: 40px;
+      background: var(--bg-card);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      border: 2px solid var(--border-color);
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--border-color);
+      border-top-color: var(--primary-blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    #loadingText {
+      margin-top: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* Results */
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    #resultsInfo {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .results-count {
+      font-size: 16px;
+      color: var(--text-primary);
+    }
+
+    .results-showing {
+      font-size: 14px;
+      color: var(--text-tertiary);
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-tertiary);
+      background: var(--bg-card);
+      border-radius: 12px;
+      border: 2px solid var(--border-color);
+    }
+
+    /* Problem Cards */
+    .problem-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border-color);
+      border-left: 5px solid var(--primary-blue);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s;
+    }
+
+    .problem-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-blue-light);
+    }
+
+    .problem-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .problem-meta-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .problem-id {
+      font-weight: 700;
+      color: var(--text-tertiary);
+      font-size: 14px;
+    }
+
+    .difficulty-badge {
+      background: var(--bg-secondary);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .quality-badge {
+      color: var(--warning-color);
+      font-size: 14px;
+      letter-spacing: 1px;
+    }
+
+    .problem-source {
+      font-size: 14px;
+      color: var(--primary-blue);
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .problem-text {
+      font-family: 'Latin Modern Roman', 'Times New Roman', serif;
+      font-size: 17px;
+      line-height: 1.8;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+
+    .problem-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .problem-answer {
+      font-size: 14px;
+    }
+
+    .answer-label {
+      color: var(--text-tertiary);
+    }
+
+    .answer-value {
+      font-weight: 700;
+      color: var(--success-color);
+      margin-left: 4px;
+    }
+
+    .aops-link {
+      font-size: 14px;
+      color: var(--primary-blue);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .aops-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+
+    .pagination button {
+      padding: 8px 14px;
+      font-size: 14px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 2px solid var(--border-color);
+    }
+
+    .pagination button:hover:not(:disabled) {
+      border-color: var(--primary-blue);
+      color: var(--primary-blue);
+    }
+
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .pagination button.page-num {
+      min-width: 40px;
+    }
+
+    .pagination button.page-num.active {
+      background: var(--primary-blue);
+      color: white;
+      border-color: var(--primary-blue);
+    }
+
+    .pagination-ellipsis {
+      color: var(--text-tertiary);
+      padding: 0 4px;
+    }
+
+    /* Toggle buttons for original content */
+    .toggle-original-btn {
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 4px;
+      margin-top: 8px;
+      transition: all 0.2s;
+    }
+
+    .toggle-original-btn:hover {
+      background: var(--border-color);
+    }
+
+    .toggle-original-btn.small {
+      padding: 3px 8px;
+      margin-left: 8px;
+      margin-top: 0;
+    }
+
+    .original-problem {
+      margin-top: 12px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 6px;
+      border-left: 3px solid var(--text-tertiary);
+      font-family: 'Latin Modern Roman', 'Times New Roman', serif;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    .original-answer {
+      color: var(--text-tertiary);
+      margin-left: 8px;
+      font-weight: 600;
+    }
+
+    /* Report button */
+    .report-btn {
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .report-btn:hover {
+      background: var(--error-color);
+      color: white;
+      border-color: var(--error-color);
+    }
+
+    .problem-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+      background-color: var(--bg-card);
+      margin: 5% auto;
+      padding: 32px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 700px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: var(--primary-blue);
+    }
+
+    .modal-close {
+      float: right;
+      font-size: 28px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text-tertiary);
+      transition: color 0.2s;
+    }
+
+    .modal-close:hover {
+      color: var(--text-secondary);
+    }
+
+    .modal-label {
+      display: block;
+      margin: 16px 0 8px 0;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .modal-textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 15px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      box-sizing: border-box;
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .modal-textarea:focus {
+      outline: none;
+      border-color: var(--primary-blue);
+    }
+
+    .modal-submit {
+      margin-top: 24px;
+      padding: 12px 24px;
+      background: var(--primary-blue);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      width: 100%;
+      transition: all 0.2s;
+    }
+
+    .modal-submit:hover {
+      transform: translateY(-2px);
+    }
+
+    .modal-submit:disabled {
+      background: var(--text-tertiary);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .report-section {
+      margin: 20px 0;
+      padding: 15px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      border-left: 4px solid var(--primary-blue);
+      display: none;
+    }
+
+    .section-divider {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary-blue);
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .quality-help-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      background: var(--border-strong);
+      color: white;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .quality-help-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .quality-help-item {
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .quality-help-item:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .quality-rating {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stars {
+      display: flex;
+      gap: 4px;
+    }
+
+    .stars .star {
+      font-size: 24px;
+      color: var(--border-color);
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .stars .star.filled {
+      color: var(--warning-color);
+    }
+
+    .stars .star:hover {
+      color: var(--warning-color);
+    }
+
+    .difficulty-btn {
+      padding: 10px 5px;
+      background: var(--bg-card);
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text-primary);
+      transition: all 0.2s;
+    }
+
+    .difficulty-btn:hover {
+      background: var(--bg-secondary);
+      border-color: var(--primary-blue);
+    }
+
+    .difficulty-btn.selected {
+      background: var(--primary-blue);
+      color: white;
+      border-color: var(--primary-blue);
+    }
+
+    .modal-preview {
+      padding: 15px;
+      background: var(--bg-card);
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      min-height: 100px;
+      margin-bottom: 15px;
+      line-height: 1.8;
+    }
+
+    .toggle-raw-btn {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      padding: 4px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 4px;
+      color: var(--text-secondary);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .filters-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .problem-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .problem-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
+      <a href="index.html" style="display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 600; padding: 16px 0;">
+        <img src="256px_transparentBG.png" alt="Mock AIME Logo" style="height: 40px; width: auto;">
+        Mock AIME
+      </a>
+      <div style="display: flex; gap: 0; align-items: center;">
+        <a href="practice.html">Practice</a>
+        <a href="past_tests.html">Past Tests</a>
+        <a href="search.html" class="active">Search</a>
+        <a href="login.html" class="auth-button">Login</a>
+        <div class="user-info"></div>
+        <button class="dark-mode-toggle" onclick="toggleDarkMode()">Dark</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1>Problem Search</h1>
+    <p class="subtitle">Search through <span id="totalProblems">0</span> competition problems</p>
+
+    <div class="loading-indicator" id="loadingIndicator">
+      <div class="loading-spinner"></div>
+      <div id="loadingText">Loading problems...</div>
+    </div>
+
+    <div class="filters-card">
+      <div class="filters-header">
+        <h2>Search Filters</h2>
+      </div>
+
+      <div class="filters-grid">
+        <div class="filter-group">
+          <label>Problem ID</label>
+          <input type="text" id="problemId" placeholder="e.g., 1234">
+        </div>
+
+        <div class="filter-group">
+          <label>Problem Text</label>
+          <input type="text" id="textSearch" placeholder="Search keywords...">
+        </div>
+
+        <div class="filter-group">
+          <label>Source</label>
+          <input type="text" id="sourceSearch" placeholder="e.g., HMMT, 2019">
+        </div>
+
+        <div class="filter-group">
+          <label>Difficulty Range</label>
+          <div class="filter-row">
+            <input type="number" id="minDifficulty" min="1" max="8" step="0.5" value="1">
+            <span>to</span>
+            <input type="number" id="maxDifficulty" min="1" max="8" step="0.5" value="8">
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label>Quality Range</label>
+          <div class="filter-row">
+            <input type="number" id="minQuality" min="0" max="5" step="1" value="0">
+            <span>to</span>
+            <input type="number" id="maxQuality" min="0" max="5" step="1" value="5">
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-primary" onclick="searchProblems()">Search</button>
+        <button class="btn-secondary" onclick="resetFilters()">Reset</button>
+      </div>
+    </div>
+
+    <div class="results-header">
+      <div id="resultsInfo"></div>
+    </div>
+
+    <div id="results">
+      <div class="no-results">Use the filters above to search for problems.</div>
+    </div>
+
+    <div id="pagination"></div>
+  </div>
+
+  <!-- Report Modal -->
+  <div id="reportModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeReportModal()">&times;</span>
+      <div class="modal-header">Report Issue</div>
+      
+      <label class="modal-label">Select Issues to Report:</label>
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+          <input type="checkbox" id="reportQuality" onchange="toggleReportSection('quality')">
+          <span>Quality Rating</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+          <input type="checkbox" id="reportDifficulty" onchange="toggleReportSection('difficulty')">
+          <span>Difficulty Rating</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+          <input type="checkbox" id="reportAnswer" onchange="toggleReportSection('answer')">
+          <span>Wrong Answer</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+          <input type="checkbox" id="reportProblem" onchange="toggleReportSection('problem')">
+          <span>Problem Statement</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+          <input type="checkbox" id="reportSource" onchange="toggleReportSection('source')">
+          <span>Source</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+          <input type="checkbox" id="reportType" onchange="toggleReportSection('type')">
+          <span>Wrong Type</span>
+        </label>
+      </div>
+
+      <!-- Quality Section -->
+      <div id="qualitySection" class="report-section">
+        <div class="section-divider">
+          Quality Rating
+          <span class="quality-help-btn" onclick="toggleQualityHelp()">?</span>
+        </div>
+        <div id="qualityHelpBox" class="quality-help-box" style="display: none;">
+          <div class="quality-help-item"><strong>1 Star:</strong> Unsolvable or fundamentally flawed.</div>
+          <div class="quality-help-item"><strong>2 Stars:</strong> Solvable but poor quality.</div>
+          <div class="quality-help-item"><strong>3 Stars:</strong> Acceptable quality.</div>
+          <div class="quality-help-item"><strong>4 Stars:</strong> High quality, comparable to AIME.</div>
+          <div class="quality-help-item"><strong>5 Stars:</strong> Exceptional quality.</div>
+        </div>
+        <div class="quality-rating" style="justify-content: center;">
+          <div class="stars" id="reportQualityStars">
+            <span class="star" data-rating="1">★</span>
+            <span class="star" data-rating="2">★</span>
+            <span class="star" data-rating="3">★</span>
+            <span class="star" data-rating="4">★</span>
+            <span class="star" data-rating="5">★</span>
+          </div>
+          <span id="reportQualityText" style="margin-left: 10px; color: var(--text-tertiary);">(0/5)</span>
+        </div>
+        <label class="modal-label">Additional Details (Optional):</label>
+        <textarea id="qualityDetails" class="modal-textarea" placeholder="Explain your quality rating..."></textarea>
+      </div>
+
+      <!-- Difficulty Section -->
+      <div id="difficultySection" class="report-section">
+        <div class="section-divider">
+          Difficulty Rating
+          <span class="quality-help-btn" onclick="toggleDifficultyHelp()">?</span>
+        </div>
+        <div id="difficultyHelpBox" class="quality-help-box" style="display: none;">
+          For guidance on difficulty ratings, see the <a href="https://artofproblemsolving.com/wiki/index.php/AoPS_Wiki:Competition_ratings" target="_blank" style="color: var(--primary-blue); font-weight: 600;">AoPS Competition Ratings</a> page.
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(9, 1fr); gap: 8px; margin-bottom: 15px;">
+          <button type="button" class="difficulty-btn" data-diff="1.0">1.0</button>
+          <button type="button" class="difficulty-btn" data-diff="1.5">1.5</button>
+          <button type="button" class="difficulty-btn" data-diff="2.0">2.0</button>
+          <button type="button" class="difficulty-btn" data-diff="2.5">2.5</button>
+          <button type="button" class="difficulty-btn" data-diff="3.0">3.0</button>
+          <button type="button" class="difficulty-btn" data-diff="3.5">3.5</button>
+          <button type="button" class="difficulty-btn" data-diff="4.0">4.0</button>
+          <button type="button" class="difficulty-btn" data-diff="4.5">4.5</button>
+          <button type="button" class="difficulty-btn" data-diff="5.0">5.0</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(9, 1fr); gap: 8px; margin-bottom: 15px;">
+          <button type="button" class="difficulty-btn" data-diff="5.5">5.5</button>
+          <button type="button" class="difficulty-btn" data-diff="6.0">6.0</button>
+          <button type="button" class="difficulty-btn" data-diff="6.5">6.5</button>
+          <button type="button" class="difficulty-btn" data-diff="7.0">7.0</button>
+          <button type="button" class="difficulty-btn" data-diff="7.5">7.5</button>
+          <button type="button" class="difficulty-btn" data-diff="8.0">8.0</button>
+          <button type="button" class="difficulty-btn" data-diff="8.5">8.5</button>
+          <button type="button" class="difficulty-btn" data-diff="9.0">9.0</button>
+          <button type="button" class="difficulty-btn" data-diff="9.5">9.5</button>
+        </div>
+        <div style="text-align: center; margin-bottom: 15px;">
+          <strong>Selected Difficulty: <span id="selectedDifficulty">None</span></strong>
+        </div>
+        <label class="modal-label">Additional Details (Optional):</label>
+        <textarea id="difficultyDetails" class="modal-textarea" placeholder="Explain your difficulty rating..."></textarea>
+      </div>
+
+      <!-- Answer Section -->
+      <div id="answerSection" class="report-section">
+        <div class="section-divider">Correct Answer</div>
+        <label class="modal-label">
+          Current Answer: <strong id="currentAnswer">-</strong>
+          <button type="button" class="toggle-raw-btn" style="margin-left: 10px;" onclick="toggleCurrentAnswer()">Show Answer</button>
+        </label>
+        <div id="currentAnswerReveal" style="display: none; margin: 10px 0; padding: 10px; background: var(--bg-secondary); border-radius: 4px; font-weight: bold; font-size: 18px;"></div>
+        
+        <label class="modal-label">Your Proposed Answer:</label>
+        <input type="text" id="proposedAnswer" maxlength="3" placeholder="000" style="width: 100px; padding: 8px; border: 2px solid var(--border-color); border-radius: 6px; text-align: center; font-size: 18px; font-weight: bold;">
+        <label class="modal-label" style="margin-top: 15px;">Link to Answer Key:</label>
+        <input type="text" id="answerKeyLink" placeholder="https://..." style="width: 100%; padding: 10px; border: 2px solid var(--border-color); border-radius: 6px; box-sizing: border-box;">
+        <label class="modal-label" style="margin-top: 15px;">Additional Details (Optional):</label>
+        <textarea id="answerDetails" class="modal-textarea" placeholder="Explain why this is the correct answer..."></textarea>
+      </div>
+
+      <!-- Problem Statement Section -->
+      <div id="problemSection" class="report-section">
+        <div class="section-divider">Problem Statement</div>
+        
+        <label class="modal-label">
+          Current Answer for Reference: 
+          <button type="button" class="toggle-raw-btn" style="margin-left: 10px;" onclick="toggleProblemCurrentAnswer()">Show Answer</button>
+        </label>
+        <div id="problemCurrentAnswerReveal" style="display: none; margin: 10px 0; padding: 10px; background: var(--bg-secondary); border-radius: 4px; font-weight: bold; font-size: 18px;"></div>
+        
+        <label class="modal-label">Edit Problem Statement (LaTeX):</label>
+        <textarea id="problemText" class="modal-textarea" style="min-height: 150px; font-family: 'Courier New', monospace;" oninput="updateProblemPreview()"></textarea>
+        
+        <label class="modal-label">Preview:</label>
+        <div id="problemPreview" class="modal-preview"></div>
+        
+        <label class="modal-label">Answer for Modified Problem:</label>
+        <input type="text" id="problemAnswer" maxlength="3" placeholder="000" style="width: 100px; padding: 8px; border: 2px solid var(--border-color); border-radius: 6px; text-align: center; font-size: 18px; font-weight: bold;">
+        
+        <label class="modal-label" style="margin-top: 15px;">Additional Details (Optional):</label>
+        <textarea id="problemDetails" class="modal-textarea" placeholder="Explain your changes..."></textarea>
+      </div>
+
+      <!-- Source Section -->
+      <div id="sourceSection" class="report-section">
+        <div class="section-divider">Source</div>
+        <label class="modal-label">Current Source: <strong id="currentSource">-</strong></label>
+        <label class="modal-label">Corrected Source:</label>
+        <input type="text" id="proposedSource" placeholder="e.g., AMC 12A 2020/15" style="width: 100%; padding: 10px; border: 2px solid var(--border-color); border-radius: 6px; box-sizing: border-box;">
+        <label class="modal-label" style="margin-top: 15px;">Additional Details (Optional):</label>
+        <textarea id="sourceDetails" class="modal-textarea" placeholder="Provide source information or link..."></textarea>
+      </div>
+
+      <!-- Type Section -->
+      <div id="typeSection" class="report-section">
+        <div class="section-divider">Wrong Type</div>
+        <label class="modal-label">Current Type: <strong id="currentType">-</strong></label>
+        <label class="modal-label">Correct Type:</label>
+        <select id="proposedType" style="width: 100%; padding: 10px; border: 2px solid var(--border-color); border-radius: 6px; box-sizing: border-box; font-size: 16px; background: var(--bg-card); color: var(--text-primary);">
+          <option value="">Select correct type...</option>
+          <option value="algebra">Algebra</option>
+          <option value="geometry">Geometry</option>
+          <option value="number_theory">Number Theory</option>
+          <option value="counting">Counting</option>
+          <option value="other">Other</option>
+        </select>
+        <label class="modal-label" style="margin-top: 15px;">Additional Details (Optional):</label>
+        <textarea id="typeDetails" class="modal-textarea" placeholder="Explain why this type is correct..."></textarea>
+      </div>
+      
+      <button class="modal-submit" id="submitReport">Submit Report</button>
+    </div>
+  </div>
 </body>
 </html>
