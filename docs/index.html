@@ -168,6 +168,23 @@
         }
       });
 
+      // === TEXT INPUT TRACKING (on blur) ===
+      document.addEventListener('blur', (e) => {
+        const target = e.target;
+        if (target.matches('input[type="text"], input[type="number"], textarea')) {
+          const value = target.value.trim();
+          if (value) {
+            logActivity('text_input', {
+              userAnswer: value,
+              metadata: { 
+                elementId: target.id || target.name || null,
+                problemIndex: target.dataset.index || null
+              }
+            });
+          }
+        }
+      }, true);
+
       // === SCROLL TRACKING (throttled, every 25%) ===
       let scrollTimeout;
       document.addEventListener('scroll', () => {
@@ -2554,6 +2571,7 @@
           btn.textContent = 'Show Answer';
         }
         logEvent('toggle_current_answer', { metadata: { showing: isShowing, problemId: currentReportProblemId } });
+        logActivity('toggle_current_answer', { metadata: { showing: isShowing, problemId: currentReportProblemId } });
       }
 
       function toggleProblemCurrentAnswer() {
@@ -2575,6 +2593,7 @@
           btn.textContent = 'Show Answer';
         }
         logEvent('toggle_problem_current_answer', { metadata: { showing: isShowing, problemId: currentReportProblemId } });
+        logActivity('toggle_problem_current_answer', { metadata: { showing: isShowing, problemId: currentReportProblemId } });
       }
 
       function toggleReportSection(section) {
@@ -2593,6 +2612,7 @@
         const isOpening = helpBox.style.display === 'none';
         helpBox.style.display = isOpening ? 'block' : 'none';
         logEvent('toggle_quality_help', { metadata: { opened: isOpening } });
+        logActivity('toggle_quality_help', { metadata: { opened: isOpening } });
       }
 
       function toggleDifficultyHelp() {
@@ -2600,6 +2620,7 @@
         const isOpening = helpBox.style.display === 'none';
         helpBox.style.display = isOpening ? 'block' : 'none';
         logEvent('toggle_difficulty_help', { metadata: { opened: isOpening } });
+        logActivity('toggle_difficulty_help', { metadata: { opened: isOpening } });
       }
 
       // Quality star handlers for report modal
@@ -3050,28 +3071,41 @@
         console.log('Saving mock attempt...');
         await saveMockAttempt(correctCount, chosenProblems.length, document.getElementById("difficulty").value, problemsWithAnswers);
 
-        // Track mock test completion
-        logActivity('mock_test_complete', {
-          metadata: {
-            score: correctCount,
-            total: chosenProblems.length,
-            level: document.getElementById("difficulty").value,
-            results: results.map(r => r.status)
-          }
-        });
-
-        // Track each problem submission
-        chosenProblems.forEach((p, i) => {
+        // Build detailed problem submissions data
+        const problemSubmissions = chosenProblems.map((p, i) => {
           const input = document.querySelector(`input[data-index="${i}"]`);
           const userAnswer = input?.value?.trim() || '';
           const result = results.find(r => r.index === i);
-          
-          logActivity('mock_problem_submit', {
+          return {
             problemId: p.id,
             source: p.source,
             difficulty: p.difficulty,
             isCorrect: result?.status === 'correct',
             userAnswer: userAnswer
+          };
+        });
+
+        // Track mock test completion (single row with all details)
+        logActivity('mock_test_complete', {
+          metadata: {
+            score: correctCount,
+            total: chosenProblems.length,
+            level: document.getElementById("difficulty").value,
+            results: results.map(r => r.status),
+            problems: problemSubmissions
+          }
+        });
+
+        // Track each problem submission to activity_all only
+        problemSubmissions.forEach(sub => {
+          logEvent('mock_problem_submit', {
+            metadata: {
+              problemId: sub.problemId,
+              source: sub.source,
+              difficulty: sub.difficulty,
+              isCorrect: sub.isCorrect,
+              userAnswer: sub.userAnswer
+            }
           });
         });
       }

@@ -151,6 +151,23 @@
         }
       });
 
+      // === TEXT INPUT TRACKING (on blur) ===
+      document.addEventListener('blur', (e) => {
+        const target = e.target;
+        if (target.matches('input[type="text"], input[type="number"], textarea')) {
+          const value = target.value.trim();
+          if (value) {
+            logActivity('text_input', {
+              userAnswer: value,
+              metadata: { 
+                elementId: target.id || target.name || null,
+                problemIndex: target.dataset.index || null
+              }
+            });
+          }
+        }
+      }, true);
+
       // === SCROLL TRACKING (throttled, every 25%) ===
       let scrollTimeout;
       document.addEventListener('scroll', () => {
