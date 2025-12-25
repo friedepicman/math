@@ -388,9 +388,7 @@
       const tier = getShieldTier(level);
       let html = '';
       
-      let containerClasses = 'level-shield-container';
-      if (tier.layered) containerClasses += ' shield-container-layered';
-      else containerClasses += ' shield-container-simple'; // Add simple class for bronze/silver/gold
+      let containerClasses = 'level-shield-container shield-container-layered';
       if (tier.design === 'B' || tier.design === 'C') containerClasses += ' shield-container-designB';
       if (tier.ripple) containerClasses += ` shield-container-ripple shield-container-${tier.name}`;
       
@@ -421,15 +419,12 @@
         html += `<div class="shield-horn-right shield-${tier.name}-horn"></div>`;
       }
       
-      // Outer layer (31+)
-      if (tier.layered) {
-        html += `<div class="shield-outer shield-${tier.name}-outer"></div>`;
-        html += `<div class="shield-middle shield-${tier.name}-middle"></div>`;
-      }
+      // Outer layer (all tiers now use this)
+      html += `<div class="shield-outer shield-${tier.name}-outer"></div>`;
       
-      // Outline for simple shields (bronze/silver/gold)
-      if (!tier.layered) {
-        html += `<div class="shield-outline shield-${tier.name}-outline"></div>`;
+      // Middle layer (31+ only)
+      if (tier.layered) {
+        html += `<div class="shield-middle shield-${tier.name}-middle"></div>`;
       }
       
       // Inner shield (always)
@@ -475,6 +470,182 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    // ============================================
+    // RANKS PROGRESSION FUNCTIONALITY
+    // ============================================
+    const rankCategories = ['algebra', 'counting', 'geometry', 'number_theory'];
+    
+    const rankData = [
+      { level: 1, name: 'bronze', xp: '0 XP', design: 'simple' },
+      { level: 11, name: 'silver', xp: '250 XP', design: 'simple' },
+      { level: 21, name: 'gold', xp: '750 XP', design: 'simple' },
+      { level: 31, name: 'emerald', xp: '1,750 XP', design: 'layered' },
+      { level: 41, name: 'sapphire', xp: '3,250 XP', design: 'layered' },
+      { level: 51, name: 'amethyst', xp: '5,250 XP', design: 'horns' },
+      { level: 61, name: 'ruby', xp: '7,750 XP', design: 'horns' },
+      { level: 71, name: 'diamond', xp: '11,250 XP', design: 'horns' },
+      { level: 81, name: 'obsidian', xp: '16,250 XP', design: 'full' },
+      { level: 91, name: 'legendary', xp: '23,250 XP', design: 'full' },
+      { level: 101, name: 'master', xp: '32,250 XP', design: 'master' }
+    ];
+
+    function buildRankShieldHtml(rank) {
+      const n = rank.name;
+      let html = '';
+      
+      if (rank.design === 'master') {
+        html = `
+          <div class="level-shield-container shield-container-layered shield-container-designB shield-container-ripple shield-container-master">
+            <div class="shield-back shield-master-back"></div>
+            <div class="shield-tri-outline-topleft shield-master-tri-outline"></div>
+            <div class="shield-tri-outline-topright shield-master-tri-outline"></div>
+            <div class="shield-tri-outline-bottomright shield-master-tri-outline"></div>
+            <div class="shield-tri-outline-bottomleft shield-master-tri-outline"></div>
+            <div class="shield-tri-topleft shield-master-tri"></div>
+            <div class="shield-tri-topright shield-master-tri"></div>
+            <div class="shield-tri-bottomright shield-master-tri"></div>
+            <div class="shield-tri-bottomleft shield-master-tri"></div>
+            <div class="shield-horn-outline-left shield-master-horn-outline"></div>
+            <div class="shield-horn-outline-right shield-master-horn-outline"></div>
+            <div class="shield-horn-left shield-master-horn"></div>
+            <div class="shield-horn-right shield-master-horn"></div>
+            <div class="shield-outer shield-master-outer"></div>
+            <div class="shield-middle shield-master-middle"></div>
+            <div class="level-shield shield-master">${rank.level}</div>
+          </div>`;
+      } else if (rank.design === 'full') {
+        html = `
+          <div class="level-shield-container shield-container-layered shield-container-designB shield-container-ripple shield-container-${n}">
+            <div class="shield-tri-outline-topleft shield-${n}-tri-outline"></div>
+            <div class="shield-tri-outline-topright shield-${n}-tri-outline"></div>
+            <div class="shield-tri-outline-bottomright shield-${n}-tri-outline"></div>
+            <div class="shield-tri-outline-bottomleft shield-${n}-tri-outline"></div>
+            <div class="shield-tri-topleft shield-${n}-tri"></div>
+            <div class="shield-tri-topright shield-${n}-tri"></div>
+            <div class="shield-tri-bottomright shield-${n}-tri"></div>
+            <div class="shield-tri-bottomleft shield-${n}-tri"></div>
+            <div class="shield-horn-outline-left shield-${n}-horn-outline"></div>
+            <div class="shield-horn-outline-right shield-${n}-horn-outline"></div>
+            <div class="shield-horn-left shield-${n}-horn"></div>
+            <div class="shield-horn-right shield-${n}-horn"></div>
+            <div class="shield-outer shield-${n}-outer"></div>
+            <div class="shield-middle shield-${n}-middle"></div>
+            <div class="level-shield shield-${n}">${rank.level}</div>
+          </div>`;
+      } else if (rank.design === 'horns') {
+        html = `
+          <div class="level-shield-container shield-container-layered">
+            <div class="shield-horn-outline-left shield-${n}-horn-outline"></div>
+            <div class="shield-horn-outline-right shield-${n}-horn-outline"></div>
+            <div class="shield-horn-left shield-${n}-horn"></div>
+            <div class="shield-horn-right shield-${n}-horn"></div>
+            <div class="shield-outer shield-${n}-outer"></div>
+            <div class="shield-middle shield-${n}-middle"></div>
+            <div class="level-shield shield-${n}">${rank.level}</div>
+          </div>`;
+      } else if (rank.design === 'layered') {
+        html = `
+          <div class="level-shield-container shield-container-layered">
+            <div class="shield-outer shield-${n}-outer"></div>
+            <div class="shield-middle shield-${n}-middle"></div>
+            <div class="level-shield shield-${n}">${rank.level}</div>
+          </div>`;
+      } else {
+        html = `
+          <div class="level-shield-container shield-container-layered">
+            <div class="shield-outer shield-${n}-outer"></div>
+            <div class="level-shield shield-${n}">${rank.level}</div>
+          </div>`;
+      }
+      return html;
+    }
+
+    function getRankTier(level) {
+      if (level >= 101) return 10;
+      if (level >= 91) return 9;
+      if (level >= 81) return 8;
+      if (level >= 71) return 7;
+      if (level >= 61) return 6;
+      if (level >= 51) return 5;
+      if (level >= 41) return 4;
+      if (level >= 31) return 3;
+      if (level >= 21) return 2;
+      if (level >= 11) return 1;
+      return 0;
+    }
+
+    function buildProgressionHtml(category) {
+      // Get the user's level for this category from the displayed shield
+      let userLevel = 1;
+      const shieldWrapper = document.getElementById(`shield-wrapper-${category}`);
+      if (shieldWrapper) {
+        const levelEl = shieldWrapper.querySelector('.level-shield');
+        if (levelEl) {
+          userLevel = parseInt(levelEl.textContent) || 1;
+        }
+      }
+      
+      const userTier = getRankTier(userLevel);
+      
+      let html = '';
+      rankData.forEach((rank, idx) => {
+        const isUnlocked = idx <= userTier;
+        const isCurrent = idx === userTier;
+        
+        html += `<div class="rank-node ${isUnlocked ? 'unlocked' : 'locked'} ${isCurrent ? 'current' : ''}">`;
+        if (isCurrent) {
+          html += `<div class="current-indicator">▼</div>`;
+        }
+        html += buildRankShieldHtml(rank);
+        html += `<div class="rank-xp">${rank.xp}</div>`;
+        html += `</div>`;
+      });
+      
+      return html;
+    }
+
+    function expandCard(category, event) {
+      event.stopPropagation();
+      
+      // Build progression if not already done
+      const progressionEl = document.getElementById(`progression-${category}`);
+      if (progressionEl && !progressionEl.innerHTML) {
+        progressionEl.innerHTML = buildProgressionHtml(category);
+      }
+      
+      if (rankCategories.includes(category)) {
+        rankCategories.forEach(cat => {
+          const card = document.getElementById(`card-${cat}`);
+          if (card) {
+            if (cat === category) {
+              card.classList.add('expanded');
+              card.classList.remove('hidden');
+            } else {
+              card.classList.add('hidden');
+              card.classList.remove('expanded');
+            }
+          }
+        });
+      } else {
+        const generalCard = document.getElementById('card-general');
+        if (generalCard) generalCard.classList.add('expanded');
+      }
+    }
+
+    function collapseCard(category, event) {
+      event.stopPropagation();
+      
+      if (rankCategories.includes(category)) {
+        rankCategories.forEach(cat => {
+          const card = document.getElementById(`card-${cat}`);
+          if (card) card.classList.remove('expanded', 'hidden');
+        });
+      } else {
+        const generalCard = document.getElementById('card-general');
+        if (generalCard) generalCard.classList.remove('expanded');
+      }
     }
 
     function setMathContent(element, content) {
@@ -614,6 +785,261 @@
       gap: 16px;
     }
 
+    /* ============================================
+       YOUR LEVELS SECTION WITH RANKS
+       ============================================ */
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .category-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 15px;
+      position: relative;
+    }
+
+    .category-card.expanded {
+      grid-column: 1 / -1;
+    }
+
+    .category-card.hidden {
+      display: none;
+    }
+
+    .category-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .category-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: #c0c0c0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #1a4a7a, #4a9fd4);
+      transition: width 0.5s ease;
+    }
+
+    .xp-text {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      text-align: right;
+      margin-bottom: 8px;
+    }
+
+    .ranks-btn {
+      display: block;
+      width: 100%;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .ranks-btn:hover {
+      background: var(--accent-primary);
+      color: white;
+      border-color: var(--accent-primary);
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      width: 28px;
+      height: 28px;
+      font-size: 16px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .close-btn:hover {
+      background: #dc3545;
+      color: white;
+      border-color: #dc3545;
+    }
+
+    .category-card.expanded .ranks-btn { display: none; }
+    .category-card.expanded .close-btn { display: flex; }
+    .category-card.expanded .normal-view { display: none; }
+    .category-card.expanded .expanded-progression { display: block; }
+
+    .expanded-progression {
+      display: none;
+    }
+
+    .expanded-header {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+    }
+
+    .progression-scroll {
+      display: flex;
+      align-items: flex-start;
+      gap: 5px;
+      overflow-x: auto;
+      padding: 30px 10px 20px;
+      position: relative;
+    }
+
+    .progression-scroll::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .progression-scroll::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 3px;
+    }
+
+    .progression-scroll::before {
+      content: '';
+      position: absolute;
+      top: 64px;
+      left: 40px;
+      right: 40px;
+      height: 4px;
+      background: linear-gradient(to right, 
+        #cd7f32 0%, #cd7f32 9%,
+        #c0c0c0 9%, #c0c0c0 18%,
+        #ffd700 18%, #ffd700 27%,
+        #50c878 27%, #50c878 36%,
+        #0f52ba 36%, #0f52ba 45%,
+        #9966cc 45%, #9966cc 54%,
+        #e0115f 54%, #e0115f 63%,
+        #4dd0e1 63%, #4dd0e1 72%,
+        #333 72%, #333 81%,
+        #8ec0dc 81%, #8ec0dc 90%,
+        #ffd700 90%, #ffd700 100%
+      );
+      z-index: 0;
+      border-radius: 2px;
+    }
+
+    .rank-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 70px;
+      flex-shrink: 0;
+      z-index: 1;
+    }
+
+    .rank-node.locked .level-shield-container {
+      opacity: 0.35;
+      filter: grayscale(60%);
+    }
+
+    .rank-node.current {
+      position: relative;
+    }
+
+    .current-indicator {
+      position: absolute;
+      top: -22px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 16px;
+      color: #28a745;
+      animation: bounce 1s ease infinite;
+      z-index: 10;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-5px); }
+    }
+
+    .rank-levels {
+      display: none;
+    }
+
+    .rank-xp {
+      font-size: 9px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+    }
+
+    .general-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      border: 2px solid var(--border-color);
+    }
+
+    .general-content {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .general-left {
+      flex: 1;
+    }
+
+    .general-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+
+    .general-progress {
+      height: 12px;
+      background: #c0c0c0;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .general-card .ranks-btn {
+      width: auto;
+      margin-top: 10px;
+    }
+
+    .general-card.expanded .normal-view { display: none; }
+    .general-card.expanded .expanded-progression { display: block; }
+    .general-card.expanded .close-btn { display: flex; }
+
+    @media (max-width: 700px) {
+      .categories-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 400px) {
+      .categories-grid { grid-template-columns: 1fr; }
+    }
+
     .xp-bar-wrapper {
       background: var(--bg-secondary);
       border-radius: 8px;
@@ -707,23 +1133,33 @@
       z-index: 2;
     }
 
-    /* Bronze: 1-10 */
+    /* Bronze: 1-10 - thin flat border */
     .shield-bronze {
       background: linear-gradient(135deg, #cd7f32, #8b4513);
     }
     .shield-bronze-outline {
       background: rgba(92, 51, 16, 0.5);
     }
+    .shield-bronze-outer {
+      background: #5c2e0d;
+      width: 42px !important;
+      height: 48px !important;
+    }
 
-    /* Silver: 11-20 */
+    /* Silver: 11-20 - thin flat border */
     .shield-silver {
       background: linear-gradient(135deg, #c0c0c0, #808080);
     }
     .shield-silver-outline {
       background: rgba(74, 74, 74, 0.5);
     }
+    .shield-silver-outer {
+      background: #505050;
+      width: 42px !important;
+      height: 48px !important;
+    }
 
-    /* Gold: 21-30 */
+    /* Gold: 21-30 - thin flat border */
     .shield-gold {
       background: linear-gradient(135deg, #ffd700, #b8860b);
       color: #333;
@@ -731,6 +1167,11 @@
     }
     .shield-gold-outline {
       background: rgba(139, 105, 20, 0.5);
+    }
+    .shield-gold-outer {
+      background: #7a5a07;
+      width: 42px !important;
+      height: 48px !important;
     }
 
     /* === TIERS 31-50: Triple layer + rainbow animation === */
@@ -1014,51 +1455,54 @@
       background: rgba(100, 100, 100, 0.6);
     }
 
-    /* Legendary: 91-100 - Design B */
+    /* Legendary: 91-100 - Platinum */
     .shield-legendary-outer { 
-      background: linear-gradient(135deg, #8b0000, #4a0080); 
+      background: linear-gradient(135deg, #6a9ab8, #4a7a98); 
       animation: legendaryOuter 3s ease infinite;
     }
     .shield-legendary-middle { 
-      background: linear-gradient(135deg, #ff4500, #8b008b); 
+      background: linear-gradient(135deg, #8ec0dc, #6a9ab8); 
       animation: legendaryMiddle 3s ease infinite;
     }
     .shield-legendary {
-      background: linear-gradient(135deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff);
-      background-size: 300% 300%;
+      background: linear-gradient(135deg, #ffffff, #e8f0f8, #ffffff, #e0eaf4);
+      background-size: 200% 200%;
+      color: #333;
+      text-shadow: none;
       animation: legendaryInner 3s ease infinite;
+      box-shadow: 0 0 12px rgba(255,255,255,0.5);
     }
     .shield-legendary-horn {
-      background: linear-gradient(to left, #8b0000, #ff4500);
+      background: linear-gradient(to left, #5a8aa8, #a8d0e8);
     }
     .shield-horn-right.shield-legendary-horn {
-      background: linear-gradient(to right, #8b0000, #ff4500);
+      background: linear-gradient(to right, #5a8aa8, #a8d0e8);
     }
     .shield-legendary-horn-outline {
-      background: rgba(61, 0, 0, 0.5);
+      background: rgba(60, 90, 110, 0.5);
     }
     .shield-legendary-tri {
-      background: linear-gradient(135deg, #ff4500, #ffd700);
+      background: linear-gradient(135deg, #8ec0dc, #b8daf0);
     }
     .shield-legendary-tri-outline {
-      background: rgba(139, 37, 0, 0.5);
+      background: rgba(70, 100, 120, 0.5);
     }
     .shield-container-legendary::before,
     .shield-container-legendary::after {
-      background: linear-gradient(135deg, #ff4500, #ffd700, #ff4500);
+      background: linear-gradient(135deg, #c0e0f0, #a0c8e0, #c0e0f0);
     }
 
     @keyframes legendaryOuter {
-      0%, 100% { filter: hue-rotate(0deg); }
-      50% { filter: hue-rotate(60deg); }
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.15); }
     }
     @keyframes legendaryMiddle {
-      0%, 100% { filter: hue-rotate(0deg); }
-      50% { filter: hue-rotate(-60deg); }
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.1); }
     }
     @keyframes legendaryInner {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
+      0%, 100% { background-position: 0% 50%; filter: brightness(1); }
+      50% { background-position: 100% 50%; filter: brightness(1.15); }
     }
 
     /* Master: 101-105 - Design C */
@@ -2037,56 +2481,98 @@
     <!-- XP Display -->
     <div class="card">
       <div class="card-header">Your Levels</div>
-      <div class="xp-container">
-        <div class="xp-bar-wrapper">
-          <div class="xp-bar-label">
-            <span>Algebra</span>
-            <span class="xp-bar-value" id="shield-wrapper-algebra"></span>
+      
+      <div class="categories-grid" id="categoriesGrid">
+        <!-- Algebra -->
+        <div class="category-card" id="card-algebra">
+          <button class="close-btn" onclick="collapseCard('algebra', event)">✕</button>
+          <div class="normal-view">
+            <div class="category-content">
+              <span class="category-name">Algebra</span>
+              <span id="shield-wrapper-algebra"></span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="xp-algebra-bar" style="width: 0%;"></div></div>
+            <div class="xp-text" id="xp-algebra-sublabel">0 / 25 XP</div>
+            <button class="ranks-btn" onclick="expandCard('algebra', event)">View Ranks</button>
           </div>
-          <div class="xp-bar-track">
-            <div class="xp-bar-fill algebra" id="xp-algebra-bar" style="width: 0%"></div>
+          <div class="expanded-progression">
+            <div class="expanded-header">Algebra Ranks</div>
+            <div class="progression-scroll" id="progression-algebra"></div>
           </div>
-          <div class="xp-sublabel" id="xp-algebra-sublabel">0 / 25 XP</div>
         </div>
-        <div class="xp-bar-wrapper">
-          <div class="xp-bar-label">
-            <span>Geometry</span>
-            <span class="xp-bar-value" id="shield-wrapper-geometry"></span>
+
+        <!-- Counting -->
+        <div class="category-card" id="card-counting">
+          <button class="close-btn" onclick="collapseCard('counting', event)">✕</button>
+          <div class="normal-view">
+            <div class="category-content">
+              <span class="category-name">Counting</span>
+              <span id="shield-wrapper-counting"></span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="xp-counting-bar" style="width: 0%;"></div></div>
+            <div class="xp-text" id="xp-counting-sublabel">0 / 25 XP</div>
+            <button class="ranks-btn" onclick="expandCard('counting', event)">View Ranks</button>
           </div>
-          <div class="xp-bar-track">
-            <div class="xp-bar-fill geometry" id="xp-geometry-bar" style="width: 0%"></div>
+          <div class="expanded-progression">
+            <div class="expanded-header">Counting Ranks</div>
+            <div class="progression-scroll" id="progression-counting"></div>
           </div>
-          <div class="xp-sublabel" id="xp-geometry-sublabel">0 / 25 XP</div>
         </div>
-        <div class="xp-bar-wrapper">
-          <div class="xp-bar-label">
-            <span>Number Theory</span>
-            <span class="xp-bar-value" id="shield-wrapper-number_theory"></span>
+
+        <!-- Geometry -->
+        <div class="category-card" id="card-geometry">
+          <button class="close-btn" onclick="collapseCard('geometry', event)">✕</button>
+          <div class="normal-view">
+            <div class="category-content">
+              <span class="category-name">Geometry</span>
+              <span id="shield-wrapper-geometry"></span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="xp-geometry-bar" style="width: 0%;"></div></div>
+            <div class="xp-text" id="xp-geometry-sublabel">0 / 25 XP</div>
+            <button class="ranks-btn" onclick="expandCard('geometry', event)">View Ranks</button>
           </div>
-          <div class="xp-bar-track">
-            <div class="xp-bar-fill number_theory" id="xp-number_theory-bar" style="width: 0%"></div>
+          <div class="expanded-progression">
+            <div class="expanded-header">Geometry Ranks</div>
+            <div class="progression-scroll" id="progression-geometry"></div>
           </div>
-          <div class="xp-sublabel" id="xp-number_theory-sublabel">0 / 25 XP</div>
         </div>
-        <div class="xp-bar-wrapper">
-          <div class="xp-bar-label">
-            <span>Counting</span>
-            <span class="xp-bar-value" id="shield-wrapper-counting"></span>
+
+        <!-- Number Theory -->
+        <div class="category-card" id="card-number_theory">
+          <button class="close-btn" onclick="collapseCard('number_theory', event)">✕</button>
+          <div class="normal-view">
+            <div class="category-content">
+              <span class="category-name">Number Theory</span>
+              <span id="shield-wrapper-number_theory"></span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="xp-number_theory-bar" style="width: 0%;"></div></div>
+            <div class="xp-text" id="xp-number_theory-sublabel">0 / 25 XP</div>
+            <button class="ranks-btn" onclick="expandCard('number_theory', event)">View Ranks</button>
           </div>
-          <div class="xp-bar-track">
-            <div class="xp-bar-fill counting" id="xp-counting-bar" style="width: 0%"></div>
+          <div class="expanded-progression">
+            <div class="expanded-header">Number Theory Ranks</div>
+            <div class="progression-scroll" id="progression-number_theory"></div>
           </div>
-          <div class="xp-sublabel" id="xp-counting-sublabel">0 / 25 XP</div>
         </div>
-        <div class="xp-bar-wrapper general-bar">
-          <div class="xp-bar-label">
-            <span>🌟 Overall</span>
-            <span class="xp-bar-value" id="shield-wrapper-general"></span>
+      </div>
+
+      <!-- General/Overall -->
+      <div class="general-card" id="card-general">
+        <button class="close-btn" onclick="collapseCard('general', event)">✕</button>
+        <div class="normal-view">
+          <div class="general-content">
+            <div class="general-left">
+              <div class="general-label" style="font-size: 16px;">Overall</div>
+              <div class="general-progress"><div class="progress-fill" id="xp-general-bar" style="width: 0%;"></div></div>
+              <div class="xp-text" id="xp-general-sublabel">0 / 100 XP</div>
+            </div>
+            <span id="shield-wrapper-general"></span>
           </div>
-          <div class="xp-bar-track">
-            <div class="xp-bar-fill general" id="xp-general-bar" style="width: 0%"></div>
-          </div>
-          <div class="xp-sublabel" id="xp-general-sublabel">0 / 100 XP</div>
+          <button class="ranks-btn" onclick="expandCard('general', event)">View Ranks</button>
+        </div>
+        <div class="expanded-progression">
+          <div class="expanded-header">Overall Ranks</div>
+          <div class="progression-scroll" id="progression-general"></div>
         </div>
       </div>
     </div>
@@ -2125,9 +2611,9 @@
         <label style="font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 8px;">Problem Types:</label>
         <div class="type-checkboxes">
           <div class="type-checkbox selected" data-type="algebra">Algebra</div>
+          <div class="type-checkbox selected" data-type="counting">Counting</div>
           <div class="type-checkbox selected" data-type="geometry">Geometry</div>
           <div class="type-checkbox selected" data-type="number_theory">Number Theory</div>
-          <div class="type-checkbox selected" data-type="counting">Counting</div>
         </div>
       </div>
 

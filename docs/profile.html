@@ -502,38 +502,85 @@
       color: var(--text-primary);
     }
 
-    /* Level Shields */
+    /* Categories grid layout - matching practice page */
     .levels-section {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
       margin-top: 20px;
     }
 
     .level-card {
-      text-align: center;
-      padding: 15px;
       background: var(--bg-primary);
-      border-radius: 8px;
+      border-radius: 12px;
+      padding: 15px;
     }
 
     .level-card.general-card {
       grid-column: 1 / -1;
-      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      background: var(--bg-primary);
       border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .level-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
     }
 
     .level-card-label {
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
-      color: var(--text-secondary);
-      margin-bottom: 10px;
+      color: var(--text-primary);
     }
 
     .level-card-xp {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-secondary);
+      text-align: right;
       margin-top: 8px;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: #c0c0c0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #1a4a7a, #4a9fd4);
+      transition: width 0.5s ease;
+    }
+
+    .general-card .level-card-header {
+      gap: 20px;
+    }
+
+    .general-card .general-left {
+      flex: 1;
+    }
+
+    .general-card .level-card-label {
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .general-card .progress-bar {
+      height: 12px;
+      border-radius: 6px;
+    }
+
+    @media (max-width: 700px) {
+      .levels-section { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 400px) {
+      .levels-section { grid-template-columns: 1fr; }
     }
 
     .level-shield-container {
@@ -573,13 +620,16 @@
       z-index: 2;
     }
 
-    /* Simple hexagons: 1-30 */
+    /* Simple hexagons: 1-30 - thin flat borders */
     .shield-bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); }
     .shield-bronze-outline { background: rgba(92, 51, 16, 0.5); }
+    .shield-bronze-outer { background: #5c2e0d; width: 42px !important; height: 48px !important; }
     .shield-silver { background: linear-gradient(135deg, #c0c0c0, #808080); }
     .shield-silver-outline { background: rgba(74, 74, 74, 0.5); }
+    .shield-silver-outer { background: #505050; width: 42px !important; height: 48px !important; }
     .shield-gold { background: linear-gradient(135deg, #ffd700, #b8860b); color: #333; text-shadow: 0 1px 1px rgba(255,255,255,0.3); }
     .shield-gold-outline { background: rgba(139, 105, 20, 0.5); }
+    .shield-gold-outer { background: #7a5a07; width: 42px !important; height: 48px !important; }
 
     /* Triple layer hexagons: 31+ */
     .shield-container-layered .shield-outer {
@@ -761,20 +811,20 @@
     .shield-obsidian-tri-outline { background: rgba(0, 0, 0, 0.4); }
     .shield-container-obsidian::before, .shield-container-obsidian::after { background: rgba(100, 100, 100, 0.6); }
 
-    /* Legendary: 91-100 */
-    .shield-legendary-outer { background: linear-gradient(135deg, #8b0000, #4a0080); animation: legendaryOuter 3s ease infinite; }
-    .shield-legendary-middle { background: linear-gradient(135deg, #ff4500, #8b008b); animation: legendaryMiddle 3s ease infinite; }
-    .shield-legendary { background: linear-gradient(135deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff); background-size: 300% 300%; animation: legendaryInner 3s ease infinite; }
-    .shield-legendary-horn { background: linear-gradient(to left, #8b0000, #ff4500); }
-    .shield-horn-right.shield-legendary-horn { background: linear-gradient(to right, #8b0000, #ff4500); }
-    .shield-legendary-horn-outline { background: rgba(61, 0, 0, 0.5); }
-    .shield-legendary-tri { background: linear-gradient(135deg, #ff4500, #ffd700); }
-    .shield-legendary-tri-outline { background: rgba(139, 37, 0, 0.5); }
-    .shield-container-legendary::before, .shield-container-legendary::after { background: linear-gradient(135deg, #ff4500, #ffd700, #ff4500); }
+    /* Legendary: 91-100 - Platinum */
+    .shield-legendary-outer { background: linear-gradient(135deg, #6a9ab8, #4a7a98); animation: legendaryOuter 3s ease infinite; }
+    .shield-legendary-middle { background: linear-gradient(135deg, #8ec0dc, #6a9ab8); animation: legendaryMiddle 3s ease infinite; }
+    .shield-legendary { background: linear-gradient(135deg, #ffffff, #e8f0f8, #ffffff, #e0eaf4); background-size: 200% 200%; color: #333; text-shadow: none; animation: legendaryInner 3s ease infinite; box-shadow: 0 0 12px rgba(255,255,255,0.5); }
+    .shield-legendary-horn { background: linear-gradient(to left, #5a8aa8, #a8d0e8); }
+    .shield-horn-right.shield-legendary-horn { background: linear-gradient(to right, #5a8aa8, #a8d0e8); }
+    .shield-legendary-horn-outline { background: rgba(60, 90, 110, 0.5); }
+    .shield-legendary-tri { background: linear-gradient(135deg, #8ec0dc, #b8daf0); }
+    .shield-legendary-tri-outline { background: rgba(70, 100, 120, 0.5); }
+    .shield-container-legendary::before, .shield-container-legendary::after { background: linear-gradient(135deg, #c0e0f0, #a0c8e0, #c0e0f0); }
 
-    @keyframes legendaryOuter { 0%, 100% { filter: hue-rotate(0deg); } 50% { filter: hue-rotate(60deg); } }
-    @keyframes legendaryMiddle { 0%, 100% { filter: hue-rotate(0deg); } 50% { filter: hue-rotate(-60deg); } }
-    @keyframes legendaryInner { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+    @keyframes legendaryOuter { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.15); } }
+    @keyframes legendaryMiddle { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.1); } }
+    @keyframes legendaryInner { 0%, 100% { background-position: 0% 50%; filter: brightness(1); } 50% { background-position: 100% 50%; filter: brightness(1.15); } }
 
     /* Design C: 101-105 - Back shield */
     .shield-back {
@@ -805,68 +855,13 @@
     @keyframes masterMiddle { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.2); } }
     @keyframes masterInner { 0%, 100% { background-position: 0% 50%; filter: brightness(1); } 50% { background-position: 100% 50%; filter: brightness(1.3); } }
 
-    /* Level Shields (duplicate section from original) */
-    .levels-section {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 20px;
-      margin-top: 20px;
-    }
-
-    .level-card {
-      text-align: center;
-      padding: 15px;
-      background: var(--bg-primary);
-      border-radius: 8px;
-    }
-
-    .level-card.general-card {
-      grid-column: 1 / -1;
-      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-      border: 2px solid var(--border-color);
-    }
-
-    .level-card-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      margin-bottom: 10px;
-    }
-
-    .level-card-xp {
-      font-size: 11px;
-      color: var(--text-secondary);
-      margin-top: 8px;
-    }
-
-    .level-shield-container {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 65px;
-      height: 68px;
-    }
-
-    .level-shield {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 42px;
-      font-weight: 700;
-      font-size: 14px;
-      color: white;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-      position: relative;
-      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-      z-index: 2;
-    }
-
-    /* Simple hexagons: 1-30 */
+    /* Simple hexagons: 1-30 - thin flat borders */
     .shield-bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); }
+    .shield-bronze-outer { background: #5c2e0d; width: 42px !important; height: 48px !important; }
     .shield-silver { background: linear-gradient(135deg, #c0c0c0, #808080); }
+    .shield-silver-outer { background: #505050; width: 42px !important; height: 48px !important; }
     .shield-gold { background: linear-gradient(135deg, #ffd700, #b8860b); color: #333; text-shadow: 0 1px 1px rgba(255,255,255,0.3); }
+    .shield-gold-outer { background: #7a5a07; width: 42px !important; height: 48px !important; }
 
     /* Triple layer hexagons: 31+ */
     .shield-container-layered .shield-outer {
@@ -981,18 +976,18 @@
     .shield-obsidian-tri { background: linear-gradient(135deg, #333, #555); }
     .shield-container-obsidian::before, .shield-container-obsidian::after { background: rgba(100, 100, 100, 0.6); }
 
-    /* Legendary: 91-100 */
-    .shield-legendary-outer { background: linear-gradient(135deg, #8b0000, #4a0080); animation: legendaryOuter 3s ease infinite; }
-    .shield-legendary-middle { background: linear-gradient(135deg, #ff4500, #8b008b); animation: legendaryMiddle 3s ease infinite; }
-    .shield-legendary { background: linear-gradient(135deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff); background-size: 300% 300%; animation: legendaryInner 3s ease infinite; }
-    .shield-legendary-horn { background: linear-gradient(to left, #8b0000, #ff4500); }
-    .shield-horn-right.shield-legendary-horn { background: linear-gradient(to right, #8b0000, #ff4500); }
-    .shield-legendary-tri { background: linear-gradient(135deg, #ff4500, #ffd700); }
-    .shield-container-legendary::before, .shield-container-legendary::after { background: linear-gradient(135deg, #ff4500, #ffd700, #ff4500); }
+    /* Legendary: 91-100 - Platinum */
+    .shield-legendary-outer { background: linear-gradient(135deg, #6a9ab8, #4a7a98); animation: legendaryOuter 3s ease infinite; }
+    .shield-legendary-middle { background: linear-gradient(135deg, #8ec0dc, #6a9ab8); animation: legendaryMiddle 3s ease infinite; }
+    .shield-legendary { background: linear-gradient(135deg, #ffffff, #e8f0f8, #ffffff, #e0eaf4); background-size: 200% 200%; color: #333; text-shadow: none; animation: legendaryInner 3s ease infinite; box-shadow: 0 0 12px rgba(255,255,255,0.5); }
+    .shield-legendary-horn { background: linear-gradient(to left, #5a8aa8, #a8d0e8); }
+    .shield-horn-right.shield-legendary-horn { background: linear-gradient(to right, #5a8aa8, #a8d0e8); }
+    .shield-legendary-tri { background: linear-gradient(135deg, #8ec0dc, #b8daf0); }
+    .shield-container-legendary::before, .shield-container-legendary::after { background: linear-gradient(135deg, #c0e0f0, #a0c8e0, #c0e0f0); }
 
-    @keyframes legendaryOuter { 0%, 100% { filter: hue-rotate(0deg); } 50% { filter: hue-rotate(60deg); } }
-    @keyframes legendaryMiddle { 0%, 100% { filter: hue-rotate(0deg); } 50% { filter: hue-rotate(-60deg); } }
-    @keyframes legendaryInner { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+    @keyframes legendaryOuter { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.15); } }
+    @keyframes legendaryMiddle { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.1); } }
+    @keyframes legendaryInner { 0%, 100% { background-position: 0% 50%; filter: brightness(1); } 50% { background-position: 100% 50%; filter: brightness(1.15); } }
 
     /* Design C: 101-105 - Back shield */
     .shield-back {
@@ -1389,9 +1384,7 @@
       const tier = getShieldTier(level);
       let html = '';
       
-      let containerClasses = 'level-shield-container';
-      if (tier.layered) containerClasses += ' shield-container-layered';
-      else containerClasses += ' shield-container-simple';
+      let containerClasses = 'level-shield-container shield-container-layered';
       if (tier.design === 'B' || tier.design === 'C') containerClasses += ' shield-container-designB';
       if (tier.ripple) containerClasses += ` shield-container-ripple shield-container-${tier.name}`;
       
@@ -1419,13 +1412,12 @@
         html += `<div class="shield-horn-right shield-${tier.name}-horn"></div>`;
       }
       
-      if (tier.layered) {
-        html += `<div class="shield-outer shield-${tier.name}-outer"></div>`;
-        html += `<div class="shield-middle shield-${tier.name}-middle"></div>`;
-      }
+      // Outer layer (all tiers now use this)
+      html += `<div class="shield-outer shield-${tier.name}-outer"></div>`;
       
-      if (!tier.layered) {
-        html += `<div class="shield-outline shield-${tier.name}-outline"></div>`;
+      // Middle layer (31+ only)
+      if (tier.layered) {
+        html += `<div class="shield-middle shield-${tier.name}-middle"></div>`;
       }
       
       html += `<div class="level-shield shield-${tier.name}">${level}</div>`;
@@ -1504,28 +1496,54 @@
 
       const container = document.getElementById('levelsContainer');
       
+      // Reordered: Algebra, Counting, Geometry, Number Theory
       const types = [
         { key: 'algebra', label: 'Algebra', isGeneral: false },
-        { key: 'geometry', label: 'Geometry', isGeneral: false },
-        { key: 'number_theory', label: 'Number Theory', isGeneral: false },
         { key: 'counting', label: 'Counting', isGeneral: false },
-        { key: 'general', label: 'Overall', isGeneral: true }
+        { key: 'geometry', label: 'Geometry', isGeneral: false },
+        { key: 'number_theory', label: 'Number Theory', isGeneral: false }
       ];
 
-      container.innerHTML = types.map(type => {
+      let html = types.map(type => {
         const levelInfo = getLevelFromXp(xp[type.key], type.isGeneral);
         const xpText = levelInfo.level >= MAX_LEVEL 
           ? `MAX (${xp[type.key].toLocaleString()} XP)`
           : `${levelInfo.currentXp.toLocaleString()} / ${levelInfo.xpForNext.toLocaleString()} XP`;
+        const progressPercent = levelInfo.level >= MAX_LEVEL ? 100 : Math.round((levelInfo.currentXp / levelInfo.xpForNext) * 100);
         
         return `
-          <div class="level-card ${type.isGeneral ? 'general-card' : ''}">
-            <div class="level-card-label">${type.label}</div>
-            ${buildShieldHtml(levelInfo.level)}
+          <div class="level-card">
+            <div class="level-card-header">
+              <span class="level-card-label">${type.label}</span>
+              ${buildShieldHtml(levelInfo.level)}
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width: ${progressPercent}%;"></div></div>
             <div class="level-card-xp">${xpText}</div>
           </div>
         `;
       }).join('');
+
+      // Add Overall section
+      const generalLevelInfo = getLevelFromXp(xp.general, true);
+      const generalXpText = generalLevelInfo.level >= MAX_LEVEL 
+        ? `MAX (${xp.general.toLocaleString()} XP)`
+        : `${generalLevelInfo.currentXp.toLocaleString()} / ${generalLevelInfo.xpForNext.toLocaleString()} XP`;
+      const generalProgressPercent = generalLevelInfo.level >= MAX_LEVEL ? 100 : Math.round((generalLevelInfo.currentXp / generalLevelInfo.xpForNext) * 100);
+
+      html += `
+        <div class="level-card general-card">
+          <div class="level-card-header">
+            <div class="general-left">
+              <div class="level-card-label">Overall</div>
+              <div class="progress-bar"><div class="progress-fill" style="width: ${generalProgressPercent}%;"></div></div>
+              <div class="level-card-xp">${generalXpText}</div>
+            </div>
+            ${buildShieldHtml(generalLevelInfo.level)}
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = html;
     }
 
     async function loadRecentAttempts() {
