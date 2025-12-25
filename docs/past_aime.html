@@ -79,6 +79,37 @@
       }
     }
 
+    // Update inbox badge with unread count
+    async function updateInboxBadge() {
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.user) return;
+
+        const { data, error } = await supabaseClient
+          .from('user_messages')
+          .select('id')
+          .or(`user_id.eq.${session.user.id},user_id.is.null`)
+          .is('read_at', null);
+
+        if (error) throw error;
+
+        const badge = document.getElementById('navBadge');
+        if (badge && data) {
+          const count = data.length;
+          if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.style.display = 'inline-block';
+          } else {
+            badge.style.display = 'none';
+          }
+        }
+      } catch (err) {
+        console.error('Error updating inbox badge:', err);
+      }
+    }
+
+    setTimeout(updateInboxBadge, 1000);
+
     function initAnalytics() {
       logActivity('page_view', { metadata: { referrer: document.referrer } });
       logEvent('page_view', { metadata: { referrer: document.referrer, userAgent: navigator.userAgent } });
@@ -94,23 +125,6 @@
           });
         }
       });
-
-      // === TEXT INPUT TRACKING (on blur) ===
-      document.addEventListener('blur', (e) => {
-        const target = e.target;
-        if (target.matches('input[type="text"], input[type="number"], textarea')) {
-          const value = target.value.trim();
-          if (value) {
-            logActivity('text_input', {
-              userAnswer: value,
-              metadata: { 
-                elementId: target.id || target.name || null,
-                problemIndex: target.dataset.index || null
-              }
-            });
-          }
-        }
-      }, true);
     }
 
     setTimeout(initAnalytics, 500);
@@ -867,6 +881,21 @@
         padding-top: 44px;
       }
     }
+
+    .inbox-badge {
+      position: absolute;
+      top: 10px;
+      right: 6px;
+      background: #dc3545;
+      color: white;
+      font-size: 10px;
+      font-weight: bold;
+      padding: 2px 5px;
+      border-radius: 8px;
+      min-width: 16px;
+      text-align: center;
+      line-height: 1.2;
+    }
   </style>
 
   <script>
@@ -894,7 +923,14 @@
         <a href="index.html">Mock Test</a>
         <a href="practice.html">Practice</a>
         <a href="past_tests.html" style="background: rgba(255,255,255,0.15);">Past Tests</a>
-        <a href="search.html" style="background: rgba(255,255,255,0.15);">Search</a>
+        <a href="search.html">Search</a>
+        <a href="inbox.html" class="nav-inbox" style="display: inline-flex; align-items: center; position: relative;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          <span class="inbox-badge" id="navBadge" style="display: none;">0</span>
+        </a>
         <a href="login.html" class="auth-button">Login</a>
         <div class="user-info"></div>
         <button class="dark-mode-toggle" onclick="toggleDarkMode()">🌙 Dark</button>

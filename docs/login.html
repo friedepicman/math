@@ -192,6 +192,21 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    .inbox-badge {
+      position: absolute;
+      top: 10px;
+      right: 6px;
+      background: #dc3545;
+      color: white;
+      font-size: 10px;
+      font-weight: bold;
+      padding: 2px 5px;
+      border-radius: 8px;
+      min-width: 16px;
+      text-align: center;
+      line-height: 1.2;
+    }
   </style>
 </head>
 <body>
@@ -373,6 +388,37 @@
         console.error('Event log error:', e);
       }
     }
+
+    // Update inbox badge with unread count
+    async function updateInboxBadge() {
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.user) return;
+
+        const { data, error } = await supabaseClient
+          .from('user_messages')
+          .select('id')
+          .or(`user_id.eq.${session.user.id},user_id.is.null`)
+          .is('read_at', null);
+
+        if (error) throw error;
+
+        const badge = document.getElementById('navBadge');
+        if (badge && data) {
+          const count = data.length;
+          if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.style.display = 'inline-block';
+          } else {
+            badge.style.display = 'none';
+          }
+        }
+      } catch (err) {
+        console.error('Error updating inbox badge:', err);
+      }
+    }
+
+    setTimeout(updateInboxBadge, 1000);
 
     function initAnalytics() {
       logActivity('page_view', { metadata: { referrer: document.referrer } });

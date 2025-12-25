@@ -892,11 +892,15 @@
 
           ${isHandled ? '' : `
           <div class="mark-handled-section">
-            <div>
+            <div style="flex: 1;">
               <strong style="font-size: 16px;">Done reviewing this report?</strong>
               <div style="color: #666; font-size: 14px; margin-top: 5px;">Mark as handled to remove from pending list</div>
+              <div style="margin-top: 12px;">
+                <label style="font-size: 14px; color: #333; display: block; margin-bottom: 6px;">Message to reporter (optional):</label>
+                <textarea id="handledMsg-${report.id}" placeholder="Add a personal note, e.g. 'Fixed the answer' or 'Good catch on the typo!'" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical; min-height: 60px;"></textarea>
+              </div>
             </div>
-            <button class="btn-mark-handled" onclick="markReportHandled(${report.id})">
+            <button class="btn-mark-handled" onclick="markReportHandled(${report.id})" style="align-self: flex-end;">
               ✓ Mark as Handled
             </button>
           </div>
@@ -1358,6 +1362,13 @@
 
     async function markReportHandled(reportId) {
         try {
+            // Get the report to find the user_id and problem_id
+            const report = allReports.find(r => r.id === reportId);
+            
+            // Get custom message if any
+            const customMsgEl = document.getElementById(`handledMsg-${reportId}`);
+            const customMsg = customMsgEl ? customMsgEl.value.trim() : '';
+            
             const { error } = await supabaseClient
             .from('problem_reports')
             .update({ 
@@ -1367,6 +1378,34 @@
             .eq('id', reportId);
 
             if (error) throw error;
+
+            // Send message to the reporter if they were logged in
+            if (report && report.user_id) {
+                const problemId = report.problem_id;
+                const problem = allProblems[problemId];
+                const problemSource = problem?.source || `Problem #${problemId}`;
+                
+                // Build message body
+                let messageBody = `Thanks for reporting an issue with "${problemSource}"!`;
+                if (customMsg) {
+                    messageBody += `\n\n${customMsg}`;
+                }
+                
+                try {
+                    await supabaseClient
+                        .from('user_messages')
+                        .insert({
+                            user_id: report.user_id,
+                            title: 'Your report was reviewed',
+                            body: messageBody,
+                            message_type: 'report_update',
+                            metadata: { problem_id: problemId, report_id: reportId }
+                        });
+                } catch (msgErr) {
+                    console.error('Error sending message to reporter:', msgErr);
+                    // Don't fail the whole operation if message fails
+                }
+            }
 
             // Remove from local array and re-render (no alert)
             allReports = allReports.filter(r => r.id !== reportId);

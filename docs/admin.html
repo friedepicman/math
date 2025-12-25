@@ -387,6 +387,54 @@
     <a href="admin_reports.html">View Reports</a>
     <a href="login.html" class="auth-button">Login</a>
   </div>
+
+  <!-- Send Message Section -->
+  <div class="controls" style="margin-bottom: 20px;">
+    <h3 style="margin-top: 0; color: #004488;">📬 Send User Message</h3>
+    <div style="display: grid; gap: 15px;">
+      <div style="display: flex; gap: 15px; align-items: center;">
+        <label style="min-width: 80px;">To:</label>
+        <select id="msgRecipient" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-width: 200px;">
+          <option value="broadcast">Everyone (Broadcast)</option>
+          <option value="specific">Specific User</option>
+        </select>
+        <input type="text" id="msgUserId" placeholder="User UUID (paste from Supabase)" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; flex: 1; display: none;" />
+      </div>
+      <div style="display: flex; gap: 15px; align-items: center;">
+        <label style="min-width: 80px;">Type:</label>
+        <select id="msgType" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-width: 200px;">
+          <option value="announcement">Announcement</option>
+          <option value="curated">Curated Content</option>
+          <option value="milestone">Milestone</option>
+          <option value="welcome">Welcome</option>
+          <option value="report_update">Report Update</option>
+          <option value="general">General</option>
+        </select>
+      </div>
+      <div style="display: flex; gap: 15px; align-items: center;">
+        <label style="min-width: 80px;">From:</label>
+        <input type="text" id="msgSender" placeholder="[SYSTEM]" value="[SYSTEM]" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 200px;" />
+        <span style="color: #666; font-size: 13px;">Displays as sender name</span>
+      </div>
+      <div style="display: flex; gap: 15px; align-items: center;">
+        <label style="min-width: 80px;">Title:</label>
+        <input type="text" id="msgTitle" placeholder="Message title" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; flex: 1;" />
+      </div>
+      <div style="display: flex; gap: 15px; align-items: flex-start;">
+        <label style="min-width: 80px; padding-top: 8px;">Body:</label>
+        <textarea id="msgBody" placeholder="Message body (supports LaTeX with $...$ and URLs)" rows="5" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; flex: 1; resize: vertical; font-family: monospace;" oninput="updatePreview()"></textarea>
+      </div>
+      <div style="display: flex; gap: 15px; align-items: flex-start;">
+        <label style="min-width: 80px; padding-top: 8px;">Preview:</label>
+        <div id="msgPreview" style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9; min-height: 60px; white-space: pre-wrap; line-height: 1.6;"></div>
+      </div>
+      <div style="display: flex; gap: 15px; align-items: center;">
+        <label style="min-width: 80px;"></label>
+        <button onclick="sendMessage()" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Send Message</button>
+        <span id="msgStatus" style="color: #28a745;"></span>
+      </div>
+    </div>
+  </div>
   
   <div class="stats" id="stats">Loading...</div>
 
@@ -1127,6 +1175,106 @@
     document.getElementById('showUntypedOnly').addEventListener('change', function() {
       loadProblems();
     });
+
+    // Message recipient toggle
+    document.getElementById('msgRecipient').addEventListener('change', function() {
+      const userIdInput = document.getElementById('msgUserId');
+      if (this.value === 'specific') {
+        userIdInput.style.display = 'block';
+      } else {
+        userIdInput.style.display = 'none';
+        userIdInput.value = '';
+      }
+    });
+
+    // Send message function
+    async function sendMessage() {
+      const recipient = document.getElementById('msgRecipient').value;
+      const userId = document.getElementById('msgUserId').value.trim();
+      const msgType = document.getElementById('msgType').value;
+      const title = document.getElementById('msgTitle').value.trim();
+      const body = document.getElementById('msgBody').value.trim();
+      const statusEl = document.getElementById('msgStatus');
+
+      // Validation
+      if (!title) {
+        statusEl.style.color = '#dc3545';
+        statusEl.textContent = 'Please enter a title';
+        return;
+      }
+      if (!body) {
+        statusEl.style.color = '#dc3545';
+        statusEl.textContent = 'Please enter a message body';
+        return;
+      }
+      if (recipient === 'specific' && !userId) {
+        statusEl.style.color = '#dc3545';
+        statusEl.textContent = 'Please enter a user UUID';
+        return;
+      }
+
+      const sender = document.getElementById('msgSender').value.trim() || '[SYSTEM]';
+
+      statusEl.style.color = '#666';
+      statusEl.textContent = 'Sending...';
+
+      try {
+        const { error } = await supabaseClient
+          .from('user_messages')
+          .insert({
+            user_id: recipient === 'broadcast' ? null : userId,
+            title: title,
+            body: body,
+            message_type: msgType,
+            sent_from: sender
+          });
+
+        if (error) throw error;
+
+        statusEl.style.color = '#28a745';
+        statusEl.textContent = recipient === 'broadcast' 
+          ? '✓ Broadcast sent to all users!' 
+          : '✓ Message sent!';
+
+        // Clear form
+        document.getElementById('msgTitle').value = '';
+        document.getElementById('msgBody').value = '';
+        document.getElementById('msgPreview').innerHTML = '';
+
+        // Clear status after 3 seconds
+        setTimeout(() => { statusEl.textContent = ''; }, 3000);
+
+      } catch (err) {
+        console.error('Error sending message:', err);
+        statusEl.style.color = '#dc3545';
+        statusEl.textContent = 'Failed to send message: ' + err.message;
+      }
+    }
+
+    // Live preview with LaTeX
+    function updatePreview() {
+      const body = document.getElementById('msgBody').value;
+      const previewEl = document.getElementById('msgPreview');
+      
+      // Escape HTML but preserve newlines
+      let escaped = body
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      
+      // Convert URLs to links
+      escaped = escaped.replace(
+        /(https?:\/\/[^\s]+)/g,
+        '<a href="$1" target="_blank" style="color: #0056b3;">$1</a>'
+      );
+      
+      previewEl.innerHTML = escaped || '<span style="color: #999;">Preview will appear here...</span>';
+      
+      // Re-render LaTeX
+      if (window.MathJax) {
+        MathJax.typesetPromise([previewEl]).catch(err => console.log('MathJax error:', err));
+      }
+    }
   </script>
 </body>
 </html>
