@@ -478,18 +478,22 @@
     const rankCategories = ['algebra', 'counting', 'geometry', 'number_theory'];
     
     const rankData = [
-      { level: 1, name: 'bronze', xp: '0 XP', design: 'simple' },
-      { level: 11, name: 'silver', xp: '250 XP', design: 'simple' },
-      { level: 21, name: 'gold', xp: '750 XP', design: 'simple' },
-      { level: 31, name: 'emerald', xp: '1,750 XP', design: 'layered' },
-      { level: 41, name: 'sapphire', xp: '3,250 XP', design: 'layered' },
-      { level: 51, name: 'amethyst', xp: '5,250 XP', design: 'horns' },
-      { level: 61, name: 'ruby', xp: '7,750 XP', design: 'horns' },
-      { level: 71, name: 'diamond', xp: '11,250 XP', design: 'horns' },
-      { level: 81, name: 'obsidian', xp: '16,250 XP', design: 'full' },
-      { level: 91, name: 'legendary', xp: '23,250 XP', design: 'full' },
-      { level: 101, name: 'master', xp: '32,250 XP', design: 'master' }
+      { level: 1, name: 'bronze', xp: 0, design: 'simple' },
+      { level: 11, name: 'silver', xp: 250, design: 'simple' },
+      { level: 21, name: 'gold', xp: 750, design: 'simple' },
+      { level: 31, name: 'emerald', xp: 1750, design: 'layered' },
+      { level: 41, name: 'sapphire', xp: 3250, design: 'layered' },
+      { level: 51, name: 'amethyst', xp: 5250, design: 'horns' },
+      { level: 61, name: 'ruby', xp: 7750, design: 'horns' },
+      { level: 71, name: 'diamond', xp: 11250, design: 'horns' },
+      { level: 81, name: 'obsidian', xp: 16250, design: 'full' },
+      { level: 91, name: 'legendary', xp: 23250, design: 'full' },
+      { level: 101, name: 'master', xp: 32250, design: 'master' }
     ];
+
+    function formatXp(xp) {
+      return xp.toLocaleString() + ' XP';
+    }
 
     function buildRankShieldHtml(rank) {
       const n = rank.name;
@@ -588,18 +592,21 @@
       }
       
       const userTier = getRankTier(userLevel);
+      const isGeneral = category === 'general';
+      const xpMultiplier = isGeneral ? 4 : 1;
       
       let html = '';
       rankData.forEach((rank, idx) => {
         const isUnlocked = idx <= userTier;
         const isCurrent = idx === userTier;
+        const displayXp = formatXp(rank.xp * xpMultiplier);
         
         html += `<div class="rank-node ${isUnlocked ? 'unlocked' : 'locked'} ${isCurrent ? 'current' : ''}">`;
         if (isCurrent) {
           html += `<div class="current-indicator">▼</div>`;
         }
         html += buildRankShieldHtml(rank);
-        html += `<div class="rank-xp">${rank.xp}</div>`;
+        html += `<div class="rank-xp">${displayXp}</div>`;
         html += `</div>`;
       });
       
@@ -608,6 +615,11 @@
 
     function expandCard(category, event) {
       event.stopPropagation();
+      
+      // Log view ranks action
+      logEvent('view_ranks', {
+        metadata: { category: category }
+      });
       
       // Build progression if not already done
       const progressionEl = document.getElementById(`progression-${category}`);
