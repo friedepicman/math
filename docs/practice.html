@@ -688,6 +688,8 @@
       --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
       --accent-primary: #0056b3;
       --accent-secondary: #00aa66;
+      --success-color: #28a745;
+      --error-color: #dc3545;
     }
 
     [data-theme="dark"] {
@@ -703,6 +705,8 @@
       --primary-blue-light: #6bb3ff;
       --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
       --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+      --success-color: #28a745;
+      --error-color: #dc3545;
     }
 
     * {
@@ -3327,6 +3331,7 @@
         // Reset all choice buttons
         document.querySelectorAll('.answer-choice').forEach(btn => {
           btn.classList.remove('selected', 'correct-answer', 'wrong-answer');
+          btn.disabled = false;
         });
         selectedAnswerChoice = null;
       } else {
